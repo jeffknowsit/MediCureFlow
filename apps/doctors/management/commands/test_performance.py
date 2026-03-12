@@ -15,7 +15,7 @@ import time
 
 
 class Command(BaseCommand):
-    help = 'Test performance optimizations for the WellCarePlusCure app'
+    help = 'Test performance optimizations for the MediCureFlow app'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -27,7 +27,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         verbose = options['verbose']
         
-        self.stdout.write("🚀 Testing WellCarePlusCure Performance Optimizations...")
+        self.stdout.write("🚀 Testing MediCureFlow Performance Optimizations...")
         self.stdout.write("=" * 60)
         
         # Reset query count
@@ -109,7 +109,7 @@ class Command(BaseCommand):
             from django.core.cache import cache
             
             # Test cache set/get
-            test_key = "wellcareplusCure:test_performance"
+            test_key = "MediCureFlow:test_performance"
             test_data = {"specialties": [{"value": "cardiology", "label": "Cardiology"}]}
             
             # Set cache

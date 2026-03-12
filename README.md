@@ -1,4 +1,4 @@
-# 🏥 WellCarePlusCure - Advanced Healthcare Platform
+# 🏥 MediCureFlow - Advanced Healthcare Platform
 
 <div align="center">
   
@@ -20,9 +20,9 @@
 
 ## 🎯 **Project Overview**
 
-WellCarePlusCure is a **comprehensive healthcare platform** designed to revolutionize how patients, doctors, and administrators interact in the digital healthcare ecosystem. Built with **Django 5.x** and modern web technologies, it offers a complete solution for healthcare management.
+MediCureFlow is a **comprehensive healthcare platform** designed to revolutionize how patients, doctors, and administrators interact in the digital healthcare ecosystem. Built with **Django 5.x** and modern web technologies, it offers a complete solution for healthcare management.
 
-### 🌟 **Why WellCarePlusCure?**
+### 🌟 **Why MediCureFlow?**
 
 - 🏥 **Complete Healthcare Ecosystem** - Patients, Doctors, Admin all in one platform
 - 🩺 **Smart Health System** - Intelligent health checkups and recommendations
@@ -93,7 +93,7 @@ WellCarePlusCure is a **comprehensive healthcare platform** designed to revoluti
 
 <div align="center">
 
-### 🎯 **Get a Visual Tour of WellCarePlusCure**
+### 🎯 **Get a Visual Tour of MediCureFlow**
 *Experience the modern, professional interface of our comprehensive healthcare platform*
 
 ---
@@ -179,7 +179,7 @@ WellCarePlusCure is a **comprehensive healthcare platform** designed to revoluti
 
 ### 🌟 **Experience the Difference**
 
-*These screenshots showcase the professional, modern interface that makes WellCarePlusCure stand out in the healthcare technology space. From intuitive patient experiences to powerful admin controls, every screen is designed with user experience and functionality in mind.*
+*These screenshots showcase the professional, modern interface that makes MediCureFlow stand out in the healthcare technology space. From intuitive patient experiences to powerful admin controls, every screen is designed with user experience and functionality in mind.*
 
 
 
@@ -341,15 +341,15 @@ python manage.py check --deploy
 
 <div align="center">
 
-![GitHub Repo stars](https://img.shields.io/github/stars/Aniket-Dev-IT/WellCarePlusCure?style=social)
-![GitHub forks](https://img.shields.io/github/forks/Aniket-Dev-IT/WellCarePlusCure?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/Aniket-Dev-IT/WellCarePlusCure?style=social)
+![GitHub Repo stars](https://img.shields.io/github/stars/Aniket-Dev-IT/MediCureFlow?style=social)
+![GitHub forks](https://img.shields.io/github/forks/Aniket-Dev-IT/MediCureFlow?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/Aniket-Dev-IT/MediCureFlow?style=social)
 
 ### 📈 **Project Metrics**
-![GitHub repo size](https://img.shields.io/github/repo-size/Aniket-Dev-IT/WellCarePlusCure)
-![GitHub language count](https://img.shields.io/github/languages/count/Aniket-Dev-IT/WellCarePlusCure)
-![GitHub top language](https://img.shields.io/github/languages/top/Aniket-Dev-IT/WellCarePlusCure)
-![GitHub last commit](https://img.shields.io/github/last-commit/Aniket-Dev-IT/WellCarePlusCure)
+![GitHub repo size](https://img.shields.io/github/repo-size/Aniket-Dev-IT/MediCureFlow)
+![GitHub language count](https://img.shields.io/github/languages/count/Aniket-Dev-IT/MediCureFlow)
+![GitHub top language](https://img.shields.io/github/languages/top/Aniket-Dev-IT/MediCureFlow)
+![GitHub last commit](https://img.shields.io/github/last-commit/Aniket-Dev-IT/MediCureFlow)
 
 </div>
 
@@ -403,6 +403,6 @@ See the [LICENSE](LICENSE) file for complete terms and conditions.
 
 
 
-<em>© 2025 WellCarePlusCure. All rights reserved. Contact for usage permissions.</em>
+<em>© 2025 MediCureFlow. All rights reserved. Contact for usage permissions.</em>
 
 </div>

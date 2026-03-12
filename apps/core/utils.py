@@ -1,5 +1,5 @@
 """
-Common utility functions for WellCarePlusCure project.
+Common utility functions for MediCureFlow project.
 
 This module contains shared utility functions to reduce code duplication
 across different apps.

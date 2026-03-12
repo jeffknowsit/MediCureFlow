@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Complete Payment — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-wrap { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    .payment-card { background: #fff; border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
+    .payment-header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; padding: 30px; }
+    .payment-header h2 { font-weight: 800; margin-bottom: 5px; }
+    .payment-body { padding: 40px; }
+    .order-summary { background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #e2e8f0; }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .summary-row.total { border-top: 2px solid #e2e8f0; padding-top: 15px; margin-top: 15px; font-weight: 800; font-size: 1.2rem; color: var(--dark); }
+    
+    #payment-element { 
+        margin-bottom: 24px; padding: 30px; border: 1px dashed var(--primary); 
+        border-radius: 16px; background: #f0f7ff; text-align: center;
+    }
+    #submit-payment { 
+        width: 100%; padding: 16px; background: var(--primary); color: #fff; border: none; 
+        border-radius: 12px; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: 0.2s;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    #submit-payment:hover { opacity: 0.9; transform: translateY(-1px); }
+    #submit-payment:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+    
+    .mimic-info { color: var(--primary); font-size: 0.9rem; margin-top: 10px; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-wrap">
+    <div class="payment-card">
+        <div class="payment-header">
+            <h2>Complete Your Booking</h2>
+            <p>Simulated Secure Checkout</p>
+        </div>
+        
+        <div class="payment-body">
+            <div class="order-summary">
+                <h4 style="margin-bottom:15px; font-weight:800; color:var(--dark);">Appointment Summary</h4>
+                <div class="summary-row">
+                    <span>Doctor</span>
+                    <strong>{{ appointment.doctor.display_name }}</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Date & Time</span>
+                    <span>{{ appointment.appointment_date|date:"F j, Y" }} at {{ appointment.appointment_time|time:"h:i A" }}</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Consultation Fee</span>
+                    <span>₹{{ appointment.doctor.consultation_fee }}</span>
+                </div>
+            </div>
+
+            <form id="payment-form" method="post">
+                {% csrf_token %}
+                <div id="payment-element">
+                    <i class="fas fa-shield-alt" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 15px; display: block;"></i>
+                    <p style="font-weight: 700; color: var(--dark); margin-bottom: 5px;">Secure Payment Environment</p>
+                    <p style="color: #64748b; font-size: 0.85rem;">Payment portal initialized in sandbox mode.</p>
+                </div>
+                
+                <div id="payment-messages" class="alert" style="display: none;"></div>
+                
+                <button id="submit-payment" type="submit">
+                    <span id="button-text">Confirm & Pay ₹{{ appointment.doctor.consultation_fee }}</span>
+                    <span id="spinner" style="display: none;"><i class="fas fa-circle-notch fa-spin"></i> Processing...</span>
+                </button>
+                <p style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: #94a3b8;">
+                    <i class="fas fa-lock"></i> Encrypted Transaction
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const form = document.getElementById('payment-form');
+    const submitBtn = document.getElementById('submit-payment');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('button-text');
+    const messageDiv = document.getElementById('payment-messages');
+
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const response = await fetch(window.location.href, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json", 
+                    "X-CSRFToken": "{{ csrf_token }}" 
+                },
+                body: JSON.stringify({ mimic: true })
+            });
+            
+            const data = await response.json();
+
+            if (data.success && data.redirect_url) {
+                // Simulate a small delay for "processing" feel
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1500);
+            } else {
+                showMessage(data.error || "Payment failed to initialize.", 'danger');
+                setLoading(false);
+            }
+        } catch (err) {
+            showMessage("An unexpected server error occurred.", 'danger');
+            setLoading(false);
+        }
+    });
+
+    function showMessage(message, type) {
+        messageDiv.style.display = 'block';
+        messageDiv.className = `alert alert-${type}`;
+        messageDiv.textContent = message;
+    }
+
+    function setLoading(isLoading) {
+        if (isLoading) {
+            submitBtn.disabled = true;
+            spinner.style.display = "inline";
+            btnText.style.display = "none";
+        } else {
+            submitBtn.disabled = false;
+            spinner.style.display = "none";
+            btnText.style.display = "inline";
+        }
+    }
+</script>
+{% endblock %}

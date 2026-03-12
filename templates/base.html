@@ -1,0 +1,396 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MediCureFlow — Modern Healthcare Platform{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a6fd6;
+            --secondary: #764ba2;
+            --success: #11998e;
+            --dark: #1a1a2e;
+            --text: #4a4a6a;
+            --text-light: #888;
+            --border: #e8e8f0;
+            --bg: #f5f6fa;
+            --white: #fff;
+            --shadow: 0 4px 24px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 48px rgba(0,0,0,0.12);
+            --radius: 12px;
+            --radius-lg: 20px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── NAVBAR ── */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 48px; height: 68px;
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .navbar-brand {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 1.3rem; font-weight: 800; text-decoration: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .navbar-brand .icon { -webkit-text-fill-color: var(--primary); font-size: 1.3rem; }
+
+        .navbar-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+        .navbar-links a {
+            color: var(--text); text-decoration: none; font-weight: 500; font-size: 0.9rem;
+            padding: 8px 16px; border-radius: 8px; transition: all 0.2s;
+        }
+        .navbar-links a:hover { background: #f0f0f8; color: var(--primary); }
+
+        .navbar-actions { display: flex; align-items: center; gap: 10px; }
+
+        .btn-login {
+            color: var(--primary); border: 2px solid var(--primary);
+            padding: 8px 20px; border-radius: 8px; font-weight: 600; font-size: 0.88rem;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .btn-login:hover { background: var(--primary); color: var(--white); }
+
+        .btn-register {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white); padding: 8px 20px; border-radius: 8px;
+            font-weight: 600; font-size: 0.88rem; text-decoration: none;
+            box-shadow: 0 3px 12px rgba(102,126,234,0.35); transition: all 0.2s;
+        }
+        .btn-register:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* User dropdown */
+        .dropdown { position: relative; }
+        .dropdown-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: none; border: 2px solid var(--border); cursor: pointer;
+            font-size: 0.88rem; font-weight: 600; color: var(--dark);
+            padding: 7px 14px; border-radius: 8px; transition: all 0.2s; font-family: inherit;
+        }
+        .dropdown-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .dropdown-menu {
+            display: none; position: absolute; right: 0; top: calc(100% + 8px);
+            background: var(--white); border-radius: var(--radius);
+            box-shadow: var(--shadow-lg); padding: 6px; min-width: 190px;
+            border: 1px solid var(--border);
+        }
+        /* Bridge the gap for hover stability */
+        .dropdown-menu::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            right: 0;
+            height: 10px;
+        }
+        .dropdown:hover .dropdown-menu { display: block; }
+        .dropdown-menu a, .dropdown-menu button {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; text-align: left; padding: 9px 12px; border-radius: 8px;
+            font-size: 0.875rem; color: var(--text); font-weight: 500;
+            text-decoration: none; background: none; border: none;
+            cursor: pointer; transition: all 0.15s; font-family: inherit;
+        }
+        .dropdown-menu a:hover, .dropdown-menu button:hover { background: #f0f0f8; color: var(--primary); }
+        .dropdown-menu button.danger:hover { background: #fff5f5; color: #e53935; }
+        .divider-line { height: 1px; background: var(--border); margin: 4px 8px; }
+
+        /* ── MAIN ── */
+        main { padding-top: 68px; }
+
+        /* ── MESSAGES ── */
+        .messages-wrap { max-width: 960px; margin: 16px auto; padding: 0 24px; }
+        .msg {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 13px 16px; border-radius: 10px; margin-bottom: 8px;
+            font-size: 0.875rem; font-weight: 500;
+        }
+        .msg.success { background: #e8f5e9; color: #2e7d32; }
+        .msg.error, .msg.danger { background: #ffebee; color: #c62828; }
+        .msg.info { background: #e3f2fd; color: #1565c0; }
+        .msg.warning { background: #fff8e1; color: #f57f17; }
+        .msg-close { background: none; border: none; cursor: pointer; opacity: 0.6; font-size: 1rem; padding: 0; line-height: 1; }
+        .msg-close:hover { opacity: 1; }
+
+        /* ── FOOTER ── */
+        footer {
+            background: var(--dark); color: rgba(255,255,255,0.65);
+            padding: 64px 48px 32px; margin-top: 80px;
+        }
+        .footer-inner { max-width: 1100px; margin: 0 auto; }
+        .footer-grid {
+            display: grid; grid-template-columns: 2.5fr 1fr 1fr 1fr;
+            gap: 48px; padding-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .footer-brand { font-size: 1.2rem; font-weight: 800; color: var(--white); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .footer-brand .icon { color: var(--primary); }
+        footer p { font-size: 0.855rem; line-height: 1.75; color: rgba(255,255,255,0.55); }
+        footer h6 { color: var(--white); font-weight: 700; font-size: 0.9rem; margin-bottom: 18px; }
+        footer ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+        footer ul a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.855rem; transition: color 0.2s; }
+        footer ul a:hover { color: var(--white); }
+        .social-row { display: flex; gap: 10px; margin-top: 20px; }
+        .social-btn {
+            width: 34px; height: 34px; border-radius: 8px;
+            background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.65);
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none; transition: all 0.2s; font-size: 0.8rem;
+        }
+        .social-btn:hover { background: var(--primary); color: var(--white); }
+        .footer-copy { padding-top: 24px; text-align: center; font-size: 0.8rem; color: rgba(255,255,255,0.4); }
+        /* ── MODAL ── */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0; visibility: hidden; transition: all 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-card {
+            background: var(--white); border-radius: 20px; width: 400px;
+            max-width: calc(100% - 40px); padding: 32px; text-align: center;
+            box-shadow: var(--shadow-lg); transform: translateY(20px); transition: all 0.3s;
+        }
+        .modal-overlay.active .modal-card { transform: translateY(0); }
+        .modal-icon {
+            width: 64px; height: 64px; border-radius: 50%; background: #fff5f5;
+            color: #ef4444; display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; margin: 0 auto 20px;
+        }
+        .modal-header { font-size: 1.25rem; font-weight: 800; color: var(--dark); margin-bottom: 12px; }
+        .modal-body { font-size: 0.95rem; color: var(--text-light); margin-bottom: 24px; line-height: 1.5; }
+        .modal-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .modal-btn {
+            padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;
+            cursor: pointer; border: none; transition: all 0.2s; font-family: inherit;
+        }
+        .btn-modal-cancel { background: #f1f5f9; color: #64748b; }
+        .btn-modal-cancel:hover { background: #e2e8f0; }
+        .btn-modal-confirm { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
+        .btn-modal-confirm:hover { transform: translateY(-1px); opacity: 0.9; }
+
+        @media (max-width: 900px) {
+            .navbar { padding: 0 24px; }
+            .navbar-links { display: none; }
+            footer { padding: 48px 24px 24px; }
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="{% url 'home' %}" class="navbar-brand">
+        <span class="icon"><i class="fas fa-hospital-user"></i></span>
+        MediCureFlow
+    </a>
+    <ul class="navbar-links">
+        <li><a href="{% url 'search_doctors' %}">Find Doctors</a></li>
+        <li><a href="{% url 'about_us' %}">About Us</a></li>
+        <li><a href="{% url 'help_center' %}">Help Center</a></li>
+    </ul>
+    <div class="navbar-actions">
+        {% if user.is_authenticated %}
+            <div class="dropdown">
+                <button class="dropdown-btn">
+                    <i class="fas fa-user-circle"></i>
+                    {{ user.get_full_name|default:user.username }}
+                    <i class="fas fa-chevron-down" style="font-size:0.65rem;"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="{% url 'users:dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    <a href="{% url 'users:profile' %}"><i class="fas fa-user-edit"></i> My Profile</a>
+                    {% if not user.doctor_profile %}
+                    <a href="{% url 'users:my_appointments' %}"><i class="fas fa-calendar"></i> Appointments</a>
+                    {% endif %}
+                    <div class="divider-line"></div>
+                    <form method="post" action="{% url 'users:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="danger"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <a href="{% url 'users:login' %}" class="btn-login">Login</a>
+            <a href="{% url 'users:register' %}" class="btn-register">Sign Up Free</a>
+        {% endif %}
+    </div>
+</nav>
+
+<main>
+    {% if messages %}
+    <div class="messages-wrap">
+        {% for message in messages %}
+        <div class="msg {{ message.tags }}">
+            <span>{{ message }}</span>
+            <button class="msg-close" onclick="this.closest('.msg').remove()">✕</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    <div class="footer-inner">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-brand"><span class="icon"><i class="fas fa-hospital-user"></i></span> MediCureFlow</div>
+                <p>Your comprehensive health management system. Connecting patients with the best medical professionals.</p>
+                <div class="social-row">
+                    <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-btn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div>
+                <h6>Patients</h6>
+                <ul>
+                    <li><a href="{% url 'search_doctors' %}">Find a Doctor</a></li>
+                    <li><a href="{% url 'users:register' %}">Create Account</a></li>
+                    <li><a href="{% url 'users:login' %}">Login</a></li>
+                </ul>
+            </div>
+            <div>
+                <h6>Doctors</h6>
+                <ul>
+                    <li><a href="{% url 'doctor_register' %}">Join as Doctor</a></li>
+                    <li><a href="{% url 'users:login' %}">Doctor Login</a></li>
+                </ul>
+            </div>
+            <div>
+                <h6>Company</h6>
+                <ul>
+                    <li><a href="{% url 'about_us' %}">About Us</a></li>
+                    <li><a href="{% url 'help_center' %}">Help Center</a></li>
+                    <li><a href="{% url 'privacy_policy' %}">Privacy Policy</a></li>
+                    <li><a href="{% url 'terms_of_service' %}">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-copy">&copy; {% now "Y" %} MediCureFlow. All rights reserved.</div>
+    </div>
+</footer>
+
+<!-- Global Confirmation Modal -->
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal-card">
+        <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="modal-header">Are you sure?</div>
+        <div class="modal-body">This action cannot be undone. Please confirm to proceed.</div>
+        <div class="modal-footer">
+            <button id="modalCancelBtn" class="modal-btn btn-modal-cancel">Keep Appointment</button>
+            <button id="modalConfirmBtn" class="modal-btn btn-modal-confirm">Yes, Cancel</button>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}{% endblock %}
+<script>
+    // AUTO-HIDE MESSAGES
+    setTimeout(() => {
+        document.querySelectorAll('.msg').forEach(el => el.remove());
+    }, 5000);
+
+    // GLOBAL MODAL LOGIC
+    const confirmModal = document.getElementById('confirmModal');
+    const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    let currentForm = null;
+
+    window.showConfirmModal = function(options) {
+        const { title, message, confirmText, cancelText, confirmClass, onConfirm, form } = options;
+        
+        confirmModal.querySelector('.modal-header').innerText = title || 'Are you sure?';
+        confirmModal.querySelector('.modal-body').innerText = message || 'Do you want to proceed?';
+        modalConfirmBtn.innerText = confirmText || 'Confirm';
+        modalCancelBtn.innerText = cancelText || 'Cancel';
+        
+        if (confirmClass) {
+            modalConfirmBtn.className = `modal-btn ${confirmClass}`;
+        } else {
+            modalConfirmBtn.className = 'modal-btn btn-modal-confirm';
+        }
+
+        currentForm = form || null;
+        confirmModal.classList.add('active');
+
+        return new Promise((resolve) => {
+            const handleConfirm = () => {
+                confirmModal.classList.remove('active');
+                modalConfirmBtn.removeEventListener('click', handleConfirm);
+                modalCancelBtn.removeEventListener('click', handleCancel);
+                if (currentForm) currentForm.submit();
+                resolve(true);
+            };
+            const handleCancel = () => {
+                confirmModal.classList.remove('active');
+                modalConfirmBtn.removeEventListener('click', handleConfirm);
+                modalCancelBtn.removeEventListener('click', handleCancel);
+                resolve(false);
+            };
+            modalConfirmBtn.addEventListener('click', handleConfirm);
+            modalCancelBtn.addEventListener('click', handleCancel);
+        });
+    };
+
+    // Global listener for forms with data-confirm
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (form.hasAttribute('data-confirm') && !form.dataset.confirmed) {
+            e.preventDefault();
+            const message = form.getAttribute('data-confirm');
+            window.showConfirmModal({
+                title: 'Confirmation Required',
+                message: message,
+                confirmText: 'Yes, Proceed',
+                cancelText: 'Go Back',
+                form: form
+            }).then(confirmed => {
+                if (confirmed) {
+                    form.dataset.confirmed = "true";
+                    form.submit();
+                }
+            });
+        }
+    });
+
+    // Handle single buttons/links with data-confirm
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('[data-confirm-click]');
+        if (target) {
+            e.preventDefault();
+            const message = target.getAttribute('data-confirm-click');
+            window.showConfirmModal({
+                title: 'Quick Check',
+                message: message,
+                onConfirm: () => {
+                    window.location.href = target.href;
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

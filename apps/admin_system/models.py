@@ -1,5 +1,5 @@
 """
-WellCarePlusCure Admin System Models
+MediCureFlow Admin System Models
 Comprehensive models for admin operations, logging, and system management
 """
 

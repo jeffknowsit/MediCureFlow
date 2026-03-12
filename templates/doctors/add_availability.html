@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Set Availability — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-container { max-width: 500px; margin: 60px auto; padding: 40px; background: #fff; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+.form-title { font-size: 1.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 32px; text-align: center; }
+
+.field-group { margin-bottom: 24px; }
+.field-group label { display: block; font-size: 0.85rem; font-weight: 700; color: #555; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.field-input { width: 100%; padding: 12px 16px; border: 2px solid #e8e8f0; border-radius: 12px; font-size: 1rem; font-family: inherit; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, #4834d4 0%, #686de0 100%); color: #fff; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 20px; }
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(72, 52, 212, 0.2); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="form-title">Add Availability Slot</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="field-group">
+            <label>Day of Week</label>
+            <select name="day_of_week" class="field-input">
+                {% for code, label in form.fields.day_of_week.choices %}
+                    <option value="{{ code }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-row">
+            <div class="field-group">
+                <label>Start Time</label>
+                <input type="time" name="start_time" class="field-input">
+            </div>
+            <div class="field-group">
+                <label>End Time</label>
+                <input type="time" name="end_time" class="field-input">
+            </div>
+        </div>
+        <div class="field-group" style="display: flex; align-items: center; gap: 12px;">
+            <input type="checkbox" name="is_active" id="id_is_active" checked>
+            <label for="id_is_active" style="margin-bottom: 0;">Active Slot</label>
+        </div>
+
+        <button type="submit" class="btn-submit">Add Slot</button>
+    </form>
+</div>
+{% endblock %}

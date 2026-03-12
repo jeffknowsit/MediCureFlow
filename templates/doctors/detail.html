@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ doctor.display_name }} — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+.detail-card { background: #fff; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 32px; }
+
+.detail-header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 60px; color: #fff; display: flex; align-items: center; gap: 40px; }
+.detail-hero-img { width: 150px; height: 150px; border-radius: 20px; border: 4px solid rgba(255,255,255,0.1); overflow: hidden; }
+.detail-hero-img img { width: 100%; height: 100%; object-fit: cover; }
+.hero-text h1 { font-size: 2.22rem; font-weight: 800; margin-bottom: 4px; }
+.hero-text p { font-size: 1.1rem; opacity: 0.9; margin-bottom: 12px; }
+.spec-tag { background: #4834d4; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.detail-tabs { display: flex; border-bottom: 2px solid #f1f5f9; padding: 0 40px; background: #fff; }
+.tab-link { padding: 24px 30px; font-weight: 800; color: #64748b; text-decoration: none; position: relative; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+.tab-link.active { color: #4834d4; }
+.tab-link.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 3px; background: #4834d4; border-radius: 10px; }
+
+.detail-body { padding: 50px 60px; display: grid; grid-template-columns: 2fr 1fr; gap: 50px; }
+.content-section { margin-bottom: 40px; }
+.section-h { font-size: 1.25rem; font-weight: 800; color: #1a1a2e; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+.section-h i { color: #4834d4; }
+.bio-p { color: #475569; line-height: 1.8; font-size: 1.05rem; }
+
+.sidebar-card { background: #f8fafc; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; }
+.info-row { display: flex; gap: 16px; margin-bottom: 24px; }
+.info-icon { width: 40px; height: 40px; border-radius: 10px; background: #fff; color: #4834d4; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+.info-label { font-size: 0.75rem; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 2px; }
+.info-val { font-weight: 700; color: #1e293b; font-size: 1rem; }
+
+.btn-book { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #4834d4 0%, #686de0 100%); color: #fff; border: none; border-radius: 14px; font-size: 1rem; font-weight: 800; text-decoration: none; text-align: center; margin-top: 32px; box-shadow: 0 10px 20px rgba(72, 52, 212, 0.2); }
+
+@media (max-width: 900px) {
+    .detail-header { flex-direction: column; text-align: center; padding: 40px 20px; }
+    .detail-body { grid-template-columns: 1fr; padding: 30px 20px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-card">
+        <div class="detail-header">
+            <div class="detail-hero-img">
+                {% if doctor.photo %}
+                    <img src="{{ doctor.photo.url }}" alt="{{ doctor.display_name }}">
+                {% else %}
+                    <div style="width: 100%; height: 100%; background: #fff; display: flex; align-items: center; justify-content: center; color: #334155; font-size: 4rem;">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="hero-text">
+                <h1>{{ doctor.display_name }}</h1>
+                <p>{{ doctor.qualification }}</p>
+                <span class="spec-tag">{{ doctor.get_specialty_display }}</span>
+            </div>
+        </div>
+
+        <div class="detail-tabs">
+            <a href="#" class="tab-link active">About</a>
+            <a href="#" class="tab-link">Reviews</a>
+            <a href="#" class="tab-link">Locations</a>
+        </div>
+
+        <div class="detail-body">
+            <div class="main-content">
+                <div class="content-section">
+                    <h2 class="section-h"><i class="fas fa-file-medical-alt"></i> Professional Biography</h2>
+                    <p class="bio-p">{{ doctor.bio|default:"No biography details provided yet." }}</p>
+                </div>
+
+                <div class="content-section">
+                    <h2 class="section-h"><i class="fas fa-graduation-cap"></i> Education & Experience</h2>
+                    <p class="bio-p">Over {{ doctor.experience_years }} years of clinical experience in {{ doctor.get_specialty_display }}. Holds {{ doctor.qualification }} degree from accredited medical institutions.</p>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-card">
+                    <div class="info-row">
+                        <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
+                        <div>
+                            <span class="info-label">Clinic Location</span>
+                            <span class="info-val">{{ doctor.city }}, {{ doctor.state }}</span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-icon"><i class="fas fa-money-bill-wave"></i></div>
+                        <div>
+                            <span class="info-label">Consultation Fee</span>
+                            <span class="info-val">₹{{ doctor.consultation_fee }}</span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-icon"><i class="fas fa-language"></i></div>
+                        <div>
+                            <span class="info-label">Languages</span>
+                            <span class="info-val">{{ doctor.languages_spoken }}</span>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'users:book_appointment' doctor.pk %}" class="btn-book">Book Appointment</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

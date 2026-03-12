@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-WellCarePlusCure - Production Smoke Test Script
+MediCureFlow - Production Smoke Test Script
 =============================================
 
 This script performs comprehensive health checks for the Django application
@@ -9,7 +9,7 @@ to ensure production readiness and ongoing system health monitoring.
 Usage:
     python scripts/smoke_test.py [--verbose] [--check=all|web|db|cache|email]
 
-Author: WellCarePlusCure Team
+Author: MediCureFlow Team
 Last Updated: 2025-01-09
 """
 
@@ -28,7 +28,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 # Setup Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wellcareplusCure.settings.development')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'MediCureFlow.settings.development')
 django.setup()
 
 # Django imports (must be after django.setup())
@@ -60,7 +60,7 @@ class Colors:
 
 
 class SmokeTest:
-    """Main smoke test class for WellCarePlusCure."""
+    """Main smoke test class for MediCureFlow."""
     
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
@@ -344,7 +344,7 @@ class SmokeTest:
     
     def run_health_check(self, check_type: str = 'all') -> bool:
         """Run the specified health checks."""
-        self.log(f"Starting WellCarePlusCure Health Check - {check_type.upper()}", 'HEADER')
+        self.log(f"Starting MediCureFlow Health Check - {check_type.upper()}", 'HEADER')
         
         checks = {
             'config': self.test_django_configuration,
@@ -384,7 +384,7 @@ class SmokeTest:
         duration = time.time() - self.start_time
         
         print(f"\n{Colors.HEADER}{'='*60}{Colors.ENDC}")
-        print(f"{Colors.HEADER}WellCarePlusCure Health Check Summary{Colors.ENDC}")
+        print(f"{Colors.HEADER}MediCureFlow Health Check Summary{Colors.ENDC}")
         print(f"{Colors.HEADER}{'='*60}{Colors.ENDC}")
         
         print(f"{Colors.GREEN}✓ Passed:{Colors.ENDC} {self.results['passed']}")
@@ -412,7 +412,7 @@ class SmokeTest:
 def main():
     """Main function to run smoke tests."""
     parser = argparse.ArgumentParser(
-        description='WellCarePlusCure Production Smoke Test',
+        description='MediCureFlow Production Smoke Test',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
 Examples:

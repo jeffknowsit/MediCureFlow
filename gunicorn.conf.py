@@ -1,4 +1,4 @@
-# Gunicorn Configuration for WellCarePlusCure
+# Gunicorn Configuration for MediCureFlow
 # Production-ready WSGI server configuration
 
 import multiprocessing
@@ -27,7 +27,7 @@ loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 
 # Process naming
-proc_name = "wellcareplus"
+proc_name = "MediCureFlow"
 
 # Daemonize the Gunicorn process (detach & enter background)
 daemon = False
@@ -40,7 +40,7 @@ pidfile = "logs/gunicorn.pid"
 # group = "www-data"
 
 # Directory to change to when running
-# chdir = "/path/to/wellcareplus"
+# chdir = "/path/to/MediCureFlow"
 
 # Preload application code before worker processes are forked
 preload_app = True
@@ -50,7 +50,7 @@ restart_on_reload = True
 
 # Environment
 raw_env = [
-    "DJANGO_SETTINGS_MODULE=wellcareplusCure.settings.production",
+    "DJANGO_SETTINGS_MODULE=MediCureFlow.settings.production",
 ]
 
 # Security
@@ -69,7 +69,7 @@ limit_request_field_size = 8190
 
 def when_ready(server):
     """Called just after the server is started."""
-    server.log.info("WellCarePlus server is ready. Listening on %s", server.address)
+    server.log.info("MediCureFlow server is ready. Listening on %s", server.address)
 
 def worker_int(worker):
     """Called just after a worker has been killed by SIGINT."""

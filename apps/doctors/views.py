@@ -112,7 +112,25 @@ class DoctorDashboardView(LoginRequiredMixin, DoctorMixin, TemplateView):
             'rating_distribution': analytics.get_rating_distribution(),
             'peak_hours': analytics.get_peak_hours(),
             'patient_demographics': analytics.get_patient_demographics(),
+            'revenue_trends': analytics.get_revenue_trends(),
+            'revenue_performance': analytics.calculate_revenue_performance(),
+            'total_earnings': analytics.calculate_total_earnings(),
         })
+        
+        # Add month names for revenue comparison
+        from django.utils import timezone
+        from datetime import timedelta
+        now = timezone.now()
+        context['current_month_name'] = now.strftime('%B %Y')
+        last_month = (now.replace(day=1) - timedelta(days=1))
+        context['last_month_name'] = last_month.strftime('%B %Y')
+        
+        # Convert chart data to JSON for JavaScript
+        import json
+        context['appointment_trends_json'] = json.dumps(context['appointment_trends'])
+        context['revenue_trends_json'] = json.dumps(context['revenue_trends'])
+        context['rating_distribution_json'] = json.dumps(context['rating_distribution'])
+        context['peak_hours_json'] = json.dumps(context['peak_hours'])
         
         # Get today's appointments
         from datetime import date
@@ -151,8 +169,39 @@ class DoctorDashboardView(LoginRequiredMixin, DoctorMixin, TemplateView):
             total_hours += slot_hours
             active_days.add(slot.day_of_week)
         
-        context['total_weekly_hours'] = total_hours
-        context['active_days_count'] = len(active_days)
+        context['total_weekly_hours'] = int(total_hours)
+        context['active_days'] = len(active_days)
+        context['total_slots'] = context['availability_slots'].count()
+        
+        # Total patients
+        from django.db.models import Count
+        context['total_patients'] = Appointment.objects.filter(
+            doctor=doctor
+        ).values('patient').distinct().count()
+        
+        # Today's appointment count stat
+        context['todays_appointments_count'] = Appointment.objects.filter(
+            doctor=doctor, appointment_date=today
+        ).count()
+        
+        # Monthly revenue
+        from django.utils import timezone
+        from django.db.models import Sum
+        month_start = today.replace(day=1)
+        context['monthly_revenue'] = Appointment.objects.filter(
+            doctor=doctor, appointment_date__gte=month_start,
+            status='completed'
+        ).aggregate(total=Sum('fee_charged'))['total'] or 0
+        
+        # Merge upcoming with today for combined list
+        context['upcoming_appointments'] = Appointment.objects.filter(
+            doctor=doctor, appointment_date=today
+        ).select_related('patient').order_by('appointment_time')[:5]
+        
+        # Get recent reviews
+        context['recent_reviews'] = Review.objects.filter(
+            doctor=doctor, is_approved=True
+        ).select_related('patient').order_by('-created_at')[:3]
         
         # Convert chart data to JSON for JavaScript
         import json
@@ -246,6 +295,60 @@ class DoctorProfileView(LoginRequiredMixin, DoctorMixin, UpdateView):
     def form_invalid(self, form):
         messages.error(self.request, 'Please correct the errors below.')
         return super().form_invalid(form)
+
+class DoctorAnalyticsView(LoginRequiredMixin, DoctorMixin, TemplateView):
+    """
+    Detailed analytics for the logged-in doctor.
+    """
+    template_name = 'doctors/analytics.html'
+    login_url = reverse_lazy('users:login')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        doctor = self.request.user.doctor_profile
+        today = timezone.now().date()
+        six_months_ago = today - timezone.timedelta(days=180)
+
+        # Basic Stats
+        context['total_appointments'] = Appointment.objects.filter(doctor=doctor).count()
+        context['completed_appointments'] = Appointment.objects.filter(doctor=doctor, status='completed').count()
+        
+        # Monthly Revenue Trend (Last 6 Months)
+        from django.db.models.functions import TruncMonth
+        from django.db.models import Sum, Count
+        
+        revenue_trends = Appointment.objects.filter(
+            doctor=doctor, 
+            status='completed',
+            appointment_date__gte=six_months_ago
+        ).annotate(month=TruncMonth('appointment_date')).values('month').annotate(
+            revenue=Sum('fee_charged'),
+            count=Count('id')
+        ).order_by('month')
+        
+        context['revenue_labels'] = [entry['month'].strftime('%b %Y') for entry in revenue_trends]
+        context['revenue_values'] = [float(entry['revenue'] or 0) for entry in revenue_trends]
+        context['revenue_counts'] = [entry['count'] for entry in revenue_trends]
+
+        # Specialty Comparison / Performance
+        context['specialty_avg_fee'] = Appointment.objects.filter(
+            doctor__specialty=doctor.specialty,
+            status='completed'
+        ).aggregate(avg_fee=Sum('fee_charged'))['avg_fee'] or 0
+
+        # Patient Demographics
+        gender_map = {'M': 'Male', 'F': 'Female', 'O': 'Other', 'P': 'Prefer not to say'}
+        gender_data = Appointment.objects.filter(doctor=doctor).values('patient__profile__gender').annotate(count=Count('id'))
+        context['gender_labels'] = [gender_map.get(entry['patient__profile__gender'], 'Unknown') for entry in gender_data]
+        context['gender_counts'] = [entry['count'] for entry in gender_data]
+
+        import json
+        context['revenue_labels_json'] = json.dumps(context['revenue_labels'])
+        context['revenue_values_json'] = json.dumps(context['revenue_values'])
+        context['gender_labels_json'] = json.dumps(context['gender_labels'])
+        context['gender_counts_json'] = json.dumps(context['gender_counts'])
+
+        return context
 
 
 class DoctorAppointmentsView(LoginRequiredMixin, DoctorMixin, ListView):
@@ -688,18 +791,28 @@ class ToggleAvailabilityView(LoginRequiredMixin, DoctorMixin, TemplateView):
         try:
             import json
             data = json.loads(request.body)
-            available = data.get('available', False)
+            available = data.get('available')
+            on_duty = data.get('on_duty')
             
             doctor = request.user.doctor_profile
-            doctor.is_available = available
-            doctor.save(update_fields=['is_available'])
             
-            status_text = 'available' if available else 'unavailable'
+            if available is not None:
+                doctor.is_available = available
+                doctor.save(update_fields=['is_available'])
+                status_text = 'available' if available else 'unavailable'
+                message = f'You are now marked as {status_text}'
+                
+            elif on_duty is not None:
+                doctor.is_on_duty = on_duty
+                doctor.save(update_fields=['is_on_duty'])
+                status_text = 'on duty' if on_duty else 'off duty'
+                message = f'Work Mode is now {status_text}'
             
             return JsonResponse({
                 'success': True,
-                'message': f'You are now marked as {status_text}',
-                'available': available
+                'message': message,
+                'available': doctor.is_available,
+                'on_duty': doctor.is_on_duty
             })
             
         except Exception as e:
@@ -937,3 +1050,170 @@ class AppointmentNotesUpdateAPI(LoginRequiredMixin, DoctorMixin, TemplateView):
         except Exception as e:
             logger.error(f'Error updating notes for appointment {appointment_id}: {str(e)}')
             return JsonResponse({'success': False, 'message': 'Server error occurred'})
+
+
+class DoctorAvailableSlotsView(TemplateView):
+    """
+    View to fetch available time slots for a doctor on a specific date.
+    """
+    def get(self, request, *args, **kwargs):
+        doctor_id = request.GET.get('doctor_id')
+        date_str = request.GET.get('date')
+        
+        if not doctor_id or not date_str:
+            return JsonResponse({'success': False, 'error': 'Missing doctor_id or date'})
+        
+        try:
+            doctor = Doctor.objects.get(id=doctor_id)
+            
+            # Check if doctor is accepting appointments
+            if not doctor.is_available or not doctor.is_on_duty:
+                return JsonResponse({'success': True, 'slots': []})
+
+            from datetime import datetime, time
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+            day_of_week = date_obj.weekday()
+            
+            # Get availability for this day
+            availabilities = DoctorAvailability.objects.filter(
+                doctor=doctor, 
+                day_of_week=day_of_week,
+                is_active=True
+            ).order_by('start_time')
+            
+            # Use defined availabilities or default to 9AM-6PM
+            active_ranges = []
+            if availabilities.exists():
+                for a in availabilities:
+                    active_ranges.append((a.start_time, a.end_time))
+            else:
+                # Default working hours: 09:00 to 18:00
+                active_ranges.append((time(9, 0), time(18, 0)))
+            
+            # Get already booked appointments for this date
+            booked_appointments = Appointment.objects.filter(
+                doctor=doctor,
+                appointment_date=date_obj,
+                status__in=['scheduled', 'confirmed', 'in_progress']
+            ).values_list('appointment_time', flat=True)
+            
+            slots = []
+            for start, end in active_ranges:
+                # Generate slots every 30 minutes
+                current = datetime.combine(date_obj, start)
+                limit = datetime.combine(date_obj, end)
+                
+                while current < limit:
+                    slot_time = current.time()
+                    
+                    # Check if slot is booked
+                    is_booked = any(b.hour == slot_time.hour and b.minute == slot_time.minute for b in booked_appointments)
+                    
+                    # Check if slot is during lunch break
+                    is_lunch = False
+                    if doctor.lunch_break_start and doctor.lunch_break_end:
+                        if doctor.lunch_break_start <= slot_time < doctor.lunch_break_end:
+                            is_lunch = True
+                    
+                    # Check if slot is in the past (if date is today)
+                    is_past = False
+                    if date_obj == timezone.now().date():
+                        if slot_time <= timezone.now().time():
+                            is_past = True
+                    
+                    if not is_booked and not is_lunch and not is_past:
+                        slots.append({
+                            'time': slot_time.strftime('%H:%M'),
+                            'display_time': slot_time.strftime('%I:%M %p')
+                        })
+                    
+                    current += timezone.timedelta(minutes=30)
+            
+            return JsonResponse({'success': True, 'slots': slots})
+            
+        except Doctor.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Doctor not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+
+class AppointmentConsultationAPI(LoginRequiredMixin, DoctorMixin, TemplateView):
+    """
+    API view to save consultation remarks and recommended next appointment.
+    """
+    http_method_names = ['post']
+    
+    def post(self, request, appointment_id):
+        try:
+            data = json.loads(request.body)
+            appointment = get_object_or_404(
+                Appointment, 
+                id=appointment_id, 
+                doctor=request.user.doctor_profile
+            )
+            
+            appointment.consultation_remarks = data.get('remarks', '')
+            next_date = data.get('next_date')
+            next_time = data.get('next_time')
+            
+            if next_date:
+                appointment.next_appointment_date = next_date
+            if next_time:
+                appointment.next_appointment_time = next_time
+                
+            appointment.status = 'completed'
+            appointment.save()
+            
+            # Create notification for patient
+            from apps.notifications.services import NotificationService
+            from apps.notifications.models import NotificationType
+            
+            try:
+                notif_type = NotificationType.objects.get(name='Appointment Completed')
+            except NotificationType.DoesNotExist:
+                notif_type = NotificationType.objects.create(
+                    name='Appointment Completed',
+                    description='Notification when an appointment is completed'
+                )
+            
+            NotificationService.create_notification(
+                recipient=appointment.patient,
+                notification_type=notif_type,
+                title="Consultation Completed",
+                message=f"Dr. {appointment.doctor.last_name} has completed your consultation. Please check your dashboard for remarks and follow-up details.",
+                content_object=appointment
+            )
+            
+            return JsonResponse({'success': True, 'message': 'Consultation details saved successfully'})
+            
+        except Exception as e:
+            logger.error(f'Error in AppointmentConsultationAPI: {str(e)}')
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+class PatientHistoryAPI(LoginRequiredMixin, DoctorMixin, TemplateView):
+    """
+    API view to fetch past consultation history for a patient.
+    """
+    def get(self, request, patient_id):
+        try:
+            # Get only completed appointments for this patient
+            history = Appointment.objects.filter(
+                patient_id=patient_id,
+                status='completed'
+            ).order_by('appointment_date', 'appointment_time')
+            
+            data = []
+            for appt in history:
+                data.append({
+                    'id': appt.id,
+                    'date': appt.appointment_date.strftime('%d %b, %Y'),
+                    'doctor': appt.doctor.display_name,
+                    'remarks': appt.consultation_remarks or "No remarks provided.",
+                    'notes': appt.patient_notes or "N/A"
+                })
+            
+            return JsonResponse({'success': True, 'history': data})
+        except Exception as e:
+            logger.error(f'Error in PatientHistoryAPI: {str(e)}')
+            return JsonResponse({'success': False, 'message': str(e)})

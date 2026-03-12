@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Dashboard — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── DASHBOARD BACKGROUND ── */
+body { background-color: #f8fafc; }
+
+/* ── HERO BANNER (Image 2 Style) ── */
+.hero-banner {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    padding: 50px 60px;
+    border-radius: 24px;
+    margin: 20px auto;
+    max-width: 1240px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(106, 17, 203, 0.2);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+.hero-left { display: flex; align-items: center; gap: 30px; z-index: 2; }
+.hero-avatar {
+    width: 110px; height: 110px; border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    background: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 2.5rem; color: #6a11cb; font-weight: 800; flex-shrink: 0;
+    overflow: hidden;
+}
+.hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.hero-info h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; }
+.hero-meta { display: flex; flex-direction: column; gap: 6px; }
+.hero-meta span { font-size: 0.95rem; color: rgba(255, 255, 255, 0.9); display: flex; align-items: center; gap: 10px; }
+.hero-right { text-align: right; z-index: 2; }
+.hero-date-badge {
+    background: rgba(255, 255, 255, 0.95); color: #1a1a2e;
+    border-radius: 14px; padding: 10px 22px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1rem; font-weight: 700; margin-bottom: 12px;
+}
+.hero-appt-badge { font-size: 0.9rem; color: rgba(255, 255, 255, 0.85); font-weight: 600; }
+
+/* ── STATS STRIP ── */
+.stats-container { max-width: 1240px; margin: 0 auto 32px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.stat-card {
+    background: #fff; border-radius: 18px; padding: 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04); transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-5px); }
+.stat-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 5px; }
+.sc1 { background: #e8f5e9; color: #2e7d32; }
+.sc2 { background: #f3e5f5; color: #7b1fa2; }
+.sc3 { background: #feeef2; color: #d32f2f; }
+.sc4 { background: #e3f2fd; color: #1976d2; }
+.stat-val { font-size: 1.8rem; font-weight: 800; color: #1a1a2e; }
+.stat-label { font-size: 0.82rem; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── LAYOUT ── */
+.dash-content { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 1.8fr 1fr; gap: 30px; }
+
+/* ── CARDS ── */
+.d-card { background: #fff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 30px; margin-bottom: 24px; }
+.d-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; border-bottom: 2px solid #f8fafc; padding-bottom: 15px; }
+.d-card-title { font-size: 1.1rem; font-weight: 800; color: #1a1a2e; display: flex; align-items: center; gap: 12px; }
+.view-all-btn { font-size: 0.85rem; color: #2575fc; font-weight: 700; text-decoration: none; border: 1px solid #2575fc; padding: 5px 15px; border-radius: 8px; }
+
+/* ── APPOINTMENTS ── */
+.appt-list { display: flex; flex-direction: column; gap: 16px; }
+.appt-item {
+    display: flex; align-items: center; gap: 18px; padding: 18px;
+    border: 1px solid #f1f5f9; border-radius: 16px; transition: all 0.2s;
+}
+.appt-item:hover { border-color: #6a11cb; background: #fafbff; }
+.appt-doc-img { width: 55px; height: 55px; border-radius: 12px; background: #f1f5f9; flex-shrink: 0; }
+.appt-details { flex: 1; }
+.appt-doc-name { font-weight: 700; color: #1a1a2e; font-size: 0.95rem; margin-bottom: 2px; }
+.appt-time { font-size: 0.82rem; color: #64748b; display: flex; align-items: center; gap: 6px; }
+.appt-status-pill { font-size: 0.72rem; font-weight: 700; padding: 5px 12px; border-radius: 20px; text-transform: uppercase; }
+.status-scheduled { background: #e0f2fe; color: #0369a1; }
+.status-completed { background: #f0fdf4; color: #166534; }
+.status-cancelled { background: #fef2f2; color: #991b1b; }
+
+.cancel-btn {
+    background: none; border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px;
+    border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+}
+.cancel-btn:hover { background: #ef4444; color: #fff; }
+
+.book-now-card-btn {
+    width: 100%; margin-top: 20px; padding: 14px;
+    border: 2px dashed #cbd5e1; border-radius: 14px;
+    color: #64748b; font-weight: 700; text-align: center; text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;
+}
+.book-now-card-btn:hover { border-color: #6a11cb; color: #6a11cb; background: #f5f3ff; }
+
+/* ── SIDEBAR BLOCKS ── */
+.sidebar-card { border-radius: 20px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.side-header { padding: 18px 25px; color: #fff; display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1rem; }
+.sh-reminders { background: #f59e0b; }
+.sh-tips { background: #10b981; }
+.side-body { padding: 20px; background: #fff; display: flex; flex-direction: column; gap: 18px; }
+
+.side-item { display: flex; gap: 15px; }
+.side-icon { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+.side-info strong { display: block; font-size: 0.88rem; color: #1a1a2e; margin-bottom: 2px; }
+.side-info span { font-size: 0.78rem; color: #64748b; line-height: 1.3; display: block; }
+
+/* ── EMERGENCY CONTACTS ── */
+.emergency-wrap { max-width: 1240px; margin: 40px auto; }
+.emergency-header { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 800; color: #1a1a2e; margin-bottom: 20px; }
+.emergency-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.emergency-tile {
+    padding: 25px 15px; text-align: center; color: #fff; border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.et1 { background: #dc2626; }
+.et2 { background: #ef4444; }
+.et3 { background: #f87171; }
+.et4 { background: #991b1b; }
+.et5 { background: #8b5cf6; }
+.emergency-tile i { font-size: 1.8rem; }
+.et-num { font-size: 1.25rem; font-weight: 800; }
+.et-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; opacity: 0.9; }
+
+@media (max-width: 1000px) {
+    .hero-banner { flex-direction: column; text-align: center; gap: 20px; padding: 35px 30px; }
+    .hero-left { flex-direction: column; }
+    .hero-right { text-align: center; }
+    .stats-container { grid-template-columns: repeat(2, 1fr); }
+    .dash-content { grid-template-columns: 1fr; }
+    .emergency-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-banner">
+    <div class="hero-left">
+        <div class="hero-avatar">
+            {% if user.userprofile.avatar %}
+                <img src="{{ user.userprofile.avatar.url }}" alt="Avatar">
+            {% else %}
+                <i class="fas fa-user"></i>
+            {% endif %}
+        </div>
+        <div class="hero-info">
+            <h1>Welcome, {{ user.get_full_name|default:user.username }}</h1>
+            <div class="hero-meta">
+                <span><i class="fas fa-envelope"></i> {{ user.email }}</span>
+                {% if user.userprofile.phone %}
+                <span><i class="fas fa-phone"></i> {{ user.userprofile.phone }}</span>
+                {% endif %}
+                {% if user.userprofile.city %}
+                <span><i class="fas fa-map-marker-alt"></i> {{ user.userprofile.city }}{% if user.userprofile.state %}, {{ user.userprofile.state }}{% endif %}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="hero-right">
+        <div class="hero-date-badge">
+            <i class="fas fa-calendar-alt" style="color:#6a11cb;"></i>
+            {{ "now"|date:"F j, Y" }}
+        </div>
+        <div class="hero-appt-badge">
+            {{ upcoming_appointments|default:"0" }} upcoming appointments
+        </div>
+    </div>
+</div>
+
+<div class="stats-container">
+    <div class="stat-card">
+        <div class="stat-icon sc1"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-val">{{ upcoming_appointments|default:"0" }}</div>
+        <div class="stat-label">Upcoming</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon sc2"><i class="fas fa-user-md"></i></div>
+        <div class="stat-val">{{ available_doctors_count|default:"0" }}</div>
+        <div class="stat-label">Available Doctors</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon sc3"><i class="fas fa-map-marker-alt"></i></div>
+        <div class="stat-val" style="font-size:1.3rem;">{{ user.userprofile.city|default:"—" }}</div>
+        <div class="stat-label">Your Location</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon sc4"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-val" style="font-size:1.5rem;">
+            {% if user.userprofile.is_profile_complete %}Complete{% else %}Incomplete{% endif %}
+        </div>
+        <div class="stat-label">Profile Status</div>
+    </div>
+</div>
+
+<div class="dash-content">
+    <!-- LEFT: Recent Appointments -->
+    <div>
+        <div class="d-card">
+            <div class="d-card-header">
+                <div class="d-card-title"><i class="fas fa-history" style="color:#6a11cb;"></i> Recent Appointments</div>
+                <a href="{% url 'users:my_appointments' %}" class="view-all-btn">View All</a>
+            </div>
+            
+            <div class="appt-list">
+                {% if recent_appointments %}
+                    {% for appt in recent_appointments %}
+                    <div class="appt-item">
+                        <div class="appt-doc-img">
+                            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f1f5f9;border-radius:12px;color:#cbd5e1;font-size:1.5rem;">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                        </div>
+                        <div class="appt-details">
+                            <div class="appt-doc-name">{{ appt.doctor.display_name }}</div>
+                            <div class="appt-time">
+                                <i class="fas fa-clock"></i> {{ appt.appointment_date|date:"N j, Y" }} • {{ appt.appointment_time|time:"h:i A" }}
+                            </div>
+                        </div>
+                        <span class="appt-status-pill status-{{ appt.status }}">{{ appt.status }}</span>
+                        
+                        {% if appt.status == 'scheduled' or appt.status == 'confirmed' %}
+                        <form action="{% url 'users:cancel_appointment' appt.id %}" method="post" style="display:inline;" data-confirm="Are you sure you want to cancel your appointment with {{ appt.doctor.display_name }}?">
+                            {% csrf_token %}
+                            <button type="submit" class="cancel-btn">Cancel</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align:center;padding:30px;color:#94a3b8;">
+                        <i class="fas fa-calendar-minus" style="font-size:2rem;display:block;margin-bottom:10px;opacity:0.3;"></i>
+                        No recent appointments found.
+                    </div>
+                {% endif %}
+            </div>
+            
+            <a href="{% url 'users:search_doctors' %}" class="book-now-card-btn">
+                <i class="fas fa-plus-circle"></i> Book New Appointment
+            </a>
+        </div>
+    </div>
+
+    <!-- RIGHT: Sidebars -->
+    <div>
+        <!-- Notifications -->
+        {% if notifications %}
+        <div class="sidebar-card">
+            <div class="side-header" style="background: #2575fc;">
+                <i class="fas fa-bell"></i> Notifications
+            </div>
+            <div class="side-body">
+                {% for notif in notifications %}
+                <div class="side-item">
+                    <div class="side-icon" style="background:#eef2ff;color:#2575fc;">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="side-info">
+                        <strong>{{ notif.title }}</strong>
+                        <span>{{ notif.message }}</span>
+                        <small style="font-size:0.7rem; color:#aaa;">{{ notif.created_at|timesince }} ago</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Health Reminders -->
+        <div class="sidebar-card">
+            <div class="side-header sh-reminders">
+                <i class="fas fa-bell"></i> Health Reminders
+            </div>
+            <div class="side-body">
+                <div class="side-item">
+                    <div class="side-icon" style="background:#fef3c7;color:#d97706;"><i class="fas fa-stethoscope"></i></div>
+                    <div class="side-info">
+                        <strong>Annual Health Checkup</strong>
+                        <span>Schedule your yearly comprehensive screening</span>
+                    </div>
+                </div>
+                <div class="side-item">
+                    <div class="side-icon" style="background:#e0f2fe;color:#0284c7;"><i class="fas fa-eye"></i></div>
+                    <div class="side-info">
+                        <strong>Eye Examination</strong>
+                        <span>Vision checkup every 2 years recommended</span>
+                    </div>
+                </div>
+                <div class="side-item">
+                    <div class="side-icon" style="background:#fee2e2;color:#dc2626;"><i class="fas fa-heartbeat"></i></div>
+                    <div class="side-info">
+                        <strong>Blood Pressure</strong>
+                        <span>Regular monthly blood pressure checks</span>
+                    </div>
+                </div>
+                <div class="side-item" style="opacity:0.6;">
+                    <div class="side-icon" style="background:#f5f3ff;color:#7c3aed;"><i class="fas fa-pills"></i></div>
+                    <div class="side-info">
+                        <strong>Medication Review</strong>
+                        <span>Consult with your doctor regularly</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Health Tips -->
+        <div class="sidebar-card">
+            <div class="side-header sh-tips">
+                <i class="fas fa-lightbulb"></i> Daily Health Tips
+            </div>
+            <div class="side-body">
+                <div class="side-item">
+                    <div class="side-icon" style="background:#ecfdf5;color:#059669;">💧</div>
+                    <div class="side-info">
+                        <strong>Stay Hydrated</strong>
+                        <span>Drink 8 glasses of water throughout the day</span>
+                    </div>
+                </div>
+                <div class="side-item">
+                    <div class="side-icon" style="background:#fdf2f8;color:#db2777;">🌙</div>
+                    <div class="side-info">
+                        <strong>Quality Sleep</strong>
+                        <span>Get 7–8 hours of restful sleep nightly</span>
+                    </div>
+                </div>
+                <div class="side-item">
+                    <div class="side-icon" style="background:#eff6ff;color:#2563eb;">🏃</div>
+                    <div class="side-info">
+                        <strong>Regular Exercise</strong>
+                        <span>Exercise for 30 minutes daily</span>
+                    </div>
+                </div>
+                <div class="side-item">
+                    <div class="side-icon" style="background:#f0fdf4;color:#16a34a;">🥗</div>
+                    <div class="side-info">
+                        <strong>Healthy Diet</strong>
+                        <span>Eat 5 servings of fruits and vegetables</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="emergency-wrap">
+    <div class="emergency-header">
+        <i class="fas fa-exclamation-triangle" style="color:#dc2626;"></i> Emergency Contacts
+    </div>
+    <div class="emergency-grid">
+        <div class="emergency-tile et1">
+            <i class="fas fa-phone"></i>
+            <div class="et-num">108</div>
+            <div class="et-label">Ambulance</div>
+        </div>
+        <div class="emergency-tile et2">
+            <i class="fas fa-hospital"></i>
+            <div class="et-num">102</div>
+            <div class="et-label">Hospital</div>
+        </div>
+        <div class="emergency-tile et3">
+            <i class="fas fa-heartbeat"></i>
+            <div class="et-num">104</div>
+            <div class="et-label">Helpline</div>
+        </div>
+        <div class="emergency-tile et4">
+            <i class="fas fa-shield-alt"></i>
+            <div class="et-num">1800-110-022</div>
+            <div class="et-label">Poison Control</div>
+        </div>
+        <div class="emergency-tile et5">
+            <i class="fas fa-user-friends"></i>
+            <div class="et-num">Family</div>
+            <div class="et-label">Sibling</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

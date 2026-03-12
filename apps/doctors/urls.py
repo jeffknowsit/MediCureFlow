@@ -19,6 +19,7 @@ urlpatterns = [
     # Doctor Dashboard and Profile
     path('dashboard/', views.DoctorDashboardView.as_view(), name='dashboard'),
     path('profile/', views.DoctorProfileView.as_view(), name='profile'),
+    path('analytics/', views.DoctorAnalyticsView.as_view(), name='analytics'),
     
     # Appointment Management
     path('appointments/', views.DoctorAppointmentsView.as_view(), name='appointments'),
@@ -46,6 +47,15 @@ urlpatterns = [
     path('api/appointments/<int:appointment_id>/update-notes/', 
          views.AppointmentNotesUpdateAPI.as_view(), 
          name='appointment_notes_update_api'),
+    path('api/appointments/<int:appointment_id>/consultation-save/', 
+         views.AppointmentConsultationAPI.as_view(), 
+         name='appointment_consultation_save_api'),
+    path('api/patient/<int:patient_id>/history/', 
+         views.PatientHistoryAPI.as_view(), 
+         name='patient_history_api'),
+    path('api/available-slots/', 
+         views.DoctorAvailableSlotsView.as_view(), 
+         name='available_slots_api'),
     
     # Public Doctor Detail
     path('<int:pk>/', views.DoctorDetailView.as_view(), name='detail'),

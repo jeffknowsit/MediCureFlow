@@ -1,10 +1,10 @@
-# WellCarePlusCure - Credentials and Testing Guide
+# MediCureFlow - Credentials and Testing Guide
 
 ## 🔐 User Credentials for Testing
 
 ### 👨‍💼 Administrator Account
 - **Username:** `admin`
-- **Email:** `admin@wellcareplusCure.com`
+- **Email:** `admin@MediCureFlow.com`
 - **Password:** `Admin@2025`
 - **Role:** Super Admin
 - **Access:** Full system access, admin dashboard, user/doctor management
@@ -57,7 +57,7 @@
 
 #### Dr. Aadhav Sharma - Cardiologist
 - **Username:** `dr.aadhav`
-- **Email:** `dr.aadhav@wellcareplusCure.com`
+- **Email:** `dr.aadhav@MediCureFlow.com`
 - **Password:** `Doctor@123`
 - **Specialty:** Cardiology
 - **Experience:** 15 years
@@ -67,7 +67,7 @@
 
 #### Dr. Aashna Patel - Dermatologist
 - **Username:** `dr.aashna`
-- **Email:** `dr.aashna@wellcareplusCure.com`
+- **Email:** `dr.aashna@MediCureFlow.com`
 - **Password:** `Doctor@456`
 - **Specialty:** Dermatology
 - **Experience:** 12 years
@@ -77,7 +77,7 @@
 
 #### Dr. Amiya Roy - Neurologist
 - **Username:** `dr.amiya`
-- **Email:** `dr.amiya@wellcareplusCure.com`
+- **Email:** `dr.amiya@MediCureFlow.com`
 - **Password:** `Doctor@789`
 - **Specialty:** Neurology
 - **Experience:** 18 years
@@ -87,7 +87,7 @@
 
 #### Dr. Anya Reddy - Gynecologist
 - **Username:** `dr.anya`
-- **Email:** `dr.anya@wellcareplusCure.com`
+- **Email:** `dr.anya@MediCureFlow.com`
 - **Password:** `Doctor@101`
 - **Specialty:** Gynecology
 - **Experience:** 14 years
@@ -97,7 +97,7 @@
 
 #### Dr. Charvi Agarwal - Pediatrician
 - **Username:** `dr.charvi`
-- **Email:** `dr.charvi@wellcareplusCure.com`
+- **Email:** `dr.charvi@MediCureFlow.com`
 - **Password:** `Doctor@202`
 - **Specialty:** Pediatrics
 - **Experience:** 11 years
@@ -107,7 +107,7 @@
 
 #### Dr. Isha Malhotra - Ophthalmologist
 - **Username:** `dr.isha`
-- **Email:** `dr.isha@wellcareplusCure.com`
+- **Email:** `dr.isha@MediCureFlow.com`
 - **Password:** `Doctor@303`
 - **Specialty:** Ophthalmology
 - **Experience:** 13 years
@@ -117,7 +117,7 @@
 
 #### Dr. Kabir Singh - Orthopedic Surgeon
 - **Username:** `dr.kabir`
-- **Email:** `dr.kabir@wellcareplusCure.com`
+- **Email:** `dr.kabir@MediCureFlow.com`
 - **Password:** `Doctor@404`
 - **Specialty:** Orthopedics
 - **Experience:** 16 years
@@ -127,7 +127,7 @@
 
 #### Dr. Kyro Das - Psychiatrist
 - **Username:** `dr.kyro`
-- **Email:** `dr.kyro@wellcareplusCure.com`
+- **Email:** `dr.kyro@MediCureFlow.com`
 - **Password:** `Doctor@505`
 - **Specialty:** Psychiatry
 - **Experience:** 10 years
@@ -137,7 +137,7 @@
 
 #### Dr. Liana Joseph - ENT Specialist
 - **Username:** `dr.liana`
-- **Email:** `dr.liana@wellcareplusCure.com`
+- **Email:** `dr.liana@MediCureFlow.com`
 - **Password:** `Doctor@606`
 - **Specialty:** ENT (Ear, Nose, Throat)
 - **Experience:** 9 years
@@ -147,7 +147,7 @@
 
 #### Dr. Myra Desai - General Physician
 - **Username:** `dr.myra`
-- **Email:** `dr.myra@wellcareplusCure.com`
+- **Email:** `dr.myra@MediCureFlow.com`
 - **Password:** `Doctor@707`
 - **Specialty:** General Medicine
 - **Experience:** 8 years
@@ -157,7 +157,7 @@
 
 #### Dr. Ojas Nair - Gastroenterologist
 - **Username:** `dr.ojas`
-- **Email:** `dr.ojas@wellcareplusCure.com`
+- **Email:** `dr.ojas@MediCureFlow.com`
 - **Password:** `Doctor@808`
 - **Specialty:** Gastroenterology
 - **Experience:** 12 years
@@ -167,7 +167,7 @@
 
 #### Dr. Ronav Gupta - Urologist
 - **Username:** `dr.ronav`
-- **Email:** `dr.ronav@wellcareplusCure.com`
+- **Email:** `dr.ronav@MediCureFlow.com`
 - **Password:** `Doctor@909`
 - **Specialty:** Urology
 - **Experience:** 14 years
@@ -177,7 +177,7 @@
 
 #### Dr. Vanya Joshi - Endocrinologist
 - **Username:** `dr.vanya`
-- **Email:** `dr.vanya@wellcareplusCure.com`
+- **Email:** `dr.vanya@MediCureFlow.com`
 - **Password:** `Doctor@111`
 - **Specialty:** Endocrinology
 - **Experience:** 10 years
@@ -187,7 +187,7 @@
 
 #### Dr. Vihaan Kapoor - Pulmonologist
 - **Username:** `dr.vihaan`
-- **Email:** `dr.vihaan@wellcareplusCure.com`
+- **Email:** `dr.vihaan@MediCureFlow.com`
 - **Password:** `Doctor@222`
 - **Specialty:** Pulmonology/Respiratory
 - **Experience:** 11 years
@@ -350,4 +350,4 @@ For any issues during testing:
 
 **Happy Testing! 🎉**
 
-*WellCarePlusCure - Making Healthcare Accessible for Everyone*
+*MediCureFlow - Making Healthcare Accessible for Everyone*

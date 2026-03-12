@@ -98,7 +98,7 @@ class Command(BaseCommand):
         if not User.objects.filter(username='admin').exists():
             admin = User.objects.create_superuser(
                 username='admin',
-                email='admin@wellcareplusCure.com',
+                email='admin@MediCureFlow.com',
                 password='admin123',
                 first_name='System',
                 last_name='Administrator'
@@ -108,7 +108,7 @@ class Command(BaseCommand):
                 'type': 'Admin',
                 'username': 'admin',
                 'password': 'admin123',
-                'email': 'admin@wellcareplusCure.com',
+                'email': 'admin@MediCureFlow.com',
                 'name': 'System Administrator'
             }
         return None
@@ -118,7 +118,7 @@ class Command(BaseCommand):
         doctors_data = [
             {
                 'username': 'dr.smith',
-                'email': 'john.smith@wellcareplusCure.com',
+                'email': 'john.smith@MediCureFlow.com',
                 'password': 'doctor123',
                 'first_name': 'John',
                 'last_name': 'Smith',
@@ -135,7 +135,7 @@ class Command(BaseCommand):
             },
             {
                 'username': 'dr.johnson',
-                'email': 'sarah.johnson@wellcareplusCure.com',
+                'email': 'sarah.johnson@MediCureFlow.com',
                 'password': 'doctor123',
                 'first_name': 'Sarah',
                 'last_name': 'Johnson',
@@ -152,7 +152,7 @@ class Command(BaseCommand):
             },
             {
                 'username': 'dr.williams',
-                'email': 'michael.williams@wellcareplusCure.com',
+                'email': 'michael.williams@MediCureFlow.com',
                 'password': 'doctor123',
                 'first_name': 'Michael',
                 'last_name': 'Williams',
@@ -169,7 +169,7 @@ class Command(BaseCommand):
             },
             {
                 'username': 'dr.brown',
-                'email': 'lisa.brown@wellcareplusCure.com',
+                'email': 'lisa.brown@MediCureFlow.com',
                 'password': 'doctor123',
                 'first_name': 'Lisa',
                 'last_name': 'Brown',
@@ -186,7 +186,7 @@ class Command(BaseCommand):
             },
             {
                 'username': 'dr.davis',
-                'email': 'robert.davis@wellcareplusCure.com',
+                'email': 'robert.davis@MediCureFlow.com',
                 'password': 'doctor123',
                 'first_name': 'Robert',
                 'last_name': 'Davis',
@@ -203,7 +203,7 @@ class Command(BaseCommand):
             },
             {
                 'username': 'dr.wilson',
-                'email': 'emma.wilson@wellcareplusCure.com',
+                'email': 'emma.wilson@MediCureFlow.com',
                 'password': 'doctor123',
                 'first_name': 'Emma',
                 'last_name': 'Wilson',
@@ -220,7 +220,7 @@ class Command(BaseCommand):
             },
             {
                 'username': 'dr.anderson',
-                'email': 'david.anderson@wellcareplusCure.com',
+                'email': 'david.anderson@MediCureFlow.com',
                 'password': 'doctor123',
                 'first_name': 'David',
                 'last_name': 'Anderson',
@@ -237,7 +237,7 @@ class Command(BaseCommand):
             },
             {
                 'username': 'dr.taylor',
-                'email': 'jennifer.taylor@wellcareplusCure.com',
+                'email': 'jennifer.taylor@MediCureFlow.com',
                 'password': 'doctor123',
                 'first_name': 'Jennifer',
                 'last_name': 'Taylor',
@@ -511,7 +511,7 @@ class Command(BaseCommand):
         
         with open(credentials_file, 'w') as f:
             f.write("="*60 + "\n")
-            f.write("WELLCAREPLUSLURE - SAMPLE ACCOUNT CREDENTIALS\n")
+            f.write("MediCureFlowLURE - SAMPLE ACCOUNT CREDENTIALS\n")
             f.write("="*60 + "\n")
             f.write(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write("="*60 + "\n\n")

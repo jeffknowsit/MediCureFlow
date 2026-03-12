@@ -1,6 +1,6 @@
 [Unit]
-Description=WellCarePlus Healthcare Management System
-Documentation=https://github.com/your-org/wellcareplus
+Description=MediCureFlow Healthcare Management System
+Documentation=https://github.com/your-org/MediCureFlow
 After=network.target postgresql.service redis.service
 Wants=postgresql.service redis.service
 
@@ -8,11 +8,11 @@ Wants=postgresql.service redis.service
 Type=notify
 User=www-data
 Group=www-data
-RuntimeDirectory=wellcareplus
-WorkingDirectory=/opt/wellcareplus
-Environment="PATH=/opt/wellcareplus/venv/bin"
-Environment="DJANGO_SETTINGS_MODULE=wellcareplusCure.settings.production"
-ExecStart=/opt/wellcareplus/venv/bin/gunicorn --config gunicorn.conf.py wellcareplusCure.wsgi:application
+RuntimeDirectory=MediCureFlow
+WorkingDirectory=/opt/MediCureFlow
+Environment="PATH=/opt/MediCureFlow/venv/bin"
+Environment="DJANGO_SETTINGS_MODULE=MediCureFlow.settings.production"
+ExecStart=/opt/MediCureFlow/venv/bin/gunicorn --config gunicorn.conf.py MediCureFlow.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
@@ -21,13 +21,13 @@ Restart=on-failure
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=wellcareplus
+SyslogIdentifier=MediCureFlow
 
 # Security settings
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/wellcareplus/logs /opt/wellcareplus/media /tmp
+ReadWritePaths=/opt/MediCureFlow/logs /opt/MediCureFlow/media /tmp
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true

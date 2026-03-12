@@ -232,7 +232,7 @@ class DoctorViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def specialties(self, request):
         """Get cached list of doctor specialties."""
-        cache_key = f"{getattr(settings, 'CACHE_KEY_PREFIX', 'wellcareplusCure')}:doctor_specialties"
+        cache_key = f"{getattr(settings, 'CACHE_KEY_PREFIX', 'MediCureFlow')}:doctor_specialties"
         specialties = cache.get(cache_key)
         
         if specialties is None:

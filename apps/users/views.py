@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import (
-    TemplateView, CreateView, UpdateView, ListView, FormView
+    TemplateView, CreateView, UpdateView, ListView, FormView, View
 )
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -158,6 +158,26 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['recent_appointments'] = Appointment.objects.filter(
             patient=user
         ).select_related('doctor').order_by('-created_at')[:5]
+        
+        # Upcoming appointments count
+        from django.utils import timezone as tz
+        today = tz.now().date()
+        context['upcoming_appointments'] = Appointment.objects.filter(
+            patient=user, appointment_date__gte=today,
+            status__in=['scheduled', 'confirmed']
+        ).count()
+        
+        # Available doctors count
+        context['available_doctors_count'] = Doctor.objects.filter(
+            is_available=True, is_on_duty=True
+        ).count()
+        
+        # Get notifications
+        from apps.notifications.models import Notification
+        context['notifications'] = Notification.objects.filter(
+            recipient=user,
+            read_at__isnull=True
+        ).order_by('-created_at')[:10]
         
         # Get recommended doctors (same city as user or highly rated)
         if profile.city:
@@ -402,9 +422,13 @@ class BookAppointmentView(LoginRequiredMixin, CreateView):
     
     def dispatch(self, request, *args, **kwargs):
         # Ensure only patients can book appointments
-        if request.user.is_authenticated and request.user.is_staff:
-            messages.error(request, 'Only patients can book appointments. Doctors and administrators cannot book appointments.')
-            return redirect('home')
+        # Doctors and administrators cannot book appointments
+        if request.user.is_authenticated:
+            if request.user.is_staff or hasattr(request.user, 'doctor_profile'):
+                messages.error(request, 'Only patients can book appointments. Doctors and administrators are restricted from booking.')
+                if hasattr(request.user, 'doctor_profile'):
+                    return redirect('doctors:dashboard')
+                return redirect('admin_system:dashboard')
         return super().dispatch(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
@@ -413,12 +437,17 @@ class BookAppointmentView(LoginRequiredMixin, CreateView):
         context['doctor'] = get_object_or_404(Doctor, id=doctor_id)
         return context
     
-    def form_valid(self, form):
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Set doctor on instance before validation
         doctor_id = self.kwargs.get('doctor_id')
-        doctor = get_object_or_404(Doctor, id=doctor_id)
-        
+        if doctor_id:
+            form.instance.doctor = get_object_or_404(Doctor, id=doctor_id)
+        return form
+    
+    def form_valid(self, form):
         appointment = form.save(commit=False)
-        appointment.doctor = doctor
+        # Doctor is already set in get_form
         appointment.patient = self.request.user
         appointment.patient_email = self.request.user.email
         
@@ -433,11 +462,11 @@ class BookAppointmentView(LoginRequiredMixin, CreateView):
         
         messages.success(
             self.request,
-            f'Appointment booked successfully with {doctor.display_name}!'
+            f'Appointment booked successfully with {appointment.doctor.display_name}!'
         )
         logger.info(f'Appointment booked: {appointment.id} by user {self.request.user.username}')
         
-        return redirect('dashboard')
+        return redirect('payments:create', appointment_id=appointment.id)
     
     def form_invalid(self, form):
         messages.error(self.request, 'Please correct the errors below.')
@@ -480,6 +509,24 @@ class MyAppointmentsView(LoginRequiredMixin, ListView):
         context['unique_doctors_count'] = len(unique_doctors)
         
         return context
+
+class CancelAppointmentView(LoginRequiredMixin, View):
+    """
+    View for users to cancel their own appointments.
+    """
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(Appointment, id=appointment_id, patient=request.user)
+        
+        # Only allow cancellation for scheduled or confirmed appointments
+        if appointment.status in ['scheduled', 'confirmed']:
+            appointment.status = 'cancelled'
+            appointment.save()
+            messages.success(request, f'Appointment with {appointment.doctor.display_name} has been cancelled.')
+            logger.info(f'Appointment {appointment_id} cancelled by user {request.user.username}')
+        else:
+            messages.warning(request, f'This appointment cannot be cancelled as it is already {appointment.get_status_display()}.')
+            
+        return redirect(request.META.get('HTTP_REFERER', 'users:dashboard'))
 
 
 # Keep one function-based view for the home page fallback

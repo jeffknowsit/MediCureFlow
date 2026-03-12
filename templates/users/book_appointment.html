@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book Appointment — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-wrap { max-width: 780px; margin: 0 auto; padding: 40px 24px; }
+.back-link { display:inline-flex; align-items:center; gap:6px; color:#888; text-decoration:none; font-size:0.85rem; margin-bottom:20px; }
+.back-link:hover { color:#667eea; }
+.doctor-info-card { background:linear-gradient(135deg,#667eea,#764ba2); border-radius:16px; padding:28px; color:#fff; margin-bottom:24px; display:flex; align-items:center; gap:20px; }
+.doctor-avatar { width:72px; height:72px; border-radius:14px; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:1.8rem; flex-shrink:0; }
+.doctor-name { font-size:1.2rem; font-weight:800; margin-bottom:4px; }
+.doctor-spec { opacity:0.85; font-size:0.9rem; margin-bottom:4px; }
+.doctor-fee { font-size:1rem; font-weight:700; }
+.form-card { background:#fff; border-radius:16px; padding:32px; box-shadow:0 4px 20px rgba(0,0,0,0.06); }
+.form-title { font-size:1.1rem; font-weight:700; color:#1a1a2e; margin-bottom:22px; }
+.field-group { display:flex; flex-direction:column; gap:6px; margin-bottom:18px; }
+.field-group label { font-size:0.8rem; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.5px; }
+.field-input { padding:12px 14px; border:2px solid #e8e8f0; border-radius:10px; font-size:0.9rem; font-family:inherit; color:#333; background:#fafafa; transition:all 0.2s; width:100%; box-sizing:border-box; }
+.field-input:focus { outline:none; border-color:#667eea; background:#fff; box-shadow:0 0 0 3px rgba(102,126,234,0.1); }
+.field-error { font-size:0.8rem; color:#e74c3c; margin-top:4px; font-weight:500; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.btn-submit { width:100%; padding:14px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border:none; border-radius:12px; font-size:1rem; font-weight:700; cursor:pointer; font-family:inherit; transition:all 0.2s; box-shadow:0 4px 15px rgba(102,126,234,0.4); margin-top:4px; }
+.btn-submit:hover { transform:translateY(-2px); }
+@media (max-width:560px) { .form-row { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+    <a href="{% url 'users:search_doctors' %}" class="back-link">← Back to Search</a>
+
+    {% if doctor %}
+    <div class="doctor-info-card">
+        <div class="doctor-avatar"><i class="fas fa-user-md"></i></div>
+        <div>
+            <div class="doctor-name">{{ doctor.display_name }}</div>
+            <div class="doctor-spec">{{ doctor.get_specialty_display }}</div>
+            <div class="doctor-fee">Consultation: ₹{{ doctor.consultation_fee }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="form-card">
+        <div class="form-title"><i class="fas fa-calendar-plus" style="color:#667eea;margin-right:8px;"></i>Schedule Your Appointment</div>
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                <div style="background:#fff3f3;border:1px solid #ffcdd2;border-radius:10px;padding:12px;margin-bottom:16px;font-size:0.875rem;color:#e53935;">
+                    ⚠️ {{ error }}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {# Ensure duration_minutes is handled hidden if not in template #}
+            {% if form.duration_minutes %}
+                <input type="hidden" name="duration_minutes" value="{{ form.duration_minutes.value|default:30 }}">
+                {% for e in form.duration_minutes.errors %}<div class="field-error">Duration error: {{ e }}</div>{% endfor %}
+            {% endif %}
+
+            <div class="form-row">
+                <div class="field-group">
+                    <label>Appointment Date</label>
+                    <input type="date" name="appointment_date" id="id_appointment_date" class="field-input"
+                        value="{{ form.appointment_date.value|default:'' }}" min="{{ today|date:'Y-m-d' }}">
+                    {% for e in form.appointment_date.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+                </div>
+                <div class="field-group">
+                    <label>Preferred Time</label>
+                    <select name="appointment_time" id="id_appointment_time" class="field-input">
+                        <option value="">Select a date first</option>
+                    </select>
+                    {% for e in form.appointment_time.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+                    <div id="no-slots-msg" style="display:none; font-size:0.8rem; color:#e67e22; margin-top:4px;">
+                        No available slots for this date.
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label>Additional Notes <span style="color:#aaa;font-weight:400;">(Optional)</span></label>
+                <textarea name="patient_notes" class="field-input" rows="3" placeholder="Any additional information for the doctor...">{{ form.patient_notes.value|default:'' }}</textarea>
+                {% for e in form.patient_notes.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+            </div>
+
+            <button type="submit" class="btn-submit" id="submit-btn" disabled>Confirm Appointment →</button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('id_appointment_date');
+    const timeSelect = document.getElementById('id_appointment_time');
+    const noSlotsMsg = document.getElementById('no-slots-msg');
+    const submitBtn = document.getElementById('submit-btn');
+    const doctorId = '{{ doctor.id }}';
+
+    function fetchSlots(date) {
+        if (!date) return;
+        
+        timeSelect.innerHTML = '<option value="">Loading slots...</option>';
+        timeSelect.disabled = true;
+        noSlotsMsg.style.display = 'none';
+        submitBtn.disabled = true;
+
+        fetch(`/doctors/api/available-slots/?doctor_id=${doctorId}&date=${date}`)
+            .then(response => response.json())
+            .then(data => {
+                timeSelect.innerHTML = '';
+                if (data.success && data.slots.length > 0) {
+                    const emptyOption = document.createElement('option');
+                    emptyOption.value = '';
+                    emptyOption.textContent = 'Choose a time slot';
+                    timeSelect.appendChild(emptyOption);
+
+                    data.slots.forEach(slot => {
+                        const option = document.createElement('option');
+                        option.value = slot.time;
+                        option.textContent = slot.display_time;
+                        timeSelect.appendChild(option);
+                    });
+                    timeSelect.disabled = false;
+                    timeSelect.focus();
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No slots available';
+                    timeSelect.appendChild(option);
+                    timeSelect.disabled = true;
+                    noSlotsMsg.style.display = 'block';
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching slots:', err);
+                timeSelect.innerHTML = '<option value="">Error loading slots</option>';
+            });
+    }
+
+    dateInput.addEventListener('change', function() {
+        fetchSlots(this.value);
+    });
+
+    timeSelect.addEventListener('change', function() {
+        submitBtn.disabled = !this.value;
+    });
+
+    // If date is already filled (e.g. after form error)
+    if (dateInput.value) {
+        fetchSlots(dateInput.value);
+    }
+});
+</script>
+{% endblock %}

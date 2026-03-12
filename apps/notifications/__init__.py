@@ -1,1 +1,1 @@
-# WellCarePlusCure Notifications App
+# MediCureFlow Notifications App

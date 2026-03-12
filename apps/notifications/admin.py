@@ -323,7 +323,7 @@ class DeviceTokenAdmin(admin.ModelAdmin):
 
 # Custom admin views for statistics
 class NotificationAdminSite(admin.AdminSite):
-    site_header = 'WellCare Plus Notification Administration'
+    site_header = 'MediCure Plus Notification Administration'
     site_title = 'Notification Admin'
     index_title = 'Notification System Management'
     

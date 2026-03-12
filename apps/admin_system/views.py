@@ -1,5 +1,5 @@
 """
-WellCarePlusCure Admin System Views
+MediCureFlow Admin System Views
 Powerful admin interface with complete system control
 """
 
@@ -27,7 +27,7 @@ from .models import AdminActivity, SystemAlert, AdminConfiguration
 from .signals import log_admin_activity
 from apps.users.models import UserProfile
 from apps.doctors.models import Doctor, Appointment, Review
-from apps.health_ai.models import HealthCheckup
+# from apps.health_ai.models import HealthCheckup
 
 
 def is_admin(user):
@@ -55,7 +55,8 @@ def admin_dashboard(request):
     total_doctors = Doctor.objects.count()
     total_appointments = Appointment.objects.count()
     total_reviews = Review.objects.count()
-    total_checkups = HealthCheckup.objects.count()
+    # total_checkups = HealthCheckup.objects.count()
+    total_checkups = 0
     
     # Recent activity counts
     new_users_week = User.objects.filter(date_joined__gte=week_ago, is_staff=False).count()
@@ -117,8 +118,8 @@ class UserManagementView(AdminOnlyMixin, ListView):
     def get_queryset(self):
         queryset = User.objects.filter(is_staff=False).select_related('profile').prefetch_related('appointments')
         
-        # Search functionality
-        search = self.request.GET.get('search')
+        # Search functionality - support both 'search' and 'q' params
+        search = self.request.GET.get('q') or self.request.GET.get('search')
         if search:
             queryset = queryset.filter(
                 Q(username__icontains=search) |
@@ -142,12 +143,12 @@ class UserManagementView(AdminOnlyMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['search'] = self.request.GET.get('search', '')
+        context['search'] = self.request.GET.get('q') or self.request.GET.get('search', '')
         context['status'] = self.request.GET.get('status', '')
         context['order_by'] = self.request.GET.get('order_by', '-date_joined')
         
-        # Add statistics
-        context['total_users'] = self.get_queryset().count()
+        # Add statistics (always use base counts not filtered)
+        context['total_users'] = User.objects.filter(is_staff=False).count()
         context['active_users'] = User.objects.filter(is_staff=False, is_active=True).count()
         context['inactive_users'] = User.objects.filter(is_staff=False, is_active=False).count()
         
@@ -209,7 +210,7 @@ class DoctorManagementView(AdminOnlyMixin, ListView):
         context['order_by'] = self.request.GET.get('order_by', '-created_at')
         
         # Add statistics and filter options
-        context['specialties'] = Doctor.objects.values_list('specialty', flat=True).distinct()
+        context['specialties_choices'] = Doctor.SPECIALTIES
         context['total_doctors'] = self.get_queryset().count()
         context['verified_doctors'] = Doctor.objects.filter(is_verified=True).count()
         context['available_doctors'] = Doctor.objects.filter(is_available=True).count()
@@ -609,7 +610,7 @@ def export_data(request):
     
     if export_type == 'users':
         writer.writerow(['ID', 'Username', 'First Name', 'Last Name', 'Email', 'Date Joined', 'Is Active', 'Appointments Count'])
-        users = User.objects.filter(is_staff=False).select_related('userprofile').prefetch_related('appointments')
+        users = User.objects.filter(is_staff=False).select_related('profile').prefetch_related('appointments')
         for user in users:
             writer.writerow([
                 user.id,
@@ -651,7 +652,7 @@ def export_data(request):
                 apt.appointment_time,
                 apt.get_status_display(),
                 apt.created_at.strftime('%Y-%m-%d %H:%M'),
-                f"{getattr(settings, 'CURRENCY_SYMBOLS', {}).get(getattr(settings, 'DEFAULT_CURRENCY', 'USD'), '$')}{apt.consultation_fee}" if apt.consultation_fee else 'N/A'
+                f"{getattr(settings, 'CURRENCY_SYMBOLS', {}).get(getattr(settings, 'DEFAULT_CURRENCY', 'USD'), '$')}{apt.fee_charged}" if apt.fee_charged else 'N/A'
             ])
     
     # Log export activity
@@ -1006,6 +1007,6 @@ class AppointmentManagementView(AdminOnlyMixin, ListView):
         # Add statistics
         context['appointment_statuses'] = Appointment.STATUS_CHOICES
         context['total_appointments'] = self.get_queryset().count()
-        context['status_stats'] = Appointment.objects.values('status').annotate(count=Count('id'))
+        context['appointment_stats'] = Appointment.objects.values('status').annotate(count=Count('id'))
         
         return context

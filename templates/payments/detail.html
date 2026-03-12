@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Details — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-wrap { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    .detail-card { background: #fff; border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
+    .detail-header { border-bottom: 2px solid #f1f5f9; padding: 30px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .detail-body { padding: 30px; }
+    .row-info { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+    .info-box h5 { color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 800; }
+    .info-box p { color: var(--dark); font-weight: 700; margin: 0; }
+    
+    .status-pill { padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 0.8rem; }
+    .status-succeeded { background: #e8fdf4; color: #10b981; }
+    
+    .transaction-history { background: #f8fafc; border-radius: 16px; padding: 25px; margin-top: 30px; }
+    .txn-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+    .txn-item:last-child { border-bottom: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-wrap">
+    <div style="margin-bottom:20px;">
+        <a href="{% url 'payments:list' %}" style="color:var(--primary); text-decoration:none; font-weight:700;">
+            <i class="fas fa-arrow-left"></i> Back to History
+        </a>
+    </div>
+
+    <div class="detail-card">
+        <div class="detail-header">
+            <div>
+                <h5 style="color:#94a3b8; font-size:0.75rem; text-transform:uppercase; margin-bottom:5px;">Transaction Reference</h5>
+                <h2 style="font-weight:800; color:var(--dark);">{{ payment.payment_reference }}</h2>
+            </div>
+            <span class="status-pill status-{{ payment.status }}">{{ payment.status|upper }}</span>
+        </div>
+
+        <div class="detail-body">
+            <div class="row-info">
+                <div class="info-box">
+                    <h5>Patient Name</h5>
+                    <p>{{ payment.patient.get_full_name }}</p>
+                </div>
+                <div class="info-box">
+                    <h5>Doctor</h5>
+                    <p>Dr. {{ payment.doctor.display_name }}</p>
+                </div>
+            </div>
+
+            <div class="row-info">
+                <div class="info-box">
+                    <h5>Payment Date</h5>
+                    <p>{{ payment.created_at|date:"F j, Y, g:i a" }}</p>
+                </div>
+                <div class="info-box">
+                    <h5>Total Amount</h5>
+                    <p style="font-size:1.5rem; color:var(--primary);">₹{{ payment.amount }}</p>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top:20px;">
+                <h5>Description</h5>
+                <p style="font-weight:400; color:#64748b;">{{ payment.description|default:"Consultation service" }}</p>
+            </div>
+
+            {% if transactions %}
+            <div class="transaction-history">
+                <h5 style="color:#64748b; font-size:0.75rem; text-transform:uppercase; margin-bottom:15px; font-weight:800;">Activity Logs</h5>
+                {% for txn in transactions %}
+                <div class="txn-item">
+                    <span>{{ txn.get_transaction_type_display }}</span>
+                    <span style="color:#94a3b8;">{{ txn.processed_at|date:"M j, Y H:i" }}</span>
+                    <span style="font-weight:700;">₹{{ txn.amount }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

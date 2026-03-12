@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Appointment — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-container { max-width: 600px; margin: 40px auto; padding: 40px; background: #fff; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+.form-title { font-size: 1.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 32px; text-align: center; }
+
+.appt-summary { background: #f8fafc; padding: 24px; border-radius: 16px; margin-bottom: 32px; border: 1px solid #e2e8f0; }
+.summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; }
+.summary-row:last-child { margin-bottom: 0; }
+.summary-label { color: #64748b; font-weight: 700; }
+.summary-val { color: #1e293b; font-weight: 800; }
+
+.field-group { margin-bottom: 24px; }
+.field-group label { display: block; font-size: 0.85rem; font-weight: 700; color: #555; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.field-input { width: 100%; padding: 12px 16px; border: 2px solid #e8e8f0; border-radius: 12px; font-size: 0.95rem; font-family: inherit; transition: all 0.2s; }
+.field-input:focus { border-color: #4834d4; outline: none; }
+
+.btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, #4834d4 0%, #686de0 100%); color: #fff; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(72, 52, 212, 0.2); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="form-title">Update Appointment</h1>
+
+    <div class="appt-summary">
+        <div class="summary-row">
+            <span class="summary-label">Patient:</span>
+            <span class="summary-val">{{ appointment.patient.get_full_name }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Date:</span>
+            <span class="summary-val">{{ appointment.appointment_date }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Time:</span>
+            <span class="summary-val">{{ appointment.appointment_time }}</span>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="field-group">
+            <label>Update Status</label>
+            <select name="status" class="field-input">
+                {% for code, label in form.fields.status.choices %}
+                    <option value="{{ code }}" {% if form.status.value == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="field-group">
+            <label>Doctor's Notes</label>
+            <textarea name="doctor_notes" class="field-input" rows="5" placeholder="Add diagnosis, prescriptions or notes...">{{ form.doctor_notes.value|default:'' }}</textarea>
+        </div>
+        <div class="field-group" style="display: flex; align-items: center; gap: 12px;">
+            <input type="checkbox" name="is_paid" id="id_is_paid" {% if form.is_paid.value %}checked{% endif %}>
+            <label for="id_is_paid" style="margin-bottom: 0;">Mark as Paid</label>
+        </div>
+
+        <button type="submit" class="btn-submit">Save Updates</button>
+    </form>
+</div>
+{% endblock %}

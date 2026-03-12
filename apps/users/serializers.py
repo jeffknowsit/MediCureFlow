@@ -5,10 +5,10 @@ Serializers for the users app API endpoints.
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import UserProfile
-from wellcareplusCure.middleware.security import InputSanitizationMixin
+# from MediCureFlow.middleware.security import InputSanitizationMixin
 
 
-class UserProfileSerializer(serializers.ModelSerializer, InputSanitizationMixin):
+class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer for UserProfile model."""
     
     class Meta:
@@ -43,7 +43,7 @@ class UserProfileSerializer(serializers.ModelSerializer, InputSanitizationMixin)
         return super().to_internal_value(data)
 
 
-class UserSerializer(serializers.ModelSerializer, InputSanitizationMixin):
+class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model with profile data."""
     
     profile = UserProfileSerializer(read_only=True)
@@ -94,7 +94,7 @@ class UserSerializer(serializers.ModelSerializer, InputSanitizationMixin):
         return instance
 
 
-class UserProfileUpdateSerializer(serializers.ModelSerializer, InputSanitizationMixin):
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating user profile information."""
     
     class Meta:
@@ -134,7 +134,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer, InputSanitization
         return super().to_internal_value(data)
 
 
-class UserRegistrationSerializer(serializers.ModelSerializer, InputSanitizationMixin):
+class UserRegistrationSerializer(serializers.ModelSerializer):
     """Serializer for user registration."""
     
     password = serializers.CharField(write_only=True, min_length=8)

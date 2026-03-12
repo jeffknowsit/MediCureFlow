@@ -24,6 +24,7 @@ urlpatterns = [
     # Doctor Search and Booking
     path('doctors/', views.DoctorSearchView.as_view(), name='search_doctors'),
     path('book-appointment/<int:doctor_id>/', views.BookAppointmentView.as_view(), name='book_appointment'),
+    path('cancel-appointment/<int:appointment_id>/', views.CancelAppointmentView.as_view(), name='cancel_appointment'),
     path('my-appointments/', views.MyAppointmentsView.as_view(), name='my_appointments'),
     
     # Password Management

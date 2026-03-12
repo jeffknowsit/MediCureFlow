@@ -133,6 +133,22 @@ class Doctor(models.Model):
         help_text="Whether the doctor's credentials are verified"
     )
     
+    # New Duty and Break Features
+    is_on_duty = models.BooleanField(
+        default=True,
+        help_text="Whether the doctor is currently on duty (Work Mode)"
+    )
+    lunch_break_start = models.TimeField(
+        null=True,
+        blank=True,
+        help_text="Start time of daily lunch break"
+    )
+    lunch_break_end = models.TimeField(
+        null=True,
+        blank=True,
+        help_text="End time of daily lunch break"
+    )
+    
     # Additional Professional Information
     medical_license_number = models.CharField(
         max_length=100,
@@ -567,6 +583,22 @@ class Appointment(models.Model):
         help_text="Additional payment-related notes"
     )
     
+    # Continuity and Remarks
+    consultation_remarks = models.TextField(
+        blank=True,
+        help_text="Doctor's final remarks and prescriptions"
+    )
+    next_appointment_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Recommended date for follow-up"
+    )
+    next_appointment_time = models.TimeField(
+        null=True,
+        blank=True,
+        help_text="Recommended time for follow-up"
+    )
+    
     class Meta:
         ordering = ['-appointment_date', '-appointment_time']
         verbose_name = 'Appointment'
@@ -635,6 +667,24 @@ class Appointment(models.Model):
             appointment_datetime = timezone.make_aware(naive_datetime)
             if appointment_datetime <= timezone.now():
                 raise ValidationError("Appointment must be scheduled for a future time.")
+            
+            # Check if doctor is set and on duty
+            try:
+                doctor = self.doctor
+            except Exception:
+                doctor = None
+
+            if doctor:
+                if not doctor.is_on_duty:
+                    raise ValidationError(f"{doctor.display_name} is currently off-duty and not accepting appointments.")
+                
+                # Check for lunch break
+                if doctor.lunch_break_start and doctor.lunch_break_end:
+                    if doctor.lunch_break_start <= self.appointment_time < doctor.lunch_break_end:
+                        raise ValidationError(
+                            f"This time slot falls during {doctor.display_name}'s lunch break "
+                            f"({doctor.lunch_break_start.strftime('%I:%M %p')} - {doctor.lunch_break_end.strftime('%I:%M %p')})."
+                        )
         
         # Check for double booking (exclude current instance if updating)
         # Only validate if doctor is properly set (not None and not just doctor_id)

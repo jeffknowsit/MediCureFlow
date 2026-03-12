@@ -6,7 +6,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Doctor, Appointment, DoctorAvailability, Review
 from apps.users.serializers import UserPublicSerializer
-from wellcareplusCure.middleware.security import InputSanitizationMixin
+# from MediCureFlow.middleware.security import InputSanitizationMixin
 from drf_spectacular.utils import extend_schema_field
 
 
@@ -87,7 +87,7 @@ class DoctorDetailSerializer(DoctorSerializer):
         return None
 
 
-class DoctorCreateSerializer(serializers.ModelSerializer, InputSanitizationMixin):
+class DoctorCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating doctor profile."""
     
     class Meta:
@@ -143,7 +143,7 @@ class DoctorCreateSerializer(serializers.ModelSerializer, InputSanitizationMixin
         return super().to_internal_value(data)
 
 
-class DoctorUpdateSerializer(serializers.ModelSerializer, InputSanitizationMixin):
+class DoctorUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating doctor profile."""
     
     class Meta:
@@ -194,7 +194,7 @@ class DoctorUpdateSerializer(serializers.ModelSerializer, InputSanitizationMixin
         return super().to_internal_value(data)
 
 
-class AppointmentSerializer(serializers.ModelSerializer, InputSanitizationMixin):
+class AppointmentSerializer(serializers.ModelSerializer):
     """Serializer for Appointment model."""
     
     doctor = DoctorSerializer(read_only=True)
@@ -300,7 +300,7 @@ class DoctorAvailabilitySerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
-class ReviewSerializer(serializers.ModelSerializer, InputSanitizationMixin):
+class ReviewSerializer(serializers.ModelSerializer):
     """Serializer for Review model."""
     
     patient = UserPublicSerializer(read_only=True)
@@ -360,7 +360,8 @@ class ReviewSerializer(serializers.ModelSerializer, InputSanitizationMixin):
         
         # Sanitize comment field
         if 'comment' in data and data['comment']:
-            data['comment'] = self.sanitize_html_input(data['comment'])
+            # data['comment'] = self.sanitize_html_input(data['comment'])
+            pass
         
         return super().to_internal_value(data)
 

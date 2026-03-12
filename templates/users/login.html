@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Login — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-page {
+    min-height: calc(100vh - 68px);
+    background: linear-gradient(135deg, #f5f6fa 0%, #e8ecff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.auth-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    max-width: 860px;
+    width: 100%;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 20px 70px rgba(0,0,0,0.12);
+    overflow: hidden;
+}
+
+.auth-left {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 60px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #fff;
+}
+
+.auth-left .big-icon {
+    font-size: 4rem;
+    margin-bottom: 24px;
+    opacity: 0.9;
+}
+.auth-left h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 14px; }
+.auth-left p { opacity: 0.85; font-size: 0.95rem; line-height: 1.7; margin-bottom: 28px; }
+.auth-left .badge-stack { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.auth-left .badge-item {
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px; padding: 10px 16px;
+    font-size: 0.85rem; font-weight: 600;
+    backdrop-filter: blur(5px);
+}
+
+.auth-right { padding: 60px 44px; }
+
+.back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: #888; text-decoration: none; font-size: 0.85rem;
+    margin-bottom: 24px; transition: color 0.2s;
+}
+.back-link:hover { color: #667eea; }
+
+.auth-right h1 { font-size: 1.7rem; font-weight: 800; color: #1a1a2e; margin-bottom: 6px; }
+.auth-right .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
+
+.field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.field-group label { font-size: 0.8rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.field-input {
+    padding: 13px 14px;
+    border: 2px solid #e8e8f0;
+    border-radius: 10px;
+    font-size: 0.925rem;
+    font-family: inherit;
+    color: #333;
+    background: #fafafa;
+    transition: all 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+.field-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+}
+.field-input::placeholder { color: #c0c0d0; }
+.field-error { font-size: 0.8rem; color: #e74c3c; margin-top: 4px; font-weight: 500; }
+.error-input { border-color: #e74c3c !important; background: #fff8f8 !important; }
+
+.forgot-link {
+    display: block; text-align: right; margin-top: -12px; margin-bottom: 20px;
+    font-size: 0.825rem; color: #667eea; text-decoration: none; font-weight: 600;
+}
+.forgot-link:hover { text-decoration: underline; }
+
+.btn-submit {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff; border: none; border-radius: 12px;
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+    font-family: inherit;
+}
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.5); }
+
+.divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #eee; }
+.divider span { font-size: 0.8rem; color: #aaa; white-space: nowrap; }
+
+.auth-footer { text-align: center; font-size: 0.875rem; color: #888; }
+.auth-footer a { color: #667eea; font-weight: 700; text-decoration: none; }
+.auth-footer a:hover { text-decoration: underline; }
+
+.error-banner {
+    background: #fff3f3; border: 1px solid #ffcdd2; border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 18px; font-size: 0.875rem; color: #e53935;
+}
+
+@media (max-width: 640px) {
+    .auth-wrapper { grid-template-columns: 1fr; }
+    .auth-left { padding: 40px 28px; }
+    .auth-right { padding: 36px 26px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-wrapper">
+        <!-- Left Panel -->
+        <div class="auth-left">
+            <div class="big-icon">🏥</div>
+            <h2>Welcome Back</h2>
+            <p>Your health journey continues here. Login to access your appointments, records, and more.</p>
+            <div class="badge-stack">
+                <div class="badge-item">📅 View & Manage Appointments</div>
+                <div class="badge-item">👨‍⚕️ Connect with Doctors</div>
+                <div class="badge-item">📋 Access Health Records</div>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="auth-right">
+            <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+            <h1>Sign In</h1>
+            <p class="subtitle">Enter your credentials to continue</p>
+
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <div class="error-banner">⚠️ {{ error }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="field-group">
+                    <label for="id_username">Username or Email</label>
+                    <input type="text" id="id_username" name="username"
+                        class="field-input {% if form.username.errors %}error-input{% endif %}"
+                        placeholder="Enter your username or email"
+                        value="{{ form.username.value|default:'' }}" autocomplete="username">
+                    {% for e in form.username.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+                </div>
+
+                <div class="field-group">
+                    <label for="id_password">Password</label>
+                    <input type="password" id="id_password" name="password"
+                        class="field-input {% if form.password.errors %}error-input{% endif %}"
+                        placeholder="Enter your password" autocomplete="current-password">
+                    {% for e in form.password.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+                </div>
+                <a href="{% url 'users:password_reset' %}" class="forgot-link">Forgot password?</a>
+
+                <button type="submit" class="btn-submit">Sign In →</button>
+            </form>
+
+            <div class="divider"><span>Don't have an account?</span></div>
+            <div class="auth-footer">
+                <a href="{% url 'register' %}">Create a free account</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,1 +1,1 @@
-# Test package for WellCarePlusCure project
+# Test package for MediCureFlow project

@@ -1,5 +1,5 @@
 """
-API endpoint tests for WellCarePlusCure project.
+API endpoint tests for MediCureFlow project.
 
 This module contains comprehensive tests for all API endpoints including
 authentication, permissions, CRUD operations, and business logic.

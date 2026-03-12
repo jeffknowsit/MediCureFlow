@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Help Center — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── HELP CENTER PREMIUM DESIGN ── */
+body { font-family: 'Inter', sans-serif; color: #1e293b; background: #f8fafc; }
+
+.help-hero {
+    padding: 120px 0 100px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%), 
+                url('/media/help_center_hero.png');
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+    text-align: center;
+}
+
+.help-hero h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    letter-spacing: -1px;
+}
+
+.help-hero p {
+    font-size: 1.25rem;
+    color: #94a3b8;
+    margin-bottom: 40px;
+}
+
+.search-container {
+    max-width: 700px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 20px 30px 20px 60px;
+    border-radius: 100px;
+    border: none;
+    font-size: 1.1rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    background: #fff;
+    font-family: inherit;
+}
+
+.search-icon {
+    position: absolute;
+    left: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4f46e5;
+    font-size: 1.2rem;
+}
+
+/* ── CATEGORIES ── */
+.help-section { padding: 80px 0; }
+
+.section-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 48px;
+}
+
+.cat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+.cat-card {
+    background: #fff;
+    padding: 40px;
+    border-radius: 24px;
+    border: 1px solid #f1f5f9;
+    text-align: center;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.cat-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+    border-color: #4f46e5;
+}
+
+.cat-icon {
+    width: 64px;
+    height: 64px;
+    background: #f1f5f9;
+    color: #4f46e5;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.cat-card:hover .cat-icon {
+    background: #4f46e5;
+    color: #fff;
+}
+
+.cat-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #0f172a;
+}
+
+.cat-card p {
+    font-size: 0.95rem;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+/* ── FAQ SECTION ── */
+.faq-wrap {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+    border: 1px solid #f1f5f9;
+}
+
+.faq-item h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.faq-item h4 i { color: #4f46e5; font-size: 0.9rem; }
+
+.faq-item p {
+    font-size: 0.95rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin-left: 24px;
+}
+
+/* ── CONTACT ── */
+.contact-banner {
+    background: #4f46e5;
+    border-radius: 32px;
+    padding: 60px;
+    color: #fff;
+    text-align: center;
+    margin-top: 60px;
+    box-shadow: 0 20px 50px rgba(79, 70, 229, 0.3);
+}
+
+.contact-banner h2 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+}
+
+.contact-banner p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 32px;
+}
+
+.btn-white {
+    background: #fff;
+    color: #4f46e5;
+    padding: 16px 40px;
+    border-radius: 100px;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.btn-white:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 900px) {
+    .cat-grid { grid-template-columns: 1fr; }
+    .help-hero h1 { font-size: 2.5rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="help-hero">
+    <div class="container">
+        <h1>How can we help?</h1>
+        <p>Search for articles or choose a category below to get started</p>
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" placeholder="Search for troubleshooting, billing, or appointment help...">
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <section class="help-section">
+        <h2 class="section-title">Browse by Category</h2>
+        <div class="cat-grid">
+            <a href="#" class="cat-card">
+                <div class="cat-icon"><i class="fas fa-user-circle"></i></div>
+                <h3>Account & Profile</h3>
+                <p>Manage your account settings, security, and update your medical profile information.</p>
+            </a>
+            <a href="#" class="cat-card">
+                <div class="cat-icon"><i class="fas fa-calendar-alt"></i></div>
+                <h3>Appointments</h3>
+                <p>Learn how to book, reschedule, or cancel your consultations with our specialists.</p>
+            </a>
+            <a href="#" class="cat-card">
+                <div class="cat-icon"><i class="fas fa-credit-card"></i></div>
+                <h3>Payments & Billing</h3>
+                <p>Help with consultation fees, insurance claims, and managing your payment methods.</p>
+            </a>
+            <a href="#" class="cat-card">
+                <div class="cat-icon"><i class="fas fa-video"></i></div>
+                <h3>Video Consultations</h3>
+                <p>Troubleshooting connection issues and tips for a smooth virtual doctor visit.</p>
+            </a>
+            <a href="#" class="cat-card">
+                <div class="cat-icon"><i class="fas fa-file-medical"></i></div>
+                <h3>Medical Records</h3>
+                <p>Accessing your prescriptions, lab results, and managing healthcare documents.</p>
+            </a>
+            <a href="#" class="cat-card">
+                <div class="cat-icon"><i class="fas fa-shield-alt"></i></div>
+                <h3>Security & Privacy</h3>
+                <p>Our commitment to protecting your health data and how we handle your privacy.</p>
+            </a>
+        </div>
+    </section>
+
+    <section class="help-section" style="border-top: 1px solid #e2e8f0;">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <div class="faq-wrap">
+            <div class="faq-item">
+                <h4><i class="fas fa-chevron-right"></i> How do I book an appointment?</h4>
+                <p>Log in to your account, search for a specialist by name or department, select a time slot that works for you, and confirm your booking.</p>
+            </div>
+            <div class="faq-item">
+                <h4><i class="fas fa-chevron-right"></i> Can I cancel an appointment?</h4>
+                <p>Yes, you can cancel up to 24 hours before the scheduled time via your dashboard for a full refund of any prepaid fees.</p>
+            </div>
+            <div class="faq-item">
+                <h4><i class="fas fa-chevron-right"></i> Is my medical data safe?</h4>
+                <p>Absolutely. We use bank-grade encryption and comply with all international health data privacy standards (HIPAA/GDPR).</p>
+            </div>
+            <div class="faq-item">
+                <h4><i class="fas fa-chevron-right"></i> How do I join as a medical professional?</h4>
+                <p>Check the "Join as Doctor" link in the footer to submit your credentials and start the verification process.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="contact-banner">
+        <h2>Still need help?</h2>
+        <p>Our support team is available 24/7 to assist you with any questions or technical issues.</p>
+        <a href="mailto:support@MediCureFlow.com" class="btn-white">Contact Support Team</a>
+    </div>
+</div>
+{% endblock %}

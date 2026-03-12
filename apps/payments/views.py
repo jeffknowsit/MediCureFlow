@@ -153,35 +153,32 @@ class CreatePaymentView(LoginRequiredMixin, TemplateView):
         # Create payment record
         payment = PaymentService.create_appointment_payment(appointment)
         
-        # Create Stripe payment intent
-        intent_result = StripePaymentService.create_payment_intent(
+        # MIMIC PAYMENT: Skip real Stripe and succeed immediately
+        import uuid
+        payment.stripe_payment_intent_id = f"mimic_{uuid.uuid4().hex}"
+        payment.status = 'succeeded'
+        payment.paid_at = timezone.now()
+        payment.save()
+        
+        # Update appointment
+        appointment.is_paid = True
+        appointment.save(update_fields=['is_paid'])
+        
+        # Create transaction record
+        Transaction.objects.create(
+            payment=payment,
+            transaction_type='payment',
             amount=payment.amount,
             currency=payment.currency,
-            customer_email=request.user.email,
-            metadata={
-                'payment_id': str(payment.id),
-                'appointment_id': str(appointment.id),
-                'patient_id': str(request.user.id),
-                'doctor_id': str(appointment.doctor.id),
-            }
+            external_reference=payment.stripe_payment_intent_id,
+            description=f'Simulated payment succeeded for {payment.payment_reference}'
         )
         
-        if intent_result.get('success'):
-            # Update payment with Stripe details
-            payment.stripe_payment_intent_id = intent_result['payment_intent_id']
-            payment.save()
-            
-            return JsonResponse({
-                'success': True,
-                'client_secret': intent_result['client_secret'],
-                'payment_id': str(payment.id),
-            })
-        else:
-            payment.status = 'failed'
-            payment.save()
-            return JsonResponse({
-                'error': intent_result.get('error', 'Payment intent creation failed')
-            }, status=500)
+        return JsonResponse({
+            'success': True,
+            'payment_id': str(payment.id),
+            'redirect_url': f"{reverse('payments:success')}?payment_id={payment.id}"
+        })
 
 
 @method_decorator(csrf_exempt, name='dispatch')

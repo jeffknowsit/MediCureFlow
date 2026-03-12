@@ -1,5 +1,5 @@
 """
-Main API URLs for WellCarePlusCure project.
+Main API URLs for MediCureFlow project.
 This module consolidates all API endpoints from different apps.
 """
 
@@ -31,7 +31,7 @@ from drf_spectacular.openapi import OpenApiResponse
 def api_root(request, format=None):
     """API Root endpoint with available endpoints."""
     return Response({
-        'message': 'WellCarePlusCure API v1.0',
+        'message': 'MediCureFlow API v1.0',
         'endpoints': {
             'doctors': request.build_absolute_uri('doctors/'),
             'users': request.build_absolute_uri('users/'),
@@ -43,7 +43,7 @@ def api_root(request, format=None):
             }
         },
         'version': '1.0',
-        'project': 'WellCarePlusCure'
+        'project': 'MediCureFlow'
     })
 
 app_name = 'api'

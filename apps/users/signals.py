@@ -57,11 +57,11 @@ def send_welcome_email(user):
         return
     
     try:
-        subject = 'Welcome to WellCarePlusCure!'
+        subject = 'Welcome to MediCureFlow!'
         message = f'''
         Dear {user.get_full_name() or user.username},
         
-        Welcome to WellCarePlusCure! Your account has been successfully created.
+        Welcome to MediCureFlow! Your account has been successfully created.
         
         You can now:
         - Search for doctors by specialty and location
@@ -72,7 +72,7 @@ def send_welcome_email(user):
         Get started by visiting our website and searching for doctors in your area.
         
         Best regards,
-        The WellCarePlusCure Team
+        The MediCureFlow Team
         '''
         
         send_mail(

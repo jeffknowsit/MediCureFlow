@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Doctor Management — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.mgmt-page { max-width: 1240px; margin: 0 auto; padding: 32px 24px; }
+
+.mgmt-hero {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    padding: 30px 48px; display: flex; align-items: center; gap: 20px;
+}
+.mgmt-hero i { font-size: 2rem; color: rgba(255,255,255,0.8); }
+.mgmt-hero h1 { font-size: 1.8rem; font-weight: 800; color: #fff; }
+.mgmt-hero p { color: rgba(255,255,255,0.7); font-size: 0.85rem; }
+
+/* Stats */
+.mgmt-stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.ms { border-radius: 14px; padding: 16px 24px; display: flex; align-items: center; gap: 14px; flex: 1; min-width: 160px; }
+.ms-teal { background: #0d9488; }
+.ms-green { background: #059669; }
+.ms-amber { background: #d97706; }
+.ms-blue { background: #2563eb; }
+.ms-icon { font-size: 1.4rem; color: rgba(255,255,255,0.8); }
+.ms-val { font-size: 1.8rem; font-weight: 800; color: #fff; }
+.ms-lbl { font-size: 0.72rem; color: rgba(255,255,255,0.8); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+
+/* Filter Row */
+.filter-row {
+    background: #fff; border-radius: 14px; padding: 16px 20px;
+    display: flex; gap: 12px; align-items: center; margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06); flex-wrap: wrap;
+}
+.filter-input {
+    flex: 2; min-width: 180px; padding: 9px 14px; border: 2px solid #e8e8f0;
+    border-radius: 8px; font-size: 0.875rem; font-family: inherit;
+}
+.filter-input:focus { border-color: #10b981; outline: none; }
+.filter-select { flex: 1; padding: 9px 12px; border: 2px solid #e8e8f0; border-radius: 8px; font-size: 0.875rem; font-family: inherit; background: #fff; }
+.btn-filter { padding: 9px 18px; background: #10b981; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.875rem; }
+.btn-clear { padding: 9px 14px; background: #f5f5f5; color: #555; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.875rem; text-decoration: none; }
+.btn-add { padding: 9px 18px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.875rem; text-decoration: none; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+/* Table */
+.table-wrap { background: #fff; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); overflow: hidden; }
+.table-hdr { padding: 16px 20px; border-bottom: 1px solid #f0f0f8; display: flex; align-items: center; justify-content: space-between; }
+.table-hdr h3 { font-size: 0.9rem; font-weight: 800; color: #1a1a2e; display: flex; align-items: center; gap: 8px; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 12px 16px; background: #f8f9ff; font-size: 0.78rem; font-weight: 700; color: #555; text-align: left; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 14px 16px; border-bottom: 1px solid #f5f5f5; font-size: 0.875rem; color: #333; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f0fdf4; }
+
+.doc-cell { display: flex; align-items: center; gap: 12px; }
+.doc-av { width: 40px; height: 40px; border-radius: 12px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.doc-info { display: flex; flex-direction: column; }
+.doc-name { font-weight: 700; color: #1a1a2e; font-size: 0.9rem; margin-bottom: 1px; }
+.doc-spec { font-size: 0.72rem; color: #10b981; font-weight: 700; text-transform: uppercase; }
+
+.badge-v { background: #ecfdf5; color: #059669; padding: 3px 8px; border-radius: 6px; font-size: 0.68rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; }
+.badge-uv { background: #fffbeb; color: #d97706; padding: 3px 8px; border-radius: 6px; font-size: 0.68rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; }
+
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.dot-on { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+.dot-off { background: #d1d5db; }
+
+.action-btns { display: flex; gap: 6px; }
+.ab { width: 32px; height: 32px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; text-decoration: none; transition: all 0.2s; }
+.ab-view { background: #f0f9ff; color: #0ea5e9; }
+.ab-edit { background: #f5f3ff; color: #8b5cf6; }
+.ab-del { background: #fef2f2; color: #ef4444; }
+.ab:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+.pagination { padding: 16px 20px; display: flex; justify-content: center; gap: 8px; }
+.page-btn { padding: 6px 14px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; cursor: pointer; font-size: 0.8rem; text-decoration: none; color: #555; }
+.page-btn.active { background: #10b981; color: #fff; border-color: #10b981; }
+
+.back-link { display: inline-flex; align-items: center; gap: 8px; color: #059669; font-weight: 700; text-decoration: none; font-size: 0.875rem; margin-bottom: 20px; }
+.back-link:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mgmt-hero">
+    <i class="fas fa-user-md"></i>
+    <div>
+        <h1>Doctor Management</h1>
+        <p>Manage medical professionals, verification status, and consultation fees</p>
+    </div>
+</div>
+
+<div class="mgmt-page">
+    <a href="{% url 'admin_system:dashboard' %}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+
+    <!-- Stats -->
+    <div class="mgmt-stats">
+        <div class="ms ms-teal">
+            <i class="fas fa-user-md ms-icon"></i>
+            <div>
+                <div class="ms-val">{{ total_doctors }}</div>
+                <div class="ms-lbl">Registered Doctors</div>
+            </div>
+        </div>
+        <div class="ms ms-green">
+            <i class="fas fa-check-shield ms-icon"></i>
+            <div>
+                <div class="ms-val">{{ verified_doctors }}</div>
+                <div class="ms-lbl">Verified Profiles</div>
+            </div>
+        </div>
+        <div class="ms ms-blue">
+            <i class="fas fa-clock ms-icon"></i>
+            <div>
+                <div class="ms-val">{{ available_doctors }}</div>
+                <div class="ms-lbl">Currently Available</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="filter-row">
+        <input type="text" name="search" class="filter-input" placeholder="Search by name, email, specialty..." value="{{ search }}">
+        
+        <select name="specialty" class="filter-select">
+            <option value="">All Specialties</option>
+            {% for spec_code, spec_name in specialties_choices %}
+                <option value="{{ spec_code }}" {% if specialty == spec_code %}selected{% endif %}>{{ spec_name }}</option>
+            {% endfor %}
+        </select>
+        
+        <select name="availability" class="filter-select">
+            <option value="">Availability</option>
+            <option value="available" {% if availability == 'available' %}selected{% endif %}>Available</option>
+            <option value="unavailable" {% if availability == 'unavailable' %}selected{% endif %}>Unavailable</option>
+        </select>
+        
+        <select name="verified" class="filter-select">
+            <option value="">Verification</option>
+            <option value="verified" {% if verified == 'verified' %}selected{% endif %}>Verified</option>
+            <option value="unverified" {% if verified == 'unverified' %}selected{% endif %}>Unverified</option>
+        </select>
+
+        <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
+        <a href="{% url 'admin_system:doctor_management' %}" class="btn-clear">Clear</a>
+        <a href="{% url 'admin_system:doctor_create' %}" class="btn-add"><i class="fas fa-plus"></i> Register Doctor</a>
+    </form>
+
+    <!-- Table -->
+    <div class="table-wrap">
+        <div class="table-hdr">
+            <h3><i class="fas fa-stethoscope" style="color:#10b981;"></i> Medical Professionals</h3>
+            <span style="font-size:0.8rem;color:#888;">Showing {{ doctors.count }} of {{ total_doctors }} records</span>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Doctor Profile</th>
+                    <th>City/State</th>
+                    <th>Experience</th>
+                    <th>Fee</th>
+                    <th>Status</th>
+                    <th>Verification</th>
+                    <th>Stats</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in doctors %}
+                <tr>
+                    <td>
+                        <div class="doc-cell">
+                            <img src="{{ doc.photo_url }}" class="doc-av" alt="Dr. {{ doc.first_name }}">
+                            <div class="doc-info">
+                                <div class="doc-name">Dr. {{ doc.first_name }} {{ doc.last_name }}</div>
+                                <div class="doc-spec">{{ doc.get_specialty_display }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="font-size:0.8rem;color:#555;">
+                        <i class="fas fa-map-marker-alt" style="color:#94a3b8;margin-right:4px;"></i> 
+                        {{ doc.city }}, {{ doc.state }}
+                    </td>
+                    <td><span style="font-weight:700;color:#1e293b;">{{ doc.experience_years }}</span> <small style="color:#64748b;">Years</small></td>
+                    <td><span style="font-weight:800;color:#059669;">₹{{ doc.consultation_fee|floatformat:0 }}</span></td>
+                    <td>
+                        {% if doc.is_available %}
+                            <span class="status-dot dot-on"></span> <span style="font-size:0.75rem;font-weight:600;color:#059669;">Available</span>
+                        {% else %}
+                            <span class="status-dot dot-off"></span> <span style="font-size:0.75rem;font-weight:600;color:#64748b;">Busy</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if doc.is_verified %}
+                            <span class="badge-v"><i class="fas fa-check-circle"></i> Verified</span>
+                        {% else %}
+                            <span class="badge-uv"><i class="fas fa-exclamation-triangle"></i> Pending</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.75rem;">
+                        <div style="display:flex;gap:10px;">
+                            <span title="Appointments"><i class="fas fa-calendar-check" style="color:#3b82f6;"></i> {{ doc.appointments.count }}</span>
+                            <span title="Rating"><i class="fas fa-star" style="color:#f59e0b;"></i> {{ doc.average_rating|default:"0" }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="{% url 'admin_system:doctor_detail' doc.id %}" class="ab ab-view" title="View Profile"><i class="fas fa-id-card"></i></a>
+                            <a href="{% url 'admin_system:doctor_edit' doc.id %}" class="ab ab-edit" title="Edit Data"><i class="fas fa-user-edit"></i></a>
+                            <a href="{% url 'admin_system:doctor_delete' doc.id %}" class="ab ab-del" title="Delete Account"><i class="fas fa-trash-alt"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:50px;color:#94a3b8;">
+                        <i class="fas fa-user-slash" style="font-size:3rem;margin-bottom:15px;display:block;opacity:0.2;"></i>
+                        No medical professionals found matching your filters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if specialty %}&specialty={{ specialty }}{% endif %}{% if availability %}&availability={{ availability }}{% endif %}{% if verified %}&verified={{ verified }}{% endif %}" class="page-btn">« First</a>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                    <span class="page-btn active">{{ num }}</span>
+                {% elif num|add:'-3' <= page_obj.number and num|add:'3' >= page_obj.number %}
+                    <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if specialty %}&specialty={{ specialty }}{% endif %}{% if availability %}&availability={{ availability }}{% endif %}{% if verified %}&verified={{ verified }}{% endif %}" class="page-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if specialty %}&specialty={{ specialty }}{% endif %}{% if availability %}&availability={{ availability }}{% endif %}{% if verified %}&verified={{ verified }}{% endif %}" class="page-btn">Last »</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

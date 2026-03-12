@@ -188,11 +188,14 @@ class DoctorProfileForm(forms.ModelForm):
         fields = [
             'first_name', 'last_name', 'email', 'phone', 'specialty',
             'qualification', 'experience_years', 'consultation_fee',
-            'state', 'city', 'address', 'photo', 'bio', 'is_available'
+            'state', 'city', 'address', 'photo', 'bio', 'is_available',
+            'is_on_duty', 'lunch_break_start', 'lunch_break_end'
         ]
         widgets = {
             'address': forms.Textarea(attrs={'rows': 3}),
             'bio': forms.Textarea(attrs={'rows': 4}),
+            'lunch_break_start': forms.TimeInput(attrs={'type': 'time'}),
+            'lunch_break_end': forms.TimeInput(attrs={'type': 'time'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -219,8 +222,16 @@ class DoctorProfileForm(forms.ModelForm):
             ),
             'qualification',
             Row(
-                Column('consultation_fee', css_class='form-group col-md-6'),
-                Column('is_available', css_class='form-group col-md-6'),
+                Column('consultation_fee', css_class='form-group col-md-4'),
+                Column('is_available', css_class='form-group col-md-4'),
+                Column('is_on_duty', css_class='form-group col-md-4'),
+                css_class='row'
+            ),
+            
+            HTML('<h3 class="mt-4">Lunch Break Settings</h3>'),
+            Row(
+                Column('lunch_break_start', css_class='form-group col-md-6'),
+                Column('lunch_break_end', css_class='form-group col-md-6'),
                 css_class='row'
             ),
             
@@ -260,6 +271,8 @@ class AppointmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['duration_minutes'].required = False
+        self.fields['duration_minutes'].initial = 30
         self.helper = FormHelper()
         self.helper.layout = Layout(
             HTML('<h3>Book Appointment</h3>'),

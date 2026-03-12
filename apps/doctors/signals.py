@@ -65,7 +65,7 @@ def send_appointment_confirmation_to_patient(appointment):
         If you need to reschedule or cancel, please contact us at least 24 hours in advance.
         
         Best regards,
-        WellCarePlusCure Team
+        MediCureFlow Team
         '''
         
         send_mail(
@@ -112,7 +112,7 @@ def send_appointment_notification_to_doctor(appointment):
         You can manage this appointment through your doctor dashboard.
         
         Best regards,
-        WellCarePlusCure Team
+        MediCureFlow Team
         '''
         
         send_mail(
@@ -164,7 +164,7 @@ def send_appointment_status_update(appointment):
         If you have any questions, please contact us.
         
         Best regards,
-        WellCarePlusCure Team
+        MediCureFlow Team
         '''
         
         send_mail(
@@ -206,7 +206,7 @@ def notify_doctor_of_review(sender, instance, created, **kwargs):
             You can view all your reviews in your doctor dashboard.
             
             Best regards,
-            WellCarePlusCure Team
+            MediCureFlow Team
             '''
             
             send_mail(

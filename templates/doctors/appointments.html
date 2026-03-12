@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Appointments — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.apt-container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+.apt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+.apt-header h1 { font-size: 2.2rem; font-weight: 800; color: #1a1a2e; }
+
+.filter-bar { background: #fff; padding: 20px 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 32px; display: flex; align-items: center; gap: 20px; }
+.filter-group { display: flex; align-items: center; gap: 12px; }
+.filter-group label { font-size: 0.85rem; font-weight: 800; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+.filter-input { padding: 10px 16px; border: 2px solid #e8e8f0; border-radius: 12px; font-size: 0.9rem; font-family: inherit; }
+
+.apt-table-card { background: #fff; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); overflow: hidden; }
+.apt-table { width: 100%; border-collapse: collapse; text-align: left; }
+.apt-table th { background: #f8fafc; padding: 20px 30px; font-weight: 800; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9; }
+.apt-table td { padding: 24px 30px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.apt-table tr:last-child td { border-bottom: none; }
+
+.patient-info { display: flex; align-items: center; gap: 16px; }
+.patient-avatar { width: 44px; height: 44px; border-radius: 12px; background: #eef2ff; color: #4834d4; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; }
+.patient-details span { font-weight: 700; color: #1a1a2e; font-size: 0.95rem; display: block; }
+.patient-details small { color: #888; font-size: 0.8rem; }
+
+.status-label { font-size: 0.75rem; font-weight: 800; padding: 6px 14px; border-radius: 20px; display: inline-block; text-transform: uppercase; }
+.label-scheduled { background: #fef3c7; color: #d97706; }
+.label-confirmed { background: #dcfce7; color: #15803d; }
+.label-completed { background: #e0f2fe; color: #0369a1; }
+.label-cancelled { background: #fee2e2; color: #b91c1c; }
+
+.action-links { display: flex; gap: 12px; }
+.btn-action { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #64748b; background: #f1f5f9; transition: all 0.2s; }
+.btn-action:hover { background: #4834d4; color: #fff; }
+
+@media (max-width: 900px) {
+    .filter-bar { flex-direction: column; align-items: stretch; }
+    .apt-table thead { display: none; }
+    .apt-table tr { display: block; padding: 20px; border-bottom: 2px solid #f1f5f9; }
+    .apt-table td { display: block; padding: 10px 0; border: none; text-align: right; }
+    .apt-table td::before { content: attr(data-label); float: left; font-weight: 800; color: #64748b; text-transform: uppercase; font-size: 0.7rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="apt-container">
+    <div class="apt-header">
+        <h1>Appointment Schedule</h1>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label>Filter Status</label>
+            <select class="filter-input">
+                <option>All Appointments</option>
+                <option>Scheduled</option>
+                <option>Confirmed</option>
+                <option>Completed</option>
+                <option>Cancelled</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Date Range</label>
+            <input type="date" class="filter-input">
+        </div>
+    </div>
+
+    <div class="apt-table-card">
+        <table class="apt-table">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Date & Time</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appt in appointments %}
+                <tr>
+                    <td data-label="Patient">
+                        <div class="patient-info">
+                            <div class="patient-avatar">
+                                {{ appt.patient.first_name|first }}{{ appt.patient.last_name|first }}
+                            </div>
+                            <div class="patient-details">
+                                <span>{{ appt.patient.get_full_name }}</span>
+                                <small>{{ appt.patient.email }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td data-label="Date & Time" style="font-weight: 700; color: #1a1a2e;">
+                        {{ appt.appointment_date|date:"d M, Y" }}<br>
+                        <small style="color: #888;">{{ appt.appointment_time|time:"H:i" }}</small>
+                    </td>
+                    <td data-label="Status">
+                        <span class="status-label label-{{ appt.status }}">{{ appt.get_status_display }}</span>
+                    </td>
+                    <td data-label="Reason" style="max-width: 250px; font-size: 0.9rem; color: #666; line-height: 1.4;">
+                        {{ appt.patient_notes|truncatechars:60|default:"No notes provided" }}
+                    </td>
+                    <td data-label="Actions">
+                        <div class="action-links">
+                            {% if appt.status != 'completed' and appt.status != 'cancelled' %}
+                            <button class="btn-action open-consult-modal" 
+                                    data-id="{{ appt.id }}" 
+                                    data-patient-id="{{ appt.patient.id }}"
+                                    data-patient="{{ appt.patient.get_full_name }}"
+                                    title="Complete Consultation">
+                                <i class="fas fa-stethoscope"></i>
+                            </button>
+                            {% endif %}
+                            <a href="{% url 'doctors:appointment_update' appt.pk %}" class="btn-action" title="Edit/Update Status">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 80px; color: #888;">
+                        <i class="fas fa-calendar-times" style="font-size: 4rem; opacity: 0.1; margin-bottom: 24px; display: block;"></i>
+                        <p style="font-size: 1.1rem; font-weight: 600;">No appointments found in this view.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Consultation Modal -->
+<div id="consultation-modal" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; backdrop-filter: blur(5px);">
+    <div style="background:#fff; border-radius:24px; width:95%; max-width:1100px; height: 90vh; display: flex; flex-direction: column; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
+        
+        <!-- Modal Header -->
+        <div style="padding: 24px 40px; border-bottom: 2px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fafbff;">
+            <div>
+                <h2 style="margin:0; font-weight:800; color:#1a1a2e; font-size: 1.5rem;">Clinical Consultation</h2>
+                <p style="margin: 4px 0 0; color:#64748b; font-weight: 600;">Patient: <span id="modal-patient-name" style="color:#4834d4;"></span></p>
+            </div>
+            <button id="close-modal" style="background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: #64748b; font-weight: 800;">✕</button>
+        </div>
+
+        <!-- Modal Body (Split Layout) -->
+        <div style="flex: 1; display: flex; overflow: hidden;">
+            
+            <!-- Left Panel: Consultation Form -->
+            <div style="flex: 1; padding: 40px; border-right: 2px solid #f1f5f9; overflow-y: auto;">
+                <form id="consultation-form">
+                    <div style="margin-bottom:28px;">
+                        <label style="display:block; font-size:0.8rem; font-weight:800; color:#475569; margin-bottom:12px; text-transform:uppercase; letter-spacing: 1px;">Clinical Remarks & Prescription</label>
+                        <textarea id="modal-remarks" required style="width:100%; padding:20px; border:2px solid #e2e8f0; border-radius:16px; font-family:inherit; min-height:220px; font-size: 1rem; transition: border-color 0.2s;" placeholder="Enter clinical assessment, diagnostic findings, and prescriptions..."></textarea>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px;">
+                        <div>
+                            <label style="display:block; font-size:0.8rem; font-weight:800; color:#475569; margin-bottom:12px; text-transform:uppercase; letter-spacing: 1px;">Follow-up Date</label>
+                            <input type="date" id="modal-next-date" style="width:100%; padding:14px 18px; border:2px solid #e2e8f0; border-radius:12px; font-size: 0.95rem;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.8rem; font-weight:800; color:#475569; margin-bottom:12px; text-transform:uppercase; letter-spacing: 1px;">Follow-up Time</label>
+                            <input type="time" id="modal-next-time" style="width:100%; padding:14px 18px; border:2px solid #e2e8f0; border-radius:12px; font-size: 0.95rem;">
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; gap:16px; justify-content:flex-end;">
+                        <button type="submit" style="padding:16px 32px; border:none; background:linear-gradient(135deg,#4834d4,#686de0); color:#fff; border-radius:14px; font-weight:700; cursor:pointer; box-shadow:0 10px 20px rgba(72,52,212,0.25); font-size: 1rem;">Complete Consultation</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right Panel: Past History Mindmap -->
+            <div style="flex: 1.2; background: #f8fafc; display: flex; flex-direction: column;">
+                <div style="padding: 24px 32px; border-bottom: 1px solid #e2e8f0; background: #fff;">
+                    <h3 style="margin:0; font-size: 0.9rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px;">
+                        <i class="fas fa-project-diagram" style="margin-right: 8px; color: #4834d4;"></i> Past Patient History
+                    </h3>
+                </div>
+                
+                <!-- Mindmap Canvas Area -->
+                <div id="history-mindmap-container" style="flex: 1; padding: 32px; overflow-y: auto; position: relative;">
+                    <!-- Loading State -->
+                    <div id="history-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">
+                        <div style="width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #4834d4; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <p style="margin-top: 16px; font-weight: 600;">Fetching clinical history...</p>
+                    </div>
+
+                    <!-- Mindmap Content -->
+                    <div id="history-mindmap" style="display: none; display: flex; flex-direction: column; align-items: center; gap: 40px; padding-bottom: 40px;">
+                        <!-- Nodes will be injected here -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="history-empty" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">
+                        <i class="fas fa-folder-open" style="font-size: 3rem; opacity: 0.2; margin-bottom: 16px;"></i>
+                        <p style="font-weight: 600;">No past consultations found.</p>
+                    </div>
+                </div>
+
+                <!-- History Summary Detail Box (Hidden initially) -->
+                <div id="history-detail-overlay" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: #fff; border-top: 3px solid #4834d4; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10;">
+                    <div style="padding: 24px 32px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                            <div>
+                                <span id="hd-date" style="font-size: 1.1rem; font-weight: 800; color: #1a1a2e;"></span>
+                                <small id="hd-doctor" style="display: block; color: #64748b; font-weight: 600;"></small>
+                            </div>
+                            <button id="close-detail" style="background: #f1f5f9; border: none; padding: 4px 12px; border-radius: 8px; cursor: pointer; color: #64748b; font-weight: 700; font-size: 0.8rem;">CLOSE</button>
+                        </div>
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; border-left: 4px solid #e2e8f0;">
+                            <h4 style="margin: 0 0 8px; font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase;">Clinical Summary:</h4>
+                            <p id="hd-remarks" style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.6; white-space: pre-wrap;"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.mindmap-node {
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px 24px;
+    width: 240px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    text-align: center;
+}
+.mindmap-node:hover {
+    transform: translateY(-5px);
+    border-color: #4834d4;
+    box-shadow: 0 10px 25px rgba(72,52,212,0.1);
+}
+.mindmap-node::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    width: 2px;
+    height: 40px;
+    background: #cbd5e1;
+    z-index: -1;
+}
+.mindmap-node:last-child::after { display: none; }
+
+.mindmap-node strong { display: block; font-size: 1rem; color: #1a1a2e; margin-bottom: 4px; }
+.mindmap-node span { font-size: 0.8rem; color: #64748b; font-weight: 600; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('consultation-modal');
+    const form = document.getElementById('consultation-form');
+    const closeBtn = document.getElementById('close-modal');
+    const patientNameSpan = document.getElementById('modal-patient-name');
+    
+    // History UI elements
+    const historyMindmap = document.getElementById('history-mindmap');
+    const historyLoading = document.getElementById('history-loading');
+    const historyEmpty = document.getElementById('history-empty');
+    const historyDetailOverlay = document.getElementById('history-detail-overlay');
+    
+    let activeAppointmentId = null;
+
+    document.querySelectorAll('.open-consult-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            activeAppointmentId = this.dataset.id;
+            const patientId = this.dataset.patientId;
+            patientNameSpan.textContent = this.dataset.patient;
+            modal.style.display = 'flex';
+            
+            // Fetch Patient History
+            fetchHistory(patientId);
+        });
+    });
+
+    function fetchHistory(patientId) {
+        historyLoading.style.display = 'flex';
+        historyMindmap.style.display = 'none';
+        historyEmpty.style.display = 'none';
+        historyMindmap.innerHTML = '';
+        historyDetailOverlay.style.display = 'none';
+
+        fetch(`/doctors/api/patient/${patientId}/history/`)
+            .then(res => res.json())
+            .then(data => {
+                historyLoading.style.display = 'none';
+                if (data.success && data.history.length > 0) {
+                    historyMindmap.style.display = 'flex';
+                    renderMindmap(data.history);
+                } else {
+                    historyEmpty.style.display = 'flex';
+                }
+            })
+            .catch(err => {
+                console.error("Error fetching history:", err);
+                historyLoading.style.display = 'none';
+                historyEmpty.style.display = 'flex';
+            });
+    }
+
+    function renderMindmap(history) {
+        history.forEach(item => {
+            const node = document.createElement('div');
+            node.className = 'mindmap-node';
+            node.innerHTML = `<strong>${item.date}</strong><span>${item.doctor}</span>`;
+            node.onclick = () => showHistoryDetail(item);
+            historyMindmap.appendChild(node);
+        });
+    }
+
+    function showHistoryDetail(item) {
+        document.getElementById('hd-date').textContent = item.date;
+        document.getElementById('hd-doctor').textContent = `Attended by ${item.doctor}`;
+        document.getElementById('hd-remarks').textContent = item.remarks;
+        
+        historyDetailOverlay.style.display = 'block';
+        setTimeout(() => {
+            historyDetailOverlay.style.transform = 'translateY(0)';
+        }, 10);
+    }
+
+    document.getElementById('close-detail').onclick = () => {
+        historyDetailOverlay.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+            historyDetailOverlay.style.display = 'none';
+        }, 300);
+    };
+
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        form.reset();
+    });
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const data = {
+            remarks: document.getElementById('modal-remarks').value,
+            next_date: document.getElementById('modal-next-date').value,
+            next_time: document.getElementById('modal-next-time').value
+        };
+
+        fetch(`/doctors/api/appointments/${activeAppointmentId}/consultation-save/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Consultation completed successfully!');
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(err => {
+            console.error('Error saving consultation:', err);
+            alert('An error occurred. Please try again.');
+        });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            form.reset();
+        }
+    });
+});
+</script>
+{% endblock %}

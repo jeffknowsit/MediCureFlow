@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}System Alerts — MediCureFlow Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.alerts-page { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+.alerts-hero {
+    background: linear-gradient(135deg, #451a03 0%, #92400e 100%);
+    padding: 30px 48px; border-radius: 20px; margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.hero-text h1 { color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 4px; }
+.hero-text p { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+
+/* Filter Container */
+.filter-box {
+    background: #fff; border-radius: 16px; padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+    margin-bottom: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+}
+.filter-select { padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; font-family: inherit; background: #fff; flex: 1; min-width: 140px; }
+.btn-filter { padding: 10px 20px; background: #92400e; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.btn-clear { color: #64748b; font-weight: 600; text-decoration: none; font-size: 0.85rem; margin-left:8px; }
+
+/* Alert Component */
+.alert-card {
+    background: #fff; border-radius: 16px; min-height: 80px; margin-bottom: 12px;
+    border: 1px solid #e2e8f0; transition: all 0.2s; position: relative;
+    display: grid; grid-template-columns: 60px 1fr 180px; align-items: stretch; overflow: hidden;
+}
+.alert-card.unread { border-left: 4px solid #ef4444; background: #fffafb; }
+.alert-card.read { border-left: 4px solid #94a3b8; opacity: 0.85; }
+
+.severity-indicator { display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+.severity-critical { color: #ef4444; background: #fef2f2; }
+.severity-high { color: #f97316; background: #fff7ed; }
+.severity-medium { color: #eab308; background: #fefce8; }
+.severity-low { color: #3b82f6; background: #eff6ff; }
+
+.alert-main { padding: 16px 4px; }
+.alert-main h4 { font-size: 0.95rem; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
+.alert-main p { font-size: 0.82rem; color: #64748b; line-height: 1.4; margin: 0; }
+.alert-meta { margin-top: 8px; font-size: 0.7rem; color: #94a3b8; display: flex; gap: 12px; }
+
+.alert-actions { 
+    display: flex; flex-direction: column; justify-content: center; gap: 8px; 
+    padding: 16px; background: #f8fafc; border-left: 1px solid #e2e8f0;
+}
+.action-btn { 
+    padding: 7px 12px; font-size: 0.75rem; font-weight: 700; 
+    border-radius: 6px; border: 1px solid #e2e8f0; background: #fff;
+    cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.action-btn:hover { background: #f0fdf4; border-color: #10b981; color: #10b981; }
+
+.pagination { margin-top: 32px; display: flex; justify-content: center; gap: 8px; }
+.page-btn { padding: 8px 16px; border-radius: 10px; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; text-decoration: none; color: #64748b; font-weight: 600; }
+.page-btn.active { background: #92400e; color: #fff; border-color: #92400e; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="alerts-page">
+    <div class="alerts-hero">
+        <div class="hero-text">
+            <h1><i class="fas fa-shield-virus" style="margin-right:12px;"></i> System Alerts</h1>
+            <p>Monitor security, performance, and operational notifications</p>
+        </div>
+        <div class="hero-badge" style="background:rgba(255,255,255,0.15); padding:10px 20px; border-radius:12px; color:#fff;">
+            <strong>{{ page_obj.paginator.count }} Total Alerts</strong>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="filter-box">
+        <select name="type" class="filter-select">
+            <option value="">All Alert Types</option>
+            {% for code, label in alert_types %}
+            <option value="{{ code }}" {% if selected_type == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="severity" class="filter-select">
+            <option value="">All Severities</option>
+            {% for code, label in severity_levels %}
+            <option value="{{ code }}" {% if selected_severity == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="status" class="filter-select">
+            <option value="">All Statuses</option>
+            <option value="unread" {% if selected_status == 'unread' %}selected{% endif %}>Unread</option>
+            <option value="unresolved" {% if selected_status == 'unresolved' %}selected{% endif %}>Unresolved</option>
+        </select>
+
+        <button type="submit" class="btn-filter">Update View</button>
+        <a href="{% url 'admin_system:system_alerts' %}" class="btn-clear">Reset</a>
+    </form>
+
+    <!-- Alerts List -->
+    <div class="alerts-list">
+        {% for alert in page_obj %}
+        <div class="alert-card {% if alert.is_read %}read{% else %}unread{% endif %}">
+            <div class="severity-indicator severity-{{ alert.severity }}">
+                {% if alert.severity == 'critical' %}<i class="fas fa-biohazard"></i>
+                {% elif alert.severity == 'high' %}<i class="fas fa-exclamation-triangle"></i>
+                {% elif alert.severity == 'medium' %}<i class="fas fa-info-circle"></i>
+                {% else %}<i class="fas fa-check-circle"></i>{% endif %}
+            </div>
+            
+            <div class="alert-main">
+                <h4>{{ alert.title }}</h4>
+                <p>{{ alert.message }}</p>
+                <div class="alert-meta">
+                    <span><i class="fas fa-folder"></i> {{ alert.get_alert_type_display }}</span>
+                    <span><i class="far fa-clock"></i> {{ alert.created_at|date:"M d, Y H:i" }}</span>
+                    {% if alert.is_resolved %}
+                    <span style="color:#10b981;"><i class="fas fa-check-double"></i> Resolved</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="alert-actions">
+                {% if not alert.is_read %}
+                <button class="action-btn" onclick="markRead('{{ alert.id }}', this)">
+                    <i class="fas fa-envelope-open"></i> Mark Read
+                </button>
+                {% endif %}
+                
+                {% if not alert.is_resolved %}
+                <button class="action-btn" onclick="markResolved('{{ alert.id }}', this)">
+                    <i class="fas fa-check-circle"></i> Resolve
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align:center; padding:80px; background:#fff; border-radius:16px; border:1px dashed #cbd5e1;">
+            <i class="fas fa-clipboard-check" style="font-size:3rem; color:#e2e8f0; margin-bottom:16px; display:block;"></i>
+            <h3 style="color:#64748b;">All clear!</h3>
+            <p style="color:#94a3b8;">No alerts matching your current filters.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_severity %}&severity={{ selected_severity }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="page-btn">Previous</a>
+        {% endif %}
+        
+        <span class="page-btn active">{{ page_obj.number }}</span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_severity %}&severity={{ selected_severity }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="page-btn">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function markRead(id, btn) {
+    try {
+        const response = await fetch(`/admin-system/alerts/${id}/read/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        if (data.success) {
+            btn.parentElement.parentElement.classList.add('read');
+            btn.remove();
+        }
+    } catch (e) {
+        console.error('Error:', e);
+    }
+}
+
+async function markResolved(id, btn) {
+    try {
+        const response = await fetch(`/admin-system/alerts/${id}/resolve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        if (data.success) {
+            const card = btn.parentElement.parentElement;
+            const meta = card.querySelector('.alert-meta');
+            const status = document.createElement('span');
+            status.style.color = '#10b981';
+            status.innerHTML = '<i class="fas fa-check-double"></i> Resolved';
+            meta.appendChild(status);
+            btn.remove();
+        }
+    } catch (e) {
+        console.error('Error:', e);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Security Monitoring — MediCureFlow Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.security-page { max-width: 1300px; margin: 0 auto; padding: 20px 24px; }
+
+.security-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+    padding: 36px 48px; border-radius: 24px; margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.hero-content h1 { font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 12px; }
+.hero-content p { color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+
+/* Metrics Row */
+.security-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px; }
+.sm-card {
+    background: #fff; border-radius: 16px; padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
+    display: flex; align-items: center; gap: 16px;
+}
+.sm-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.sm-blue { background: #eff6ff; color: #3b82f6; }
+.sm-red { background: #fef2f2; color: #ef4444; }
+.sm-green { background: #f0fdf4; color: #10b981; }
+.sm-purple { background: #f5f3ff; color: #8b5cf6; }
+
+.sm-val { font-size: 1.6rem; font-weight: 800; color: #1e293b; line-height: 1; }
+.sm-lbl { font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+
+/* Main Grid */
+.security-grid { display: grid; grid-template-columns: 1fr 2.5fr; gap: 24px; }
+
+/* Left Column - Sessions & Logins */
+.side-panel { display: flex; flex-direction: column; gap: 24px; }
+.p-card { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+.p-card h3 { font-size: 0.95rem; font-weight: 800; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+.login-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+.login-row:last-child { border-bottom: none; }
+.login-av { width: 32px; height: 32px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.75rem; color: #64748b; }
+.login-info { flex: 1; overflow: hidden; }
+.login-user { font-weight: 700; font-size: 0.82rem; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.login-time { font-size: 0.68rem; color: #94a3b8; }
+.login-ip { font-size: 0.68rem; color: #3b82f6; font-weight: 600; font-family: monospace; }
+
+/* Main Table */
+.log-card { background: #fff; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; overflow: hidden; }
+.log-header { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+.log-header h2 { font-size: 1.1rem; font-weight: 800; color: #1e293b; }
+
+.table-wrap { overflow-x: auto; }
+.log-table { width: 100%; border-collapse: collapse; }
+.log-table th { background: #f8fafc; padding: 12px 16px; text-align: left; font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; }
+.log-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-size: 0.82rem; color: #334155; }
+.log-table tr:hover td { background: #fbfcfe; }
+
+.badge-type { padding: 4px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+.bt-create { background: #ecfdf5; color: #059669; }
+.bt-read { background: #f0f9ff; color: #0ea5e9; }
+.bt-update { background: #fffbeb; color: #d97706; }
+.bt-delete { background: #fef2f2; color: #ef4444; }
+.bt-bulk { background: #f5f3ff; color: #8b5cf6; }
+
+.badge-success { color: #10b981; display: flex; align-items: center; gap: 4px; font-weight: 700; }
+.badge-fail { color: #ef4444; display: flex; align-items: center; gap: 4px; font-weight: 700; }
+
+.btn-export { padding: 8px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #1e293b; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-export:hover { background: #1e293b; color: #fff; border-color: #1e293b; }
+
+.pagination { padding: 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: center; gap: 8px; }
+.page-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; text-decoration: none; color: #64748b; font-size: 0.8rem; font-weight: 600; }
+.page-btn.active { background: #334155; color: #fff; border-color: #334155; }
+
+@media (max-width: 1024px) { .security-grid { grid-template-columns: 1fr; } .security-metrics { grid-template-columns: repeat(2, 1fr); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="security-page">
+    <div class="security-hero">
+        <div class="hero-content">
+            <h1><i class="fas fa-user-shield"></i> Security Monitoring</h1>
+            <p>Activity logging, access control, and threat detection portal</p>
+        </div>
+        <div class="hero-actions">
+            <a href="{% url 'admin_system:dashboard' %}" class="btn-export" style="background:transparent; color:#fff; border-color:rgba(255,255,255,0.3);">
+                <i class="fas fa-arrow-left"></i> Back to Control Panel
+            </a>
+        </div>
+    </div>
+
+    <!-- Security Metrics -->
+    <div class="security-metrics">
+        <div class="sm-card">
+            <div class="sm-icon sm-green"><i class="fas fa-check-shield"></i></div>
+            <div>
+                <div class="sm-val">{{ successful_logins }}</div>
+                <div class="sm-lbl">Successful Logins</div>
+            </div>
+        </div>
+        <div class="sm-card">
+            <div class="sm-icon sm-red"><i class="fas fa-times-circle"></i></div>
+            <div>
+                <div class="sm-val">{{ failed_logins }}</div>
+                <div class="sm-lbl">Failed Logins</div>
+            </div>
+        </div>
+        <div class="sm-card">
+            <div class="sm-icon sm-purple"><i class="fas fa-fingerprint"></i></div>
+            <div>
+                <div class="sm-val">{{ active_sessions }}</div>
+                <div class="sm-lbl">Active Sessions</div>
+            </div>
+        </div>
+        <div class="sm-card">
+            <div class="sm-icon sm-blue"><i class="fas fa-shield-alt"></i></div>
+            <div>
+                <div class="sm-val">{{ security_alerts }}</div>
+                <div class="sm-lbl">Security Alerts</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="security-grid">
+        <!-- Sidebar -->
+        <div class="side-panel">
+            <div class="p-card">
+                <h3><i class="fas fa-sign-in-alt"></i> Recent Admin Logins</h3>
+                <div class="logins-list">
+                    {% for login in login_activities %}
+                    <div class="login-row">
+                        <div class="login-av">{{ login.admin.username|first|upper }}</div>
+                        <div class="login-info">
+                            <div class="login-user">{{ login.admin.get_full_name|default:login.admin.username }}</div>
+                            <div class="login-time">{{ login.timestamp|timesince }} ago</div>
+                        </div>
+                        <div class="login-ip">{{ login.ip_address }}</div>
+                    </div>
+                    {% empty %}
+                    <p style="text-align:center; padding:20px; color:#94a3b8; font-size:0.8rem;">No recent login logs.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="p-card">
+                <h3><i class="fas fa-ban"></i> Blocked Resources</h3>
+                <div class="blocked-list">
+                    {% for ip in blocked_ips %}
+                    <div class="login-row">
+                        <div style="color:#ef4444;"><i class="fas fa-shield-alt"></i></div>
+                        <div class="login-info">
+                            <div class="login-user">{{ ip.address }}</div>
+                            <div class="login-time">Blocked since {{ ip.since|date:"M d" }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p style="text-align:center; padding:20px; color:#94a3b8; font-size:0.8rem;">No resources are currently blocked.</p>
+                    {% endfor %}
+                </div>
+                <div style="margin-top:16px; border-top:1px solid #f1f5f9; padding-top:16px;">
+                    <a href="#" style="font-size:0.75rem; color:#3b82f6; font-weight:700; text-decoration:none;">View Firewall Configuration</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Table -->
+        <div class="log-card">
+            <div class="log-header">
+                <h2>Admin Activity Log</h2>
+                <a href="{% url 'admin_system:export_activity_log' %}" class="btn-export">
+                    <i class="fas fa-file-csv"></i> Export Log
+                </a>
+            </div>
+            <div class="table-wrap">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Admin User</th>
+                            <th>Action</th>
+                            <th>Description</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in admin_activities %}
+                        <tr>
+                            <td style="white-space:nowrap; font-size:0.78rem;">{{ activity.timestamp|date:"M d, H:i:s" }}</td>
+                            <td>
+                                <div style="font-weight:700;">{{ activity.admin.username }}</div>
+                                <div style="font-size:0.65rem; color:#94a3b8;">UID: {{ activity.admin.id }}</div>
+                            </td>
+                            <td>
+                                <span class="badge-type bt-{{ activity.action_type }}">{{ activity.get_action_type_display }}</span>
+                            </td>
+                            <td style="font-size:0.78rem; line-height:1.4; color:#64748b;">{{ activity.description }}</td>
+                            <td style="font-family:monospace; font-size:0.75rem;">{{ activity.ip_address }}</td>
+                            <td>
+                                {% if activity.success %}
+                                <span class="badge-success"><i class="fas fa-check-circle"></i> OK</span>
+                                {% else %}
+                                <span class="badge-fail"><i class="fas fa-exclamation-circle"></i> FAIL</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">No activity logged yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                <a href="?page=1{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}" class="page-btn">« First</a>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                        <span class="page-btn active">{{ num }}</span>
+                    {% elif num|add:'-3' <= page_obj.number and num|add:'3' >= page_obj.number %}
+                        <a href="?page={{ num }}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}" class="page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.action_type %}&action_type={{ request.GET.action_type }}{% endif %}" class="page-btn">Last »</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

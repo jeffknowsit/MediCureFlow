@@ -1,4 +1,4 @@
-"""wellcarepluscure URL Configuration
+"""MediCureFlow URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.2/topics/http/urls/
@@ -20,9 +20,9 @@ from django.conf.urls.static import static
 from apps.users import views as users_views
 from apps.doctors import views as doctors_views
 
-admin.site.site_header = "WellCarePlusCure Admin Portal"
-admin.site.site_title = "WellCarePlusCure Admin"
-admin.site.index_title = "Welcome to WellCarePlusCure Administration"
+admin.site.site_header = "MediCureFlow Admin Portal"
+admin.site.site_title = "MediCureFlow Admin"
+admin.site.index_title = "Welcome to MediCureFlow Administration"
 
 urlpatterns = [
     path('', users_views.HomeView.as_view(), name='home'),
@@ -32,7 +32,7 @@ urlpatterns = [
     path('users/', include('apps.users.urls')),
     path('doctors/', include('apps.doctors.urls')),
     path('payments/', include('apps.payments.urls')),
-    path('quick-checkup/', include('apps.health_ai.urls')),
+    # path('quick-checkup/', include('apps.health_ai.urls')),
     path('notifications/', include('apps.notifications.urls', namespace='notifications')),
     
     # Powerful Admin System
@@ -68,11 +68,11 @@ urlpatterns = [
 ]
 
 # Add debug toolbar URLs for development
-if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+# if settings.DEBUG:
+#     import debug_toolbar
+#     urlpatterns = [
+#         path('__debug__/', include(debug_toolbar.urls)),
+#     ] + urlpatterns
 
 # Static and media files
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

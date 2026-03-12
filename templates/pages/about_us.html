@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── RESET & BASE ── */
+body { font-family: 'Inter', sans-serif; color: #1e293b; background: #fff; scroll-behavior: smooth; }
+
+/* ── LAYOUT ── */
+.container { max-width: 1240px; margin: 0 auto; padding: 0 40px; }
+
+/* ── HERO SECTION ── */
+.abt-hero {
+    position: relative;
+    padding: 180px 0 160px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.9) 100%), 
+                url('/media/healthcare_modern_hero_1773333606785.png');
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+    overflow: visible; /* Crucial for overlapping elements */
+}
+
+.abt-hero-content { max-width: 720px; }
+
+.abt-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 18px; background: rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(129, 140, 248, 0.4); border-radius: 100px;
+    color: #c7d2fe; font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 32px;
+}
+
+.abt-hero h1 {
+    font-size: 4.5rem; font-weight: 900; line-height: 1.05; margin-bottom: 24px;
+    letter-spacing: -2px; background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.abt-hero p {
+    font-size: 1.35rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 48px;
+    max-width: 650px; opacity: 0.9;
+}
+
+/* ── BUTTONS ── */
+.abt-btn-row { display: flex; gap: 24px; flex-wrap: wrap; }
+
+.abt-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 16px 40px; border-radius: 100px; font-weight: 800;
+    font-size: 1rem; text-decoration: none; transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    cursor: pointer; gap: 12px; border: none;
+}
+
+.abt-btn-primary { 
+    background: #4f46e5; color: #ffffff !important; 
+    box-shadow: 0 10px 30px rgba(79, 70, 229, 0.5); 
+}
+.abt-btn-primary:hover { background: #4338ca; transform: translateY(-3px); box-shadow: 0 15px 40px rgba(79, 70, 229, 0.6); }
+
+.abt-btn-outline { 
+    background: transparent; border: 2px solid rgba(255,255,255,0.4); color: #ffffff !important; 
+}
+.abt-btn-outline:hover { background: rgba(255,255,255,0.1); border-color: #fff; transform: translateY(-3px); }
+
+/* ── STATS SECTION (The Overlapping Part) ── */
+.abt-stats-section {
+    position: relative;
+    z-index: 100; /* Bring to front */
+    margin-top: -100px; /* Overlap hero */
+    padding-bottom: 60px;
+}
+
+.abt-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+}
+
+.abt-stat-card {
+    background: #ffffff;
+    padding: 56px 40px;
+    border-radius: 32px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+    text-align: center;
+    border: 1px solid rgba(241, 245, 249, 0.8);
+    transition: all 0.5s ease;
+}
+
+.abt-stat-card:hover {
+    transform: translateY(-15px);
+    box-shadow: 0 45px 80px rgba(0,0,0,0.18);
+    border-color: #e2e8f0;
+}
+
+.abt-stat-icon {
+    width: 72px; height: 72px; border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 32px; font-size: 1.8rem;
+}
+
+.abt-icon-1 { background: #eef2ff; color: #6366f1; }
+.abt-icon-2 { background: #ecfdf5; color: #10b981; }
+.abt-icon-3 { background: #fef2f2; color: #ef4444; }
+
+.abt-stat-num {
+    font-size: 3.2rem; font-weight: 900; color: #0f172a; margin-bottom: 8px;
+    letter-spacing: -1px;
+}
+
+.abt-stat-label {
+    color: #64748b; font-weight: 700; text-transform: uppercase;
+    font-size: 0.85rem; letter-spacing: 2px;
+}
+
+/* ── MISSION SECTION ── */
+.abt-section { padding: 140px 0; background: #fff; }
+
+.abt-content-row {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 100px;
+    align-items: center;
+}
+
+.abt-image-wrap { position: relative; }
+
+.abt-main-img {
+    width: 100%; border-radius: 40px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.2);
+    display: block;
+}
+
+.abt-floating-badge {
+    position: absolute; bottom: -30px; right: -30px;
+    background: #4f46e5; color: #fff; padding: 32px 40px;
+    border-radius: 28px; box-shadow: 0 25px 60px rgba(79, 70, 229, 0.4);
+    text-align: center;
+}
+
+.abt-floating-badge .val { font-size: 2.2rem; font-weight: 900; display: block; line-height: 1; margin-bottom: 6px; }
+.abt-floating-badge .lbl { font-size: 0.85rem; font-weight: 600; opacity: 0.8; text-transform: uppercase; letter-spacing: 1.5px; }
+
+.abt-label {
+    color: #4f46e5; font-weight: 800; text-transform: uppercase;
+    font-size: 0.9rem; letter-spacing: 4px; margin-bottom: 24px; display: block;
+}
+
+.abt-title {
+    font-size: 3.2rem; font-weight: 900; color: #0f172a;
+    margin-bottom: 32px; line-height: 1.15; letter-spacing: -1px;
+}
+
+.abt-text p {
+    font-size: 1.2rem; color: #475569; line-height: 1.8; margin-bottom: 48px;
+}
+
+.abt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; }
+
+.abt-card {
+    padding: 32px; background: #f8fafc; border-radius: 24px;
+    border: 1px solid #f1f5f9; transition: all 0.3s ease;
+}
+
+.abt-card:hover { background: #fff; box-shadow: 0 15px 40px rgba(0,0,0,0.05); border-color: #e2e8f0; }
+
+.abt-card h4 {
+    font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 14px;
+}
+
+.abt-card h4 i { color: #4f46e5; font-size: 1.25rem; }
+.abt-card p { font-size: 0.95rem; color: #64748b; line-height: 1.6; margin: 0; }
+
+/* ── QUOTE ── */
+.abt-quote { background: #0f172a; padding: 140px 0; color: #fff; text-align: center; }
+.abt-quote-content { max-width: 900px; margin: 0 auto; }
+.abt-quote i { font-size: 4.5rem; color: rgba(255,255,255,0.1); margin-bottom: 48px; display: block; }
+.abt-quote-text {
+    font-size: 2.6rem; font-weight: 700; font-style: italic;
+    color: #f1f5f9; line-height: 1.4; margin-bottom: 40px; letter-spacing: -1px;
+}
+.abt-author strong { font-size: 1.25rem; color: #fff; display: block; margin-bottom: 4px; }
+.abt-author span { color: #94a3b8; font-weight: 500; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 2px; }
+
+/* ── CTA ── */
+.abt-cta { padding: 140px 0; text-align: center; background: #f8fafc; }
+.abt-cta-title { font-size: 3.2rem; font-weight: 900; color: #0f172a; margin-bottom: 24px; }
+.abt-cta p { font-size: 1.35rem; color: #64748b; margin-bottom: 56px; max-width: 700px; margin-inline: auto; }
+.abt-cta-btns { display: flex; justify-content: center; gap: 24px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1200px) {
+    .abt-hero h1 { font-size: 3.5rem; }
+    .abt-content-row { grid-template-columns: 1fr; gap: 100px; }
+    .abt-image-wrap { max-width: 700px; margin: 0 auto; }
+}
+
+@media (max-width: 868px) {
+    .abt-stats-grid { grid-template-columns: 1fr; }
+    .abt-grid { grid-template-columns: 1fr; }
+    .abt-hero { text-align: center; padding: 140px 0 120px; }
+    .abt-hero-content { margin: 0 auto; }
+    .abt-btn-row { justify-content: center; }
+    .abt-floating-badge { right: 0; bottom: -20px; padding: 20px 30px; }
+    .abt-quote-text { font-size: 1.8rem; }
+    .abt-cta-btns { flex-direction: column; align-items: center; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Global Hero -->
+<section class="abt-hero">
+    <div class="container">
+        <div class="abt-hero-content">
+            <div class="abt-badge"><i class="fas fa-sparkles"></i> Welcare Excellence Since 2014</div>
+            <h1>Pioneering the Future<br>of Modern Healthcare</h1>
+            <p>Empowering millions by connecting world-class medical expertise with the speed and security of advanced technology.</p>
+            <div class="abt-btn-row">
+                <a href="{% url 'users:search_doctors' %}" class="abt-btn abt-btn-primary">
+                    <i class="fas fa-calendar-check"></i> Book Appointment
+                </a>
+                <a href="{% url 'home' %}" class="abt-btn abt-btn-outline">
+                    Explore Platform
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Grid Overlap (Fixed Stacking) -->
+<section class="abt-stats-section">
+    <div class="container">
+        <div class="abt-stats-grid">
+            <div class="abt-stat-card">
+                <div class="abt-stat-icon abt-icon-1"><i class="fas fa-users"></i></div>
+                <div class="abt-stat-num">25K+</div>
+                <div class="abt-stat-label">Happy Patients</div>
+            </div>
+            <div class="abt-stat-card">
+                <div class="abt-stat-icon abt-icon-2"><i class="fas fa-user-md"></i></div>
+                <div class="abt-stat-num">500+</div>
+                <div class="abt-stat-label">Verified Doctors</div>
+            </div>
+            <div class="abt-stat-card">
+                <div class="abt-stat-icon abt-icon-3"><i class="fas fa-award"></i></div>
+                <div class="abt-stat-num">4.9/5</div>
+                <div class="abt-stat-label">Service Rating</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mission -->
+<section class="abt-section">
+    <div class="container">
+        <div class="abt-content-row">
+            <div class="abt-image-wrap">
+                <img src="/media/medical_team_professional_1773333921489.png" alt="Medical Team" class="abt-main-img">
+                <div class="abt-floating-badge">
+                    <span class="val">10+ Years</span>
+                    <span class="lbl">Of Care Excellence</span>
+                </div>
+            </div>
+            <div class="text-content">
+                <span class="abt-label">Our Mission</span>
+                <h2 class="abt-title">Making Quality Healthcare Seamless for Everyone</h2>
+                <div class="abt-text">
+                    <p>We believe that managing your health should be as intuitive as sending a message. MediCureFlow eliminates paperwork, reduces wait times, and brings the best physicians directly to your screen or local office.</p>
+                </div>
+                
+                <div class="abt-grid">
+                    <div class="abt-card">
+                        <h4><i class="fas fa-fingerprint"></i> Smart Security</h4>
+                        <p>Your medical records are protected with bank-grade encryption and privacy protocols.</p>
+                    </div>
+                    <div class="abt-card">
+                        <h4><i class="fas fa-map-marker-alt"></i> Unified Care</h4>
+                        <p>Switch between digital consultations and in-person visits with one unified history.</p>
+                    </div>
+                    <div class="abt-card">
+                        <h4><i class="fas fa-user-shield"></i> Top 1% Doctors</h4>
+                        <p>We only partner with board-certified professionals who pass our 5-step quality audit.</p>
+                    </div>
+                    <div class="abt-card">
+                        <h4><i class="fas fa-clock"></i> 24/7 Support</h4>
+                        <p>Our help center and emergency coordinators are available around the clock.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quote -->
+<section class="abt-quote">
+    <div class="container">
+        <div class="abt-quote-content">
+            <i class="fas fa-quote-left"></i>
+            <p class="abt-quote-text">"Healthcare is the most critical infrastructure of human life. We are dedicated to making it smarter, faster, and more compassionate."</p>
+            <div class="abt-author">
+                <strong>Dr. Marcus MediCure</strong>
+                <span>Founder & Chief Officer</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="abt-cta">
+    <div class="container">
+        <h2 class="abt-cta-title">Join the Healthcare Revolution</h2>
+        <p>Experience the simplicity of modern medical management today. Join thousands of users who have chosen a better way to heal.</p>
+        <div class="abt-cta-btns">
+            <a href="{% url 'users:register' %}" class="abt-btn abt-btn-primary" style="padding: 20px 60px;">
+                Create Your Account
+            </a>
+            <a href="{% url 'users:search_doctors' %}" class="abt-btn" style="border: 2px solid #4f46e5; color: #4f46e5 !important;">
+                Find Your Specialist
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

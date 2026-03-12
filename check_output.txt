@@ -1,0 +1,107 @@
+.\venv\Scripts\python.exe : Traceback (most recent call last):
+At line:1 char:1
++ .\venv\Scripts\python.exe manage.py check > check_output.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last) 
+   ::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "D:\hospitalmanagment\MediCureFlow\manage.py", line 21, in <module>
+    main()
+  File "D:\hospitalmanagment\MediCureFlow\manage.py", line 17, in main
+    execute_from_command_line(sys.argv)
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\cor
+e\management\__init__.py", line 442, in execute_from_command_line
+    utility.execute()
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\cor
+e\management\__init__.py", line 436, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\cor
+e\management\base.py", line 420, in run_from_argv
+    self.execute(*args, **cmd_options)
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\cor
+e\management\base.py", line 464, in execute
+    output = self.handle(*args, **options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\cor
+e\management\commands\check.py", line 81, in handle
+    self.check(
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\cor
+e\management\base.py", line 496, in check
+    all_issues = checks.run_checks(
+                 ^^^^^^^^^^^^^^^^^^
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\cor
+e\checks\registry.py", line 89, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\cor
+e\checks\urls.py", line 44, in check_url_namespaces_unique
+    all_namespaces = _load_all_namespaces(resolver)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\cor
+e\checks\urls.py", line 63, in _load_all_namespaces
+    url_patterns = getattr(resolver, "url_patterns", [])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\uti
+ls\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\url
+s\resolvers.py", line 718, in url_patterns
+    patterns = getattr(self.urlconf_module, "urlpatterns", self.urlconf_module)
+                       ^^^^^^^^^^^^^^^^^^^
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\uti
+ls\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ^^^^^^^^^^^^^^^^^^^
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\url
+s\resolvers.py", line 711, in urlconf_module
+    return import_module(self.urlconf_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\JEFF 
+JOSEPH\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py", 
+line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "D:\hospitalmanagment\MediCureFlow\MediCureFlow\urls.py", line 
+74, in <module>
+    path('__debug__/', include(debug_toolbar.urls)),
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\url
+s\conf.py", line 39, in include
+    urlconf_module = import_module(urlconf_module)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\JEFF 
+JOSEPH\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py", 
+line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\debug_tool
+bar\urls.py", line 2, in <module>
+    from debug_toolbar.toolbar import DebugToolbar
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\debug_tool
+bar\toolbar.py", line 27, in <module>
+    from debug_toolbar.store import BaseStore, get_store
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\debug_tool
+bar\store.py", line 12, in <module>
+    from debug_toolbar.models import HistoryEntry
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\debug_tool
+bar\models.py", line 5, in <module>
+    class HistoryEntry(models.Model):
+  File "D:\hospitalmanagment\MediCureFlow\venv\Lib\site-packages\django\db\
+models\base.py", line 136, in __new__
+    raise RuntimeError(
+RuntimeError: Model class debug_toolbar.models.HistoryEntry doesn't declare an 
+explicit app_label and isn't in an application in INSTALLED_APPS.

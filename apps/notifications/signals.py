@@ -129,7 +129,7 @@ if Doctor:
                     recipient=instance.user,
                     notification_type='doctor_registration',
                     title='Doctor Registration Successful',
-                    message='Welcome to WellCare Plus! Your doctor profile has been created successfully. You can now start managing appointments and connecting with patients.',
+                    message='Welcome to MediCure Plus! Your doctor profile has been created successfully. You can now start managing appointments and connecting with patients.',
                     priority='normal',
                     content_object=instance
                 )
@@ -325,7 +325,7 @@ def send_engagement_notifications():
                 service.create_notification(
                     recipient=user,
                     notification_type='re_engagement',
-                    title='We miss you at WellCare Plus!',
+                    title='We miss you at MediCure Plus!',
                     message='It\'s been a while since your last visit. Check out our new features and book your next appointment.',
                     priority='low'
                 )

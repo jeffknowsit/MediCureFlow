@@ -1,5 +1,5 @@
 """
-Base test utilities and fixtures for WellCarePlusCure project.
+Base test utilities and fixtures for MediCureFlow project.
 
 This module provides common test utilities, fixtures, and base classes
 for consistent testing across the application.
@@ -27,7 +27,7 @@ class BaseTestCase(TestCase):
         # Create test users
         cls.admin_user = User.objects.create_user(
             username='admin',
-            email='admin@wellcareplusCure.com',
+            email='admin@MediCureFlow.com',
             password='adminpass123',
             first_name='Admin',
             last_name='User',
@@ -37,7 +37,7 @@ class BaseTestCase(TestCase):
         
         cls.doctor_user = User.objects.create_user(
             username='drdoe',
-            email='doctor@wellcareplusCure.com',
+            email='doctor@MediCureFlow.com',
             password='doctorpass123',
             first_name='John',
             last_name='Doe'
@@ -45,7 +45,7 @@ class BaseTestCase(TestCase):
         
         cls.patient_user = User.objects.create_user(
             username='patient',
-            email='patient@wellcareplusCure.com',
+            email='patient@MediCureFlow.com',
             password='patientpass123',
             first_name='Jane',
             last_name='Smith'
@@ -53,7 +53,7 @@ class BaseTestCase(TestCase):
         
         cls.patient_user2 = User.objects.create_user(
             username='patient2',
-            email='patient2@wellcareplusCure.com',
+            email='patient2@MediCureFlow.com',
             password='patientpass123',
             first_name='Bob',
             last_name='Johnson'
@@ -84,7 +84,7 @@ class BaseTestCase(TestCase):
             first_name='John',
             last_name='Doe',
             phone='5551234567',
-            email='doctor@wellcareplusCure.com',
+            email='doctor@MediCureFlow.com',
             specialty='cardiology',
             qualification='MD, Cardiology',
             experience_years=10,
@@ -99,7 +99,7 @@ class BaseTestCase(TestCase):
         # Create another doctor for testing
         cls.doctor2_user = User.objects.create_user(
             username='drsmith',
-            email='smith@wellcareplusCure.com',
+            email='smith@MediCureFlow.com',
             password='doctorpass123',
             first_name='Sarah',
             last_name='Smith'
@@ -110,7 +110,7 @@ class BaseTestCase(TestCase):
             first_name='Sarah',
             last_name='Smith',
             phone='5559876543',
-            email='smith@wellcareplusCure.com',
+            email='smith@MediCureFlow.com',
             specialty='pediatrics',
             qualification='MD, Pediatrics',
             experience_years=8,

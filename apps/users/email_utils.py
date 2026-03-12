@@ -1,5 +1,5 @@
 """
-Email notification utilities for the WellCarePlusCure application.
+Email notification utilities for the MediCureFlow application.
 
 This module handles sending various types of emails including:
 - Appointment confirmations
@@ -43,7 +43,7 @@ class EmailNotificationService:
                 'patient': patient,
                 'doctor': doctor,
                 'appointment': appointment,
-                'site_name': 'WellCarePlusCure'
+                'site_name': 'MediCureFlow'
             })
             
             # Create plain text version
@@ -88,7 +88,7 @@ class EmailNotificationService:
                 'patient': patient,
                 'doctor': doctor,
                 'appointment': appointment,
-                'site_name': 'WellCarePlusCure'
+                'site_name': 'MediCureFlow'
             })
             
             # Create plain text version
@@ -135,7 +135,7 @@ class EmailNotificationService:
                 'doctor': doctor,
                 'appointment': appointment,
                 'cancelled_by': cancelled_by,
-                'site_name': 'WellCarePlusCure'
+                'site_name': 'MediCureFlow'
             })
             
             text_content_patient = strip_tags(html_content_patient)
@@ -157,7 +157,7 @@ class EmailNotificationService:
                 'doctor': doctor,
                 'appointment': appointment,
                 'cancelled_by': cancelled_by,
-                'site_name': 'WellCarePlusCure'
+                'site_name': 'MediCureFlow'
             })
             
             text_content_doctor = strip_tags(html_content_doctor)
@@ -191,12 +191,12 @@ class EmailNotificationService:
             bool: True if email sent successfully, False otherwise
         """
         try:
-            subject = f"Welcome to WellCarePlusCure - Your Healthcare Partner"
+            subject = f"Welcome to MediCureFlow - Your Healthcare Partner"
             
             template_name = f'emails/welcome_{user_type}.html'
             html_content = render_to_string(template_name, {
                 'user': user,
-                'site_name': 'WellCarePlusCure'
+                'site_name': 'MediCureFlow'
             })
             
             text_content = strip_tags(html_content)
@@ -252,7 +252,7 @@ class EmailNotificationService:
                 'old_status': old_status,
                 'new_status': new_status,
                 'status_message': status_message,
-                'site_name': 'WellCarePlusCure'
+                'site_name': 'MediCureFlow'
             })
             
             text_content = strip_tags(html_content)
@@ -347,7 +347,7 @@ def send_bulk_follow_ups():
                 'patient': appointment.patient,
                 'doctor': appointment.doctor,
                 'appointment': appointment,
-                'site_name': 'WellCarePlusCure'
+                'site_name': 'MediCureFlow'
             })
             
             text_content = strip_tags(html_content)

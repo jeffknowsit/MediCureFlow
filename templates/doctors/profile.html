@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Doctor Profile — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; background: #f8f9fc; }
+    .profile-card { background: #fff; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #f0f0f8; }
+
+    .profile-header { 
+        background: linear-gradient(135deg, #0f6b57 0%, #1a9c7b 50%, #2dd4a8 100%); 
+        padding: 60px 48px; color: #fff; display: flex; align-items: center; gap: 40px; 
+        position: relative; overflow: hidden;
+    }
+    .profile-header::before {
+        content: ''; position: absolute; top: -50%; right: -10%;
+        width: 300px; height: 300px; border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+    }
+    .profile-image-wrap { 
+        position: relative; width: 160px; height: 160px; 
+        border-radius: 30px; border: 6px solid rgba(255,255,255,0.2); 
+        overflow: hidden; background: rgba(255,255,255,0.1);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .profile-image { width: 100%; height: 100%; object-fit: cover; }
+    .header-info h1 { font-size: 2.4rem; font-weight: 800; margin-bottom: 8px; }
+    .header-info p { font-size: 1.1rem; opacity: 0.9; font-weight: 500; }
+    .verify-badge { 
+        background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+        padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.75rem; 
+        text-transform: uppercase; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; 
+    }
+
+    .profile-body { padding: 48px; }
+    .form-section { margin-bottom: 48px; }
+    .section-title { 
+        font-size: 1.0rem; font-weight: 800; color: #1a1a2e; 
+        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 28px; 
+        display: flex; align-items: center; gap: 12px;
+        padding-bottom: 12px; border-bottom: 2px solid #f8f9ff;
+    }
+    .section-title i { color: #1a9c7b; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    .field-group { display: flex; flex-direction: column; gap: 10px; }
+    .field-group label { font-size: 0.85rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .field-input { 
+        width: 100%; padding: 14px 18px; border: 2px solid #e8e8f0; 
+        border-radius: 12px; font-size: 0.95rem; font-family: inherit; 
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; 
+        background: #fafafa;
+    }
+    .field-input:focus { border-color: #1a9c7b; outline: none; background: #fff; box-shadow: 0 0 0 4px rgba(26, 156, 123, 0.1); }
+    .field-area { min-height: 120px; resize: vertical; }
+
+    .btn-row { display: flex; gap: 16px; margin-top: 40px; padding-top: 32px; border-top: 2px solid #f0f0f8; justify-content: flex-end; }
+    .btn-save { 
+        padding: 16px 48px; background: linear-gradient(135deg, #0f6b57 0%, #1a9c7b 100%); 
+        color: #fff; border: none; border-radius: 14px; font-size: 1rem; font-weight: 700; 
+        cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 20px rgba(15, 107, 87, 0.2);
+    }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(15, 107, 87, 0.3); }
+    .btn-cancel { 
+        padding: 16px 32px; background: #fff; color: #666; 
+        border: 2px solid #e8e8f0; border-radius: 14px; font-size: 1rem; font-weight: 600; 
+        text-decoration: none; transition: all 0.2s; 
+    }
+    .btn-cancel:hover { background: #f8f9ff; color: #1a9c7b; border-color: #1a9c7b; }
+
+    @media (max-width: 768px) {
+        .profile-header { flex-direction: column; text-align: center; padding: 40px 24px; }
+        .form-row { grid-template-columns: 1fr; }
+        .profile-body { padding: 32px 24px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-image-wrap">
+                {% if doctor.photo %}
+                    <img src="{{ doctor.photo.url }}" class="profile-image" alt="{{ doctor.display_name }}">
+                {% else %}
+                    <div class="profile-image" style="background: #fff; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #4834d4;">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="header-info">
+                <h1>{{ doctor.display_name }}</h1>
+                <p>{{ doctor.get_specialty_display }} | {{ doctor.qualification }}</p>
+                {% if doctor.is_verified %}
+                    <div class="verify-badge">
+                        <i class="fas fa-check-circle"></i> Verified Provider
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="profile-body">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                
+                <div class="form-section">
+                    <h3 class="section-title"><i class="fas fa-id-card"></i> Personal Information</h3>
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>First Name</label>
+                            <input type="text" name="first_name" class="field-input" value="{{ form.first_name.value|default:'' }}">
+                        </div>
+                        <div class="field-group">
+                            <label>Last Name</label>
+                            <input type="text" name="last_name" class="field-input" value="{{ form.last_name.value|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Professional Email</label>
+                            <input type="email" name="email" class="field-input" value="{{ form.email.value|default:'' }}">
+                        </div>
+                        <div class="field-group">
+                            <label>Contact Phone</label>
+                            <input type="text" name="phone" class="field-input" value="{{ form.phone.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title"><i class="fas fa-user-graduate"></i> Professional Info</h3>
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Medical Specialty</label>
+                            <select name="specialty" class="field-input">
+                                {% for code, label in form.fields.specialty.choices %}
+                                    <option value="{{ code }}" {% if form.specialty.value == code %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label>Years of Experience</label>
+                            <input type="number" name="experience_years" class="field-input" value="{{ form.experience_years.value|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="field-group" style="margin-bottom: 24px;">
+                        <label>Qualifications</label>
+                        <input type="text" name="qualification" class="field-input" value="{{ form.qualification.value|default:'' }}">
+                    </div>
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Consultation Fee (₹)</label>
+                            <input type="number" name="consultation_fee" class="field-input" step="0.01" value="{{ form.consultation_fee.value|default:'' }}">
+                        </div>
+                        <div class="field-group">
+                            <label>Accepting Patients</label>
+                            <select name="is_available" class="field-input">
+                                <option value="True" {% if form.is_available.value == True %}selected{% endif %}>Accepting Patients</option>
+                                <option value="False" {% if form.is_available.value == False %}selected{% endif %}>Offline / Not Available</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label>Work Mode (On Duty)</label>
+                            <select name="is_on_duty" class="field-input">
+                                <option value="True" {% if form.is_on_duty.value == True %}selected{% endif %}>On Duty</option>
+                                <option value="False" {% if form.is_on_duty.value == False %}selected{% endif %}>Off Duty</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title"><i class="fas fa-utensils"></i> Lunch Break Hours</h3>
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>Lunch Start</label>
+                            <input type="time" name="lunch_break_start" class="field-input" value="{{ form.lunch_break_start.value|default:'' }}">
+                        </div>
+                        <div class="field-group">
+                            <label>Lunch End</label>
+                            <input type="time" name="lunch_break_end" class="field-input" value="{{ form.lunch_break_end.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title"><i class="fas fa-map-marker-alt"></i> Practice Location</h3>
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label>State</label>
+                            <input type="text" name="state" class="field-input" value="{{ form.state.value|default:'' }}">
+                        </div>
+                        <div class="field-group">
+                            <label>City</label>
+                            <input type="text" name="city" class="field-input" value="{{ form.city.value|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>Clinic Address</label>
+                        <textarea name="address" class="field-input field-area">{{ form.address.value|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title"><i class="fas fa-info-circle"></i> Profile & Biography</h3>
+                    <div class="field-group" style="margin-bottom: 24px;">
+                        <label>Profile Image</label>
+                        <input type="file" name="photo" class="field-input">
+                    </div>
+                    <div class="field-group">
+                        <label>Detailed Bio</label>
+                        <textarea name="bio" class="field-input field-area">{{ form.bio.value|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" class="btn-save">Update Profile</button>
+                    <a href="{% url 'doctors:dashboard' %}" class="btn-cancel">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -444,6 +444,102 @@ class DoctorAnalytics:
             'age_groups': [{'group': group, 'count': count} for group, count in age_groups.items()],
             'gender_distribution': [{'gender': gender, 'count': count} for gender, count in gender_counts.items()]
         }
+    
+    def get_revenue_trends(self, months=6):
+        """
+        Get revenue trends over the last N months.
+        """
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=months * 30)
+        
+        appointments = Appointment.objects.filter(
+            doctor=self.doctor,
+            status='completed',
+            appointment_date__gte=start_date,
+            appointment_date__lte=end_date
+        )
+        
+        monthly_revenue = defaultdict(float)
+        for appointment in appointments:
+            month_key = appointment.appointment_date.strftime('%Y-%m')
+            # Using fee_charged or falling back to consultation_fee
+            fee = float(appointment.fee_charged or self.doctor.consultation_fee or 0)
+            monthly_revenue[month_key] += fee
+        
+        # Generate chart data
+        current_date = start_date.replace(day=1)
+        chart_data = []
+        
+        while current_date <= end_date:
+            month_key = current_date.strftime('%Y-%m')
+            chart_data.append({
+                'month': current_date.strftime('%b %Y'),
+                'revenue': monthly_revenue[month_key],
+                'date': month_key
+            })
+            
+            # Move to next month
+            if current_date.month == 12:
+                current_date = current_date.replace(year=current_date.year + 1, month=1)
+            else:
+                current_date = current_date.replace(month=current_date.month + 1)
+        
+        return chart_data
+
+    def calculate_total_earnings(self):
+        """
+        Calculate total lifetime earnings.
+        """
+        from django.db.models import Sum
+        total = Appointment.objects.filter(
+            doctor=self.doctor,
+            status='completed'
+        ).aggregate(
+            total_sum=Sum('fee_charged')
+        )['total_sum'] or 0
+        
+        if not total:
+            # Fallback if fee_charged is not used reliably
+            count = Appointment.objects.filter(doctor=self.doctor, status='completed').count()
+            total = count * float(self.doctor.consultation_fee or 0)
+            
+        return float(total)
+
+    def calculate_revenue_performance(self):
+        """
+        Calculate revenue performance compared to last month.
+        """
+        today = timezone.now().date()
+        this_month_start = today.replace(day=1)
+        last_month_end = this_month_start - timedelta(days=1)
+        last_month_start = last_month_end.replace(day=1)
+        
+        this_month_revenue = float(self.calculate_monthly_earnings())
+        
+        last_month_appointments = Appointment.objects.filter(
+            doctor=self.doctor,
+            status='completed',
+            appointment_date__gte=last_month_start,
+            appointment_date__lte=last_month_end
+        )
+        
+        last_month_revenue = sum(
+            float(apt.fee_charged or self.doctor.consultation_fee or 0)
+            for apt in last_month_appointments
+        )
+        
+        growth = 0
+        if last_month_revenue > 0:
+            growth = ((this_month_revenue - last_month_revenue) / last_month_revenue) * 100
+        elif this_month_revenue > 0:
+            growth = 100
+            
+        return {
+            'this_month': this_month_revenue,
+            'last_month': last_month_revenue,
+            'growth_percent': round(growth, 1),
+            'trend': 'up' if growth >= 0 else 'down'
+        }
 
 
 class SystemAnalytics:

@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Appointment Management — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.mgmt-page { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+.mgmt-hero {
+    background: linear-gradient(135deg, #1a1a2e 0%, #4834d4 100%);
+    padding: 30px 48px; display: flex; align-items: center; gap: 20px;
+}
+.mgmt-hero i { font-size: 2rem; color: rgba(255,255,255,0.8); }
+.mgmt-hero h1 { font-size: 1.8rem; font-weight: 800; color: #fff; }
+.mgmt-hero p { color: rgba(255,255,255,0.7); font-size: 0.85rem; }
+
+.status-tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+.st { border-radius: 14px; padding: 16px 20px; color: #fff; }
+.st-cancelled { background: #ef4444; }
+.st-completed { background: #10b981; }
+.st-confirmed { background: #3b82f6; }
+.st-in_progress { background: #6b7280; }
+.st-scheduled { background: #f59e0b; }
+.st-val { font-size: 1.8rem; font-weight: 800; }
+.st-lbl { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; opacity: 0.85; letter-spacing: 0.5px; }
+
+.filter-row {
+    background: #fff; border-radius: 14px; padding: 16px 20px;
+    display: flex; gap: 12px; align-items: center; margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06); flex-wrap: wrap;
+}
+.filter-input { flex: 1; min-width: 160px; padding: 9px 14px; border: 2px solid #e8e8f0; border-radius: 8px; font-size: 0.875rem; font-family: inherit; }
+.filter-input:focus { border-color: #4834d4; outline: none; }
+.filter-select { padding: 9px 12px; border: 2px solid #e8e8f0; border-radius: 8px; font-size: 0.875rem; font-family: inherit; background: #fff; }
+.btn-filter { padding: 9px 18px; background: #4834d4; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.875rem; }
+.btn-clear { padding: 9px 14px; background: #f5f5f5; color: #555; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.875rem; text-decoration: none; }
+.btn-export { padding: 9px 18px; background: #059669; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.875rem; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+
+.table-wrap { background: #fff; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); overflow: hidden; }
+.table-hdr { padding: 16px 20px; border-bottom: 1px solid #f0f0f8; display: flex; align-items: center; justify-content: space-between; }
+.table-hdr h3 { font-size: 0.9rem; font-weight: 800; color: #1a1a2e; display: flex; align-items: center; gap: 8px; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 12px 14px; background: #f8f9ff; font-size: 0.75rem; font-weight: 700; color: #555; text-align: left; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 13px 14px; border-bottom: 1px solid #f5f5f5; font-size: 0.85rem; color: #333; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafaff; }
+
+.doctor-cell { display: flex; align-items: center; gap: 10px; }
+.dc-av { width: 34px; height: 34px; border-radius: 8px; background: #e8ecff; color: #4834d4; font-weight: 800; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dc-name { font-weight: 700; color: #1a1a2e; font-size: 0.85rem; }
+.dc-spec { font-size: 0.72rem; color: #888; }
+
+.status-chip { padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+.chip-completed { background: #e8f5e9; color: #2e7d32; }
+.chip-scheduled { background: #e3f2fd; color: #1565c0; }
+.chip-confirmed { background: #f3e5f5; color: #6a1b9a; }
+.chip-cancelled { background: #ffebee; color: #c62828; }
+.chip-in_progress { background: #f5f5f5; color: #616161; }
+
+.fee-chip { background: #ecfdf5; color: #065f46; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+.na-chip { background: #fafafa; color: #999; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+
+.action-btns { display: flex; gap: 6px; }
+.ab { width: 28px; height: 28px; border-radius: 7px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; text-decoration: none; }
+.ab-view { background: #eff6ff; color: #3b82f6; }
+.ab-prev { background: #f3e5f5; color: #8b5cf6; }
+.ab-next { background: #ecfdf5; color: #10b981; }
+
+.pagination { padding: 16px; display: flex; justify-content: center; gap: 8px; }
+.page-btn { padding: 5px 12px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; cursor: pointer; font-size: 0.78rem; text-decoration: none; color: #555; }
+.page-btn.active { background: #4834d4; color: #fff; border-color: #4834d4; }
+
+.back-link { display: inline-flex; align-items: center; gap: 8px; color: #667eea; font-weight: 700; text-decoration: none; font-size: 0.875rem; margin-bottom: 20px; }
+
+@media (max-width: 900px) { .status-tiles { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 560px) { .status-tiles { grid-template-columns: repeat(2,1fr); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mgmt-hero">
+    <i class="fas fa-calendar-alt"></i>
+    <div>
+        <h1>Appointment Management</h1>
+        <p>MediCureFlow Administration Portal</p>
+    </div>
+</div>
+
+<div class="mgmt-page">
+    <a href="{% url 'admin_system:dashboard' %}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+
+    <!-- Status Tiles -->
+    <div class="status-tiles">
+        {% for stat in appointment_stats %}
+        <div class="st st-{{ stat.status }}">
+            <div class="st-val">{{ stat.count }}</div>
+            <div class="st-lbl">{{ stat.status|capfirst }}</div>
+        </div>
+        {% empty %}
+        <div class="st st-confirmed" style="grid-column:span 5;text-align:center;">No appointments yet</div>
+        {% endfor %}
+    </div>
+
+    <!-- Filters -->
+    <form method="get">
+        <div class="filter-row">
+            <input type="text" name="q" class="filter-input" placeholder="Doctor or patient name..." value="{{ request.GET.q }}">
+            <select name="status" class="filter-select">
+                <option value="">All Status</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="in_progress">In Progress</option>
+            </select>
+            <input type="date" name="date_from" class="filter-select" value="{{ request.GET.date_from }}">
+            <input type="date" name="date_to" class="filter-select" value="{{ request.GET.date_to }}">
+            <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
+            <a href="{% url 'admin_system:appointment_management' %}" class="btn-clear">Clear</a>
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="table-wrap">
+        <div class="table-hdr">
+            <h3><i class="fas fa-list" style="color:#4834d4;"></i> Appointments</h3>
+            <a href="{% url 'admin_system:export_data' %}" class="btn-export"><i class="fas fa-download"></i> Export Appointments</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Doctor</th>
+                    <th>Patient</th>
+                    <th>Date & Time</th>
+                    <th>Status</th>
+                    <th>Fee</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appt in appointments %}
+                <tr>
+                    <td style="font-weight:800;color:#888;">#{{ appt.id }}</td>
+                    <td>
+                        <div class="doctor-cell">
+                            <div class="dc-av">{{ appt.doctor.display_name|first }}</div>
+                            <div>
+                                <div class="dc-name">{{ appt.doctor.display_name }}</div>
+                                <div class="dc-spec">{{ appt.doctor.get_specialty_display }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <div style="font-weight:700;color:#1a1a2e;font-size:0.85rem;">{{ appt.patient.get_full_name }}</div>
+                            <div style="font-size:0.72rem;color:#888;">{{ appt.patient.email }}</div>
+                        </div>
+                    </td>
+                    <td style="font-size:0.82rem;">
+                        <div>{{ appt.appointment_date|date:"M d, Y" }}</div>
+                        <div style="color:#888;">{{ appt.appointment_time|time:"h:i A" }}</div>
+                    </td>
+                    <td>
+                        <span class="status-chip chip-{{ appt.status }}">{{ appt.get_status_display }}</span>
+                    </td>
+                    <td>
+                        {% if appt.fee_charged %}
+                            <span class="fee-chip">₹{{ appt.fee_charged }}</span>
+                        {% else %}
+                            <span class="na-chip">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.78rem;color:#888;">{{ appt.created_at|date:"M d, Y" }}<br>{{ appt.created_at|timesince }} ago</td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="{% url 'admin_system:appointment_detail' appt.id %}" class="ab ab-view"><i class="fas fa-eye"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:40px;color:#bbb;">
+                        <i class="fas fa-calendar-times" style="font-size:2rem;margin-bottom:10px;display:block;opacity:0.3;"></i>
+                        No appointments found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}<a href="?page=1" class="page-btn">« First</a>{% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                    <span class="page-btn active">{{ num }}</span>
+                {% elif num|add:'-3' <= page_obj.number and num|add:'3' >= page_obj.number %}
+                    <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}<a href="?page={{ page_obj.paginator.num_pages }}" class="page-btn">Last »</a>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

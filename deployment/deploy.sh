@@ -1,16 +1,16 @@
 #!/bin/bash
-# WellCarePlus Production Deployment Script
+# MediCureFlow Production Deployment Script
 # Run this script on the production server to deploy the application
 
 set -e  # Exit on any error
 
 # Configuration
-PROJECT_NAME="wellcareplus"
+PROJECT_NAME="MediCureFlow"
 PROJECT_USER="www-data"
 PROJECT_GROUP="www-data"
 PROJECT_DIR="/opt/${PROJECT_NAME}"
 VENV_DIR="${PROJECT_DIR}/venv"
-REPO_URL="https://github.com/your-org/wellcareplus.git"  # Update this
+REPO_URL="https://github.com/your-org/MediCureFlow.git"  # Update this
 BRANCH="main"
 
 # Colors for output
@@ -176,12 +176,12 @@ setup_django() {
     fi
     
     # Run Django commands
-    sudo -u $PROJECT_USER $VENV_DIR/bin/python manage.py migrate --settings=wellcareplusCure.settings.production
-    sudo -u $PROJECT_USER $VENV_DIR/bin/python manage.py collectstatic --noinput --settings=wellcareplusCure.settings.production
+    sudo -u $PROJECT_USER $VENV_DIR/bin/python manage.py migrate --settings=MediCureFlow.settings.production
+    sudo -u $PROJECT_USER $VENV_DIR/bin/python manage.py collectstatic --noinput --settings=MediCureFlow.settings.production
     
     # Create superuser (interactive)
     log_info "Creating Django superuser..."
-    sudo -u $PROJECT_USER $VENV_DIR/bin/python manage.py createsuperuser --settings=wellcareplusCure.settings.production
+    sudo -u $PROJECT_USER $VENV_DIR/bin/python manage.py createsuperuser --settings=MediCureFlow.settings.production
 }
 
 # Setup systemd service
@@ -189,15 +189,15 @@ setup_systemd() {
     log_info "Setting up systemd service..."
     
     # Copy service file
-    cp $PROJECT_DIR/app/deployment/wellcareplus.service /etc/systemd/system/
+    cp $PROJECT_DIR/app/deployment/MediCureFlow.service /etc/systemd/system/
     
     # Update paths in service file
-    sed -i "s|/opt/wellcareplus|$PROJECT_DIR/app|g" /etc/systemd/system/wellcareplus.service
-    sed -i "s|/opt/wellcareplus/venv|$VENV_DIR|g" /etc/systemd/system/wellcareplus.service
+    sed -i "s|/opt/MediCureFlow|$PROJECT_DIR/app|g" /etc/systemd/system/MediCureFlow.service
+    sed -i "s|/opt/MediCureFlow/venv|$VENV_DIR|g" /etc/systemd/system/MediCureFlow.service
     
     # Reload systemd and enable service
     systemctl daemon-reload
-    systemctl enable wellcareplus
+    systemctl enable MediCureFlow
 }
 
 # Setup Nginx
@@ -205,13 +205,13 @@ setup_nginx() {
     log_info "Setting up Nginx..."
     
     # Copy Nginx configuration
-    cp $PROJECT_DIR/app/deployment/nginx.conf /etc/nginx/sites-available/wellcareplus
+    cp $PROJECT_DIR/app/deployment/nginx.conf /etc/nginx/sites-available/MediCureFlow
     
     # Update paths in Nginx config
-    sed -i "s|/opt/wellcareplus|$PROJECT_DIR/app|g" /etc/nginx/sites-available/wellcareplus
+    sed -i "s|/opt/MediCureFlow|$PROJECT_DIR/app|g" /etc/nginx/sites-available/MediCureFlow
     
     # Enable site
-    ln -sf /etc/nginx/sites-available/wellcareplus /etc/nginx/sites-enabled/
+    ln -sf /etc/nginx/sites-available/MediCureFlow /etc/nginx/sites-enabled/
     
     # Remove default site
     rm -f /etc/nginx/sites-enabled/default
@@ -253,7 +253,7 @@ setup_ssl() {
         log_info "Setting up SSL certificate for $domain..."
         
         # Update Nginx config with actual domain
-        sed -i "s/yourdomain.com/$domain/g" /etc/nginx/sites-available/wellcareplus
+        sed -i "s/yourdomain.com/$domain/g" /etc/nginx/sites-available/MediCureFlow
         
         # Reload Nginx
         systemctl reload nginx
@@ -272,14 +272,14 @@ setup_ssl() {
 start_services() {
     log_info "Starting services..."
     
-    # Start WellCarePlus service
-    systemctl start wellcareplus
+    # Start MediCureFlow service
+    systemctl start MediCureFlow
     
     # Check service status
-    if systemctl is-active --quiet wellcareplus; then
-        log_info "WellCarePlus service is running successfully!"
+    if systemctl is-active --quiet MediCureFlow; then
+        log_info "MediCureFlow service is running successfully!"
     else
-        log_error "Failed to start WellCarePlus service. Check logs with: journalctl -u wellcareplus -f"
+        log_error "Failed to start MediCureFlow service. Check logs with: journalctl -u MediCureFlow -f"
         exit 1
     fi
 }
@@ -288,7 +288,7 @@ start_services() {
 setup_logrotate() {
     log_info "Setting up log rotation..."
     
-    cat > /etc/logrotate.d/wellcareplus << EOF
+    cat > /etc/logrotate.d/MediCureFlow << EOF
 $PROJECT_DIR/app/logs/*.log {
     daily
     missingok
@@ -298,7 +298,7 @@ $PROJECT_DIR/app/logs/*.log {
     notifempty
     create 644 $PROJECT_USER $PROJECT_GROUP
     postrotate
-        systemctl reload wellcareplus
+        systemctl reload MediCureFlow
     endscript
 }
 EOF
@@ -309,35 +309,35 @@ setup_monitoring() {
     log_info "Setting up basic monitoring..."
     
     # Create health check script
-    cat > /usr/local/bin/wellcareplus-health-check.sh << 'EOF'
+    cat > /usr/local/bin/MediCureFlow-health-check.sh << 'EOF'
 #!/bin/bash
-# Basic health check for WellCarePlus
+# Basic health check for MediCureFlow
 
-SERVICE_NAME="wellcareplus"
+SERVICE_NAME="MediCureFlow"
 URL="http://localhost:8000/health/"
 
 # Check if service is running
 if ! systemctl is-active --quiet $SERVICE_NAME; then
-    echo "$(date): Service $SERVICE_NAME is not running" >> /var/log/wellcareplus-health.log
+    echo "$(date): Service $SERVICE_NAME is not running" >> /var/log/MediCureFlow-health.log
     systemctl restart $SERVICE_NAME
 fi
 
 # Check if application responds
 if ! curl -f -s $URL > /dev/null; then
-    echo "$(date): Application not responding at $URL" >> /var/log/wellcareplus-health.log
+    echo "$(date): Application not responding at $URL" >> /var/log/MediCureFlow-health.log
     systemctl restart $SERVICE_NAME
 fi
 EOF
     
-    chmod +x /usr/local/bin/wellcareplus-health-check.sh
+    chmod +x /usr/local/bin/MediCureFlow-health-check.sh
     
     # Add to crontab for automated health checks
-    (crontab -l 2>/dev/null; echo "*/5 * * * * /usr/local/bin/wellcareplus-health-check.sh") | crontab -
+    (crontab -l 2>/dev/null; echo "*/5 * * * * /usr/local/bin/MediCureFlow-health-check.sh") | crontab -
 }
 
 # Main deployment function
 main() {
-    log_info "Starting WellCarePlus deployment..."
+    log_info "Starting MediCureFlow deployment..."
     
     check_root
     install_dependencies
@@ -365,7 +365,7 @@ main() {
     fi
     
     log_info "Deployment completed successfully!"
-    log_info "Your WellCarePlus application should now be accessible."
+    log_info "Your MediCureFlow application should now be accessible."
     log_warn "Don't forget to:"
     log_warn "1. Configure your .env file with actual production values"
     log_warn "2. Update database and Redis passwords"
@@ -374,7 +374,7 @@ main() {
     
     # Show service status
     log_info "Service status:"
-    systemctl status wellcareplus --no-pager -l
+    systemctl status MediCureFlow --no-pager -l
 }
 
 # Run main function

@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Doctors — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-page { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+.search-hero { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 20px; padding: 40px 40px 60px; color:#fff; margin-bottom: -36px; }
+.search-hero h1 { font-size: 1.9rem; font-weight: 800; margin-bottom: 8px; }
+.search-hero p { opacity: 0.85; font-size: 0.95rem; }
+.search-bar-wrap { background:#fff; border-radius: 14px; padding: 20px 24px; margin-top: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; }
+.search-input-group { display:flex; align-items:center; gap:10px; background:#f6f7fb; border:2px solid #e8e8f0; border-radius:10px; padding:10px 14px; transition: border-color 0.2s; }
+.search-input-group:focus-within { border-color:#667eea; background:#fff; }
+.search-input-group i { color:#aaa; font-size:0.9rem; flex-shrink:0; }
+.search-input-group input { border:none; background:transparent; outline:none; font-size:0.925rem; font-family:inherit; color:#333; width:100%; }
+.search-input-group input::placeholder { color:#ccc; }
+.btn-search-doc { background: linear-gradient(135deg,#667eea,#764ba2); color:#fff; border:none; padding:12px 24px; border-radius:10px; font-weight:700; font-size:0.9rem; cursor:pointer; white-space:nowrap; font-family:inherit; transition:all 0.2s; box-shadow:0 3px 12px rgba(102,126,234,0.4); }
+.btn-search-doc:hover { transform:translateY(-1px); }
+.content-row { display: grid; grid-template-columns: 260px 1fr; gap: 24px; margin-top: 48px; }
+.filter-card, .results-card { background:#fff; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.06); }
+.filter-card { padding: 24px; height: fit-content; position: sticky; top: 84px; }
+.filter-title { font-size:0.85rem; font-weight:700; color:#1a1a2e; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px; margin-top: 18px; }
+.filter-title:first-child { margin-top:0; }
+.filter-select { width:100%; padding:10px 12px; border:2px solid #e8e8f0; border-radius:10px; font-size:0.875rem; font-family:inherit; color:#444; background:#fafafa; outline:none; transition:border-color 0.2s; }
+.filter-select:focus { border-color:#667eea; }
+.filter-input { width:100%; padding:10px 12px; border:2px solid #e8e8f0; border-radius:10px; font-size:0.875rem; font-family:inherit; color:#444; background:#fafafa; outline:none; transition:border-color 0.2s; box-sizing:border-box; }
+.filter-input:focus { border-color:#667eea; }
+.btn-apply { width:100%; padding:11px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border:none; border-radius:10px; font-weight:700; font-size:0.875rem; cursor:pointer; margin-top:16px; font-family:inherit; }
+.btn-clear { width:100%; padding:9px; background:transparent; color:#888; border:2px solid #e8e8f0; border-radius:10px; font-weight:600; font-size:0.825rem; cursor:pointer; margin-top:8px; font-family:inherit; transition:all 0.2s; }
+.btn-clear:hover { border-color:#667eea; color:#667eea; }
+.results-header { padding:20px 24px; border-bottom:1px solid #f0f0f8; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.results-count { font-size:0.9rem; color:#888; font-weight:500; }
+.results-count span { color:#1a1a2e; font-weight:700; }
+.sort-wrap { display:flex; align-items:center; gap:8px; }
+.sort-wrap label { font-size:0.825rem; color:#888; font-weight:600; }
+.sort-select { padding:7px 12px; border:2px solid #e8e8f0; border-radius:8px; font-size:0.825rem; font-family:inherit; color:#444; outline:none; cursor:pointer; }
+.doctor-list { padding:16px; display:flex; flex-direction:column; gap:12px; }
+.doc-card { display:flex; align-items:flex-start; gap:16px; padding:20px; border:2px solid #f0f0f8; border-radius:14px; transition:all 0.2s; }
+.doc-card:hover { border-color:#667eea; box-shadow:0 4px 20px rgba(102,126,234,0.12); }
+.doc-thumb { width:72px; height:72px; border-radius:14px; background:linear-gradient(135deg,#e8ecff,#d4caff); display:flex; align-items:center; justify-content:center; font-size:1.8rem; color:#667eea; flex-shrink:0; overflow:hidden; }
+.doc-thumb img { width:100%; height:100%; object-fit:cover; }
+.doc-body { flex:1; min-width:0; }
+.doc-name { font-size:1rem; font-weight:700; color:#1a1a2e; margin-bottom:2px; }
+.doc-spec { font-size:0.825rem; color:#667eea; font-weight:600; margin-bottom:4px; }
+.doc-meta-row { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:8px; }
+.doc-meta { font-size:0.8rem; color:#888; display:flex; align-items:center; gap:4px; }
+.doc-meta i { font-size:0.8rem; }
+.doc-actions { display:flex; flex-direction:column; align-items:flex-end; gap:10px; flex-shrink:0; }
+.doc-fee { font-size:1.1rem; font-weight:800; color:#1a1a2e; }
+.doc-fee small { font-size:0.7rem; font-weight:500; color:#888; display:block; }
+.btn-book { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; text-decoration:none; padding:9px 20px; border-radius:10px; font-weight:700; font-size:0.85rem; white-space:nowrap; transition:all 0.2s; }
+.btn-book:hover { opacity:0.9; }
+.available-badge { font-size:0.75rem; font-weight:600; color:#2e7d32; background:#e8f5e9; padding:3px 10px; border-radius:20px; }
+.rating-stars { color:#f39c12; font-size:0.825rem; }
+.empty-results { padding:60px 24px; text-align:center; color:#aaa; }
+.empty-results i { font-size:3rem; margin-bottom:16px; display:block; opacity:0.4; }
+.pagination { padding:20px 24px; border-top:1px solid #f0f0f8; display:flex; justify-content:center; gap:6px; }
+.page-btn { padding:8px 14px; border-radius:8px; font-size:0.875rem; font-weight:600; text-decoration:none; color:#667eea; border:2px solid #e8e8f0; transition:all 0.2s; }
+.page-btn:hover, .page-btn.active { background:#667eea; color:#fff; border-color:#667eea; }
+@media (max-width:900px) { .content-row { grid-template-columns:1fr; } .filter-card { position:static; } .search-bar-wrap { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-page">
+    <!-- Hero Search -->
+    <div class="search-hero">
+        <h1>Find Your Perfect Doctor</h1>
+        <p>Search from hundreds of verified healthcare professionals near you</p>
+        <form method="get" class="search-bar-wrap">
+            <div class="search-input-group">
+                <i class="fas fa-stethoscope"></i>
+                <input type="text" name="search_query" placeholder="Doctor name, specialty..."
+                    value="{{ current_filters.search_query }}">
+            </div>
+            <div class="search-input-group">
+                <i class="fas fa-map-marker-alt"></i>
+                <input type="text" name="city" placeholder="City or area..."
+                    value="{{ current_filters.city }}">
+            </div>
+            <button type="submit" class="btn-search-doc">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </form>
+    </div>
+
+    <div class="content-row">
+        <!-- Filters -->
+        <div class="filter-card">
+            <form method="get">
+                <input type="hidden" name="search_query" value="{{ current_filters.search_query }}">
+                <input type="hidden" name="city" value="{{ current_filters.city }}">
+
+                <div class="filter-title">Specialty</div>
+                <select name="specialty" class="filter-select">
+                    <option value="">All Specialties</option>
+                    {% for val, label in specialties %}
+                        <option value="{{ val }}" {% if current_filters.specialty == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+
+                <div class="filter-title">Sort By</div>
+                <select name="sort_by" class="filter-select">
+                    <option value="relevance" {% if current_filters.sort_by == 'relevance' %}selected{% endif %}>Relevance</option>
+                    <option value="rating" {% if current_filters.sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
+                    <option value="experience" {% if current_filters.sort_by == 'experience' %}selected{% endif %}>Most Experienced</option>
+                    <option value="fee_low" {% if current_filters.sort_by == 'fee_low' %}selected{% endif %}>Lowest Fee</option>
+                    <option value="fee_high" {% if current_filters.sort_by == 'fee_high' %}selected{% endif %}>Highest Fee</option>
+                </select>
+
+                <div class="filter-title">Max Fee (₹)</div>
+                <input type="number" name="max_fee" class="filter-input" placeholder="e.g. 2000"
+                    value="{{ current_filters.max_fee }}">
+
+                <div class="filter-title">Min. Experience</div>
+                <input type="number" name="min_experience" class="filter-input" placeholder="Years"
+                    value="{{ current_filters.min_experience }}">
+
+                <div class="filter-title">Language</div>
+                <select name="language" class="filter-select">
+                    <option value="">Any Language</option>
+                    {% for lang in languages %}
+                        <option value="{{ lang }}" {% if current_filters.language == lang %}selected{% endif %}>{{ lang }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="btn-apply">Apply Filters</button>
+                <a href="{% url 'search_doctors' %}" style="display:block;text-align:center;margin-top:8px;font-size:0.825rem;color:#888;text-decoration:none;" 
+                   onmouseover="this.style.color='#667eea'" onmouseout="this.style.color='#888'">Clear All</a>
+            </form>
+        </div>
+
+        <!-- Results -->
+        <div class="results-card">
+            <div class="results-header">
+                <div class="results-count">
+                    Showing <span>{{ total_doctors }}</span> doctor{{ total_doctors|pluralize }} found
+                </div>
+            </div>
+
+            <div class="doctor-list">
+                {% for doctor in doctors %}
+                <div class="doc-card">
+                    <div class="doc-thumb">
+                        {% if doctor.photo %}
+                            <img src="{{ doctor.photo.url }}" alt="{{ doctor.display_name }}">
+                        {% else %}
+                            <i class="fas fa-user-md"></i>
+                        {% endif %}
+                    </div>
+                    <div class="doc-body">
+                        <div class="doc-name">
+                            {{ doctor.display_name }}
+                            {% if doctor.is_verified %}
+                                <span style="color:#667eea;font-size:0.8rem;margin-left:4px;" title="Verified">✓</span>
+                            {% endif %}
+                        </div>
+                        <div class="doc-spec">{{ doctor.get_specialty_display }}</div>
+                        <div class="doc-meta-row">
+                            {% if doctor.average_rating %}
+                            <span class="doc-meta">
+                                <span class="rating-stars">★</span> {{ doctor.average_rating|floatformat:1 }}
+                                {% if doctor.total_reviews %}({{ doctor.total_reviews }}){% endif %}
+                            </span>
+                            {% endif %}
+                            {% if doctor.experience_years %}
+                            <span class="doc-meta"><i class="fas fa-briefcase"></i> {{ doctor.experience_years }} yrs exp</span>
+                            {% endif %}
+                            {% if doctor.city %}
+                            <span class="doc-meta"><i class="fas fa-map-marker-alt"></i> {{ doctor.city }}{% if doctor.state %}, {{ doctor.state }}{% endif %}</span>
+                            {% endif %}
+                        </div>
+                        {% if doctor.bio %}
+                        <p style="font-size:0.825rem;color:#888;margin:0;line-height:1.5;">{{ doctor.bio|truncatechars:100 }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="doc-actions">
+                        <div class="doc-fee">
+                            ₹{{ doctor.consultation_fee }}
+                            <small>Consultation</small>
+                        </div>
+                        <span class="available-badge">● Available</span>
+                        <a href="{% url 'users:book_appointment' doctor.id %}" class="btn-book">Book Now</a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-results">
+                    <i class="fas fa-search"></i>
+                    <p style="font-size:1rem;font-weight:600;color:#555;margin-bottom:6px;">No doctors found</p>
+                    <p>Try removing some filters or searching with different keywords.</p>
+                    <a href="{% url 'search_doctors' %}" style="display:inline-block;margin-top:16px;color:#667eea;font-weight:700;text-decoration:none;">Clear all filters</a>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">← Prev</a>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="page-btn active">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="page-btn">Next →</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

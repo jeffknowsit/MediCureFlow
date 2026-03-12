@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}My Appointments — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-wrap { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:16px; }
+.page-header h1 { font-size:1.8rem; font-weight:800; color:#1a1a2e; }
+.btn-primary { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; text-decoration:none; padding:11px 22px; border-radius:10px; font-weight:600; font-size:0.9rem; display:inline-flex; align-items:center; gap:6px; }
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
+.stat { background:#fff; border-radius:14px; padding:20px; box-shadow:0 4px 16px rgba(0,0,0,0.05); text-align:center; }
+.stat-num { font-size:1.8rem; font-weight:800; color:#1a1a2e; }
+.stat-lbl { font-size:0.8rem; color:#888; font-weight:500; margin-top:4px; }
+.apt-card { background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.06); }
+.apt-item { display:flex; align-items:center; gap:16px; padding:18px 20px; border-bottom:1px solid #f0f0f8; }
+.apt-item:last-child { border-bottom:none; }
+.apt-date-block { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; width:52px; height:52px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0; }
+.apt-day { font-size:1.2rem; font-weight:800; line-height:1; }
+.apt-mon { font-size:0.65rem; font-weight:600; opacity:0.85; }
+.apt-info { flex:1; min-width:0; }
+.apt-doctor { font-size:0.95rem; font-weight:700; color:#1a1a2e; }
+.apt-time { font-size:0.825rem; color:#888; margin-top:2px; }
+.apt-spec { font-size:0.775rem; color:#667eea; font-weight:600; margin-top:2px; }
+.apt-status { font-size:0.775rem; font-weight:600; padding:4px 12px; border-radius:20px; }
+.status-scheduled { background:#e3f2fd; color:#1565c0; }
+.status-completed { background:#e8f5e9; color:#2e7d32; }
+.status-cancelled { background:#ffebee; color:#c62828; }
+.status-confirmed { background:#f3e5f5; color:#6a1b9a; }
+.status-in_progress { background:#fff8e1; color:#f57f17; }
+.apt-fee { font-size:0.95rem; font-weight:700; color:#1a1a2e; }
+.empty-state { text-align:center; padding:60px 20px; color:#bbb; }
+.empty-state i { font-size:3rem; display:block; margin-bottom:16px; opacity:0.4; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+    <div class="page-header">
+        <h1>📅 My Appointments</h1>
+        <a href="{% url 'search_doctors' %}" class="btn-primary">+ Book New</a>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-num">{{ appointments.count }}</div>
+            <div class="stat-lbl">Total</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num">{{ appointments|length }}</div>
+            <div class="stat-lbl">Visible</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num">{{ unique_doctors_count|default:"0" }}</div>
+            <div class="stat-lbl">Doctors</div>
+        </div>
+    </div>
+
+    <div class="apt-card">
+        {% for appt in appointments %}
+        <div class="apt-item">
+            <div class="apt-date-block">
+                <div class="apt-day">{{ appt.appointment_date|date:"d" }}</div>
+                <div class="apt-mon">{{ appt.appointment_date|date:"M" }}</div>
+            </div>
+            <div class="apt-info">
+                <div class="apt-doctor">{{ appt.doctor.display_name }}</div>
+                <div class="apt-spec">{{ appt.doctor.get_specialty_display }}</div>
+                <div class="apt-time">{{ appt.appointment_time|time:"h:i A" }}</div>
+            </div>
+            <div class="apt-actions" style="display:flex; align-items:center; gap:16px;">
+                <span class="apt-status status-{{ appt.status }}">{{ appt.get_status_display }}</span>
+                {% if appt.fee_charged %}
+                <div class="apt-fee">₹{{ appt.fee_charged }}</div>
+                {% endif %}
+                
+                {% if appt.status == 'scheduled' or appt.status == 'confirmed' %}
+                <form action="{% url 'users:cancel_appointment' appt.id %}" method="post" style="display:inline;" data-confirm="Cancel this appointment with {{ appt.doctor.display_name }}?">
+                    {% csrf_token %}
+                    <button type="submit" class="danger-btn" style="background:none; border:1px solid #ef4444; color:#ef4444; padding:5px 10px; border-radius:8px; font-size:0.75rem; font-weight:700; cursor:pointer;">Cancel</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <p style="font-size:1rem;font-weight:600;color:#555;margin-bottom:6px;">No appointments yet</p>
+            <p style="font-size:0.875rem;">Book your first appointment today!</p>
+            <a href="{% url 'search_doctors' %}" style="margin-top:16px;display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-decoration:none;padding:11px 24px;border-radius:10px;font-weight:700;">Find a Doctor</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

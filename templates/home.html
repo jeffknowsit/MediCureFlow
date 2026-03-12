@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}MediCureFlow — Revolutionizing Your Healthcare Journey{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── CONSTANTS ── */
+.container { max-width: 1240px; margin: 0 auto; padding: 0 40px; width: 100%; box-sizing: border-box; }
+
+/* ── HERO ── */
+.home-hero {
+    position: relative; min-height: 85vh; padding: 160px 0 160px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%), 
+                url('/media/home_hero_premium.png');
+    background-size: cover; background-position: center; color: #fff;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+}
+
+.hero-content { max-width: 900px; z-index: 5; margin: 0 auto; }
+
+.hero-tag {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 20px; background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(129, 140, 248, 0.3); border-radius: 100px;
+    color: #c7d2fe; font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 32px;
+}
+
+.home-hero h1 {
+    font-size: 4.8rem; font-weight: 950; line-height: 1.05; margin-bottom: 24px;
+    letter-spacing: -2.5px; background: linear-gradient(to bottom right, #ffffff, #94a3b8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.home-hero p {
+    font-size: 1.35rem; color: #cbd5e1; line-height: 1.6; margin: 0 auto 48px;
+    max-width: 700px;
+}
+
+.hero-btns { display: flex; gap: 20px; justify-content: center; }
+
+/* ── CUSTOM BUTTONS ── */
+.btn-main {
+    padding: 16px 40px; border-radius: 100px; font-weight: 800; font-size: 1rem;
+    text-decoration: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-flex; align-items: center; gap: 12px; border: none; cursor: pointer;
+}
+.btn-m-primary { background: #4f46e5; color: #fff !important; box-shadow: 0 10px 30px rgba(79, 70, 229, 0.4); }
+.btn-m-primary:hover { transform: translateY(-5px); box-shadow: 0 15px 45px rgba(79, 70, 229, 0.5); }
+.btn-m-outline { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.3); color: #fff !important; }
+.btn-m-outline:hover { background: rgba(255,255,255,0.15); border-color: #fff; transform: translateY(-5px); }
+
+/* ── SEARCH OVERLAY ── */
+.search-overlay {
+    margin-top: -85px; position: relative; z-index: 100;
+}
+
+.glass-search {
+    background: #ffffff;
+    border-radius: 40px; padding: 48px; 
+    box-shadow: 0 40px 100px rgba(0,0,0,0.12);
+    border: 1px solid #f1f5f9;
+}
+
+.search-form {
+    display: grid; grid-template-columns: 1fr 1fr 200px; gap: 24px; align-items: flex-end;
+}
+
+.field-group { display: flex; flex-direction: column; gap: 10px; }
+.field-group label { font-size: 0.85rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1.5px; margin-left: 20px; }
+
+.input-box {
+    background: #fff; border: 2px solid #f1f5f9; border-radius: 24px; padding: 14px 24px;
+    display: flex; align-items: center; gap: 14px; transition: all 0.3s;
+}
+.input-box:focus-within { border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+.input-box i { color: #94a3b8; font-size: 1.1rem; }
+.input-box input { border: none; outline: none; background: transparent; width: 100%; font-size: 1.05rem; font-family: inherit; font-weight: 500; }
+
+.btn-lookup {
+    height: 60px; padding: 0 40px; border-radius: 100px; background: #0f172a; color: #fff;
+    font-weight: 800; border: none; cursor: pointer; transition: all 0.3s;
+    display: flex; align-items: center; gap: 12px;
+}
+.btn-lookup:hover { background: #000; transform: scale(1.02); }
+
+/* ── SECTIONS ── */
+.sp { padding: 120px 0; }
+.stitle { font-size: 3rem; font-weight: 950; color: #0f172a; letter-spacing: -1.5px; margin-bottom: 16px; text-align: center; }
+.ssub { font-size: 1.1rem; color: #64748b; text-align: center; max-width: 600px; margin: 0 auto 60px; font-weight: 500; }
+
+/* ── FEATURES ── */
+.f-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+.f-card {
+    background: #fff; padding: 48px 32px; border-radius: 32px; border: 1px solid #f1f5f9;
+    text-align: center; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.f-card:hover { transform: translateY(-15px); box-shadow: 0 30px 60px rgba(0,0,0,0.08); border-color: #e2e8f0; }
+.f-icon {
+    width: 80px; height: 80px; background: #eef2ff; border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 32px; font-size: 2rem; color: #4f46e5; transition: all 0.4s;
+}
+.f-card:hover .f-icon { background: #4f46e5; color: #fff; border-radius: 30px; }
+.f-card h4 { font-size: 1.2rem; font-weight: 800; color: #0f172a; margin-bottom: 16px; }
+.f-card p { font-size: 0.95rem; color: #64748b; line-height: 1.6; }
+
+/* ── STATS BAR ── */
+.stats-bar { background: #0f172a; padding: 80px 0; color: #fff; overflow: hidden; position: relative; }
+.stats-bar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; text-align: center; }
+.stat-val { font-size: 3.5rem; font-weight: 950; display: block; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.stat-lbl { font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2.5px; color: #64748b; }
+
+/* ── DOCTOR CARDS ── */
+.d-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.d-card {
+    background: #fff; border-radius: 32px; overflow: hidden; border: 1px solid #f1f5f9;
+    transition: all 0.5s ease;
+}
+.d-card:hover { transform: translateY(-10px); box-shadow: 0 30px 60px rgba(0,0,0,0.1); }
+.d-img-box { position: relative; height: 300px; background: #eef2ff; overflow: hidden; }
+.d-img-box i { font-size: 6rem; color: #c7d2fe; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.5; }
+.d-img { width: 100%; height: 100%; object-fit: cover; }
+.d-tag {
+    position: absolute; bottom: 20px; left: 20px; background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(10px); color: #fff; padding: 6px 16px; border-radius: 50px;
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+}
+.d-body { padding: 32px; }
+.d-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.d-name { font-size: 1.4rem; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; }
+.d-rating { font-size: 0.9rem; font-weight: 800; color: #f59e0b; display: flex; align-items: center; gap: 4px; }
+.d-spec { color: #4f46e5; font-weight: 700; font-size: 1rem; margin-bottom: 24px; display: block; }
+.d-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 24px; }
+.d-price { font-size: 1.25rem; font-weight: 900; color: #0f172a; }
+.d-price span { font-size: 0.85rem; color: #94a3b8; font-weight: 600; }
+.btn-book-sm {
+    padding: 10px 24px; background: #0f172a; color: #fff !important; text-decoration: none;
+    border-radius: 50px; font-weight: 800; font-size: 0.85rem; transition: all 0.3s;
+}
+.btn-book-sm:hover { background: #4f46e5; transform: scale(1.05); }
+
+/* ── BANNER ── */
+.promo-banner {
+    background: #4f46e5; position: relative; overflow: hidden; border-radius: 48px;
+    padding: 100px 60px; color: #fff; margin: 0 40px 100px;
+}
+.promo-banner::after {
+    content: ''; position: absolute; right: -10%; top: -20%; width: 400px; height: 400px;
+    background: rgba(255,255,255,0.05); border-radius: 50%;
+}
+.promo-content { position: relative; z-index: 5; text-align: center; }
+.promo-title { font-size: 3.5rem; font-weight: 950; margin-bottom: 20px; letter-spacing: -1.5px; }
+.promo-text { font-size: 1.35rem; opacity: 0.9; max-width: 700px; margin: 0 auto 48px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+    .home-hero h1 { font-size: 3.5rem; }
+    .search-form { grid-template-columns: 1fr; }
+    .f-grid, .d-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-bar-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .container { padding: 0 24px; }
+    .home-hero { text-align: center; padding: 120px 0 100px; }
+    .hero-content { margin: 0 auto; }
+    .hero-btns { justify-content: center; }
+    .f-grid, .d-grid { grid-template-columns: 1fr; }
+    .promo-banner { padding: 60px 24px; margin: 0 20px 80px; }
+    .promo-title { font-size: 2.5rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="home-hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-tag"><i class="fas fa-check-circle"></i> TRUSTED BY 25K+ PATIENTS</div>
+            <h1>The Future of<br>Smart Healthcare</h1>
+            <p>Experience seamless medical consultations with world-class specialists at your fingertips. Technology that cares for your wellness.</p>
+            <div class="hero-btns">
+                <a href="{% url 'users:register' %}" class="btn-main btn-m-primary">
+                    Get Started Free <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#specialists" class="btn-main btn-m-outline">
+                    View Specialists
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Overlapping Search -->
+<div class="search-overlay">
+    <div class="container">
+        <div class="glass-search">
+            <form action="{% url 'users:search_doctors' %}" method="get" class="search-form">
+                <div class="field-group">
+                    <label>Specialty or Name</label>
+                    <div class="input-box">
+                        <i class="fas fa-stethoscope"></i>
+                        <input type="text" name="search_query" placeholder="e.g. Cardiologist, Dr. Marcus...">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label>In Your Location</label>
+                    <div class="input-box">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <input type="text" name="city" placeholder="e.g. New Delhi, Mumbai...">
+                    </div>
+                </div>
+                <button type="submit" class="btn-lookup">
+                    Search Now <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Features -->
+<section class="sp">
+    <div class="container">
+        <h2 class="stitle">Everything You Need</h2>
+        <p class="ssub">Designed to make healthcare management effortless, secure, and completely digital.</p>
+        
+        <div class="f-grid">
+            <div class="f-card">
+                <div class="f-icon"><i class="fas fa-user-md"></i></div>
+                <h4>Expert Doctors</h4>
+                <p>Verified medical professionals with years of specialized experience.</p>
+            </div>
+            <div class="f-card">
+                <div class="f-icon"><i class="fas fa-calendar-alt"></i></div>
+                <h4>Quick Booking</h4>
+                <p>Real-time slot availability for instant, hassle-free appointments.</p>
+            </div>
+            <div class="f-card">
+                <div class="f-icon"><i class="fas fa-lock"></i></div>
+                <h4>Private Records</h4>
+                <p>High-security encryption for all your prescriptions and health reports.</p>
+            </div>
+            <div class="f-card">
+                <div class="f-icon"><i class="fas fa-video"></i></div>
+                <h4>Tele-Health</h4>
+                <p>Consult with your doctor from the comfort of your own home.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dark Stats -->
+<section class="stats-bar">
+    <div class="container">
+        <div class="stats-bar-grid">
+            <div>
+                <span class="stat-val">25K+</span>
+                <span class="stat-lbl">Active Users</span>
+            </div>
+            <div>
+                <span class="stat-val">500+</span>
+                <span class="stat-lbl">Top Specialists</span>
+            </div>
+            <div>
+                <span class="stat-val">50+</span>
+                <span class="stat-lbl">Departments</span>
+            </div>
+            <div>
+                <span class="stat-val">4.9/5</span>
+                <span class="stat-lbl">Client Rating</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Specialists -->
+<section class="sp" id="specialists">
+    <div class="container">
+        <h2 class="stitle">Top Rated Specialists</h2>
+        <p class="ssub">Book a consultation with our most recommended medical experts.</p>
+        
+        <div class="d-grid">
+            {% for doctor in featured_doctors %}
+            <div class="d-card">
+                <div class="d-img-box">
+                    {% if doctor.photo %}
+                    <img src="{{ doctor.photo.url }}" class="d-img" alt="{{ doctor.display_name }}">
+                    {% else %}
+                    <i class="fas fa-user-md"></i>
+                    {% endif %}
+                    <div class="d-tag">{{ doctor.get_specialty_display }}</div>
+                </div>
+                <div class="d-body">
+                    <div class="d-header">
+                        <span class="d-name">{{ doctor.display_name }}</span>
+                        <div class="d-rating"><i class="fas fa-star"></i> {{ doctor.average_rating|default:"5.0" }}</div>
+                    </div>
+                    <span class="d-spec">{{ doctor.get_specialty_display }}</span>
+                    <div class="d-footer">
+                        <div class="d-price">₹{{ doctor.consultation_fee }} <span>/ visit</span></div>
+                        <a href="{% url 'users:book_appointment' doctor.id %}" class="btn-book-sm">Book Free</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #94a3b8;">
+                <i class="fas fa-user-md-slash" style="font-size: 3rem; margin-bottom: 20px; display: block;"></i>
+                <p>No featured specialists available right now.</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if featured_doctors %}
+        <div style="text-align: center; margin-top: 60px;">
+            <a href="{% url 'users:search_doctors' %}" class="btn-main" style="color: #4f46e5; border: 2px solid #eef2ff; padding: 15px 40px; border-radius: 50px;">
+                Explore All 500+ Doctors <i class="fas fa-chevron-right" style="font-size: 0.8rem;"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- CTA Banner -->
+<section>
+    <div class="promo-banner">
+        <div class="promo-content">
+            <h2 class="promo-title">Ready for Better Care?</h2>
+            <p class="promo-text">Join the future of healthcare. Start managing your appointments and medical records in one secure place.</p>
+            <div style="display: flex; justify-content: center; gap: 24px;">
+                <a href="{% url 'users:register' %}" class="btn-main" style="background: #fff; color: #4f46e5; padding: 20px 60px;">Create Free Account</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

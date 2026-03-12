@@ -1,5 +1,5 @@
 """
-Base Django settings for wellcarepluscure project.
+Base Django settings for MediCureFlow project.
 
 This file contains common settings that apply to all environments.
 """
@@ -59,7 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'wellcareplusCure.urls'
+ROOT_URLCONF = 'MediCureFlow.urls'
 
 TEMPLATES = [
     {
@@ -78,7 +78,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'wellcareplusCure.wsgi.application'
+WSGI_APPLICATION = 'MediCureFlow.wsgi.application'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -121,6 +121,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 # WhiteNoise configuration for static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -154,7 +156,7 @@ REST_FRAMEWORK = {
 
 # API Documentation with drf-spectacular
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'WellCarePlusCure API',
+    'TITLE': 'MediCureFlow API',
     'DESCRIPTION': 'Comprehensive healthcare and wellness management system API',
     'VERSION': '2.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
@@ -172,7 +174,7 @@ CORS_ALLOWED_ORIGINS = [
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'wellcarepluscure-cache',
+        'LOCATION': 'MediCureFlow-cache',
         'TIMEOUT': 300,  # 5 minutes default timeout
         'OPTIONS': {
             'MAX_ENTRIES': 2000,
@@ -202,7 +204,7 @@ CACHES = {
 }
 
 # Cache key prefixes
-CACHE_KEY_PREFIX = 'wellcareplusCure'
+CACHE_KEY_PREFIX = 'MediCureFlow'
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [

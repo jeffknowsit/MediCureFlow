@@ -35,7 +35,7 @@ class Command(BaseCommand):
                 username = f"{base_username}{counter}"
                 counter += 1
             
-            email = f"{username}@wellcareplusCure.com"
+            email = f"{username}@MediCureFlow.com"
             password = f"Doctor@{1000 + i}"
             
             # Create user account
@@ -153,13 +153,13 @@ class Command(BaseCommand):
         all_doctors = Doctor.objects.filter(user__isnull=False).select_related('user').order_by('full_name')
         all_patients = UserProfile.objects.all().select_related('user').order_by('full_name')
         
-        credentials_content = """# WellCarePlusCure - Complete Credentials and Testing Guide
+        credentials_content = """# MediCureFlow - Complete Credentials and Testing Guide
 
 ## 🔐 User Credentials for Testing
 
 ### 👨‍💼 Administrator Account
 - **Username:** `admin`
-- **Email:** `admin@wellcareplusCure.com`
+- **Email:** `admin@MediCureFlow.com`
 - **Password:** `Admin@2025`
 - **Role:** Super Admin
 - **Access:** Full system access, admin dashboard, user/doctor management
@@ -292,7 +292,7 @@ python manage.py runserver
 
 **Happy Testing! 🎉**
 
-*WellCarePlusCure - Making Healthcare Accessible for Everyone*
+*MediCureFlow - Making Healthcare Accessible for Everyone*
 """
         
         # Write to file

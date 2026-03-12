@@ -333,7 +333,7 @@ class SMSNotificationService:
     def __init__(self):
         self.api_key = getattr(settings, 'SMS_API_KEY', None)
         self.api_url = getattr(settings, 'SMS_API_URL', None)
-        self.sender_id = getattr(settings, 'SMS_SENDER_ID', 'WellCare')
+        self.sender_id = getattr(settings, 'SMS_SENDER_ID', 'MediCure')
     
     def send_notification(self, notification: Notification) -> bool:
         """Send SMS notification"""
@@ -633,12 +633,12 @@ def send_welcome_message(user, user_type='patient'):
     """Send welcome message to new users"""
     service = NotificationService()
     
-    title = f'Welcome to WellCare Plus, {user.get_full_name()}!'
+    title = f'Welcome to MediCure Plus, {user.get_full_name()}!'
     
     if user_type == 'patient':
-        message = 'Thank you for joining WellCare Plus. You can now book appointments with qualified doctors and access our health checkup system.'
+        message = 'Thank you for joining MediCure Plus. You can now book appointments with qualified doctors and access our health checkup system.'
     else:
-        message = 'Thank you for joining WellCare Plus as a healthcare provider. You can now manage your appointments and connect with patients.'
+        message = 'Thank you for joining MediCure Plus as a healthcare provider. You can now manage your appointments and connect with patients.'
     
     service.create_notification(
         recipient=user,
