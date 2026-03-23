@@ -12,6 +12,29 @@ from .models import UserProfile
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column, HTML, Div, Field
 from crispy_forms.bootstrap import FormActions
+from io import BytesIO
+from PIL import Image
+from django.core.files.uploadedfile import UploadedFile
+
+def process_profile_picture(image_file):
+    """Compress and resize profile picture for SQLite blob storage."""
+    if not image_file or not isinstance(image_file, UploadedFile):
+        return None, None
+    try:
+        img = Image.open(image_file)
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Resize to max 300x300 while maintaining aspect ratio
+        img.thumbnail((300, 300))
+        
+        output = BytesIO()
+        img.save(output, format='JPEG', quality=70)
+        return output.getvalue(), 'image/jpeg'
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error compressing image: {e}")
+        return None, None
 
 
 class CustomUserRegistrationForm(UserCreationForm):
@@ -37,6 +60,11 @@ class CustomUserRegistrationForm(UserCreationForm):
         required=False,
         widget=forms.TextInput(attrs={'placeholder': 'Phone Number (Optional)'})
     )
+    profile_picture = forms.ImageField(
+        required=False,
+        help_text='Upload a profile picture (optional)',
+        widget=forms.FileInput(attrs={'class': 'custom-file-input', 'accept': 'image/*'})
+    )
 
     class Meta:
         model = User
@@ -57,7 +85,11 @@ class CustomUserRegistrationForm(UserCreationForm):
                 Column('email', css_class='form-group col-md-6'),
                 css_class='row'
             ),
-            'phone',
+            Row(
+                Column('phone', css_class='form-group col-md-6'),
+                Column('profile_picture', css_class='form-group col-md-6'),
+                css_class='row'
+            ),
             Row(
                 Column('password1', css_class='form-group col-md-6'),
                 Column('password2', css_class='form-group col-md-6'),
@@ -93,10 +125,19 @@ class CustomUserRegistrationForm(UserCreationForm):
         if commit:
             user.save()
             # Create user profile
-            UserProfile.objects.create(
+            profile = UserProfile.objects.create(
                 user=user,
-                phone=self.cleaned_data.get('phone', '')
+                phone=self.cleaned_data.get('phone', ''),
+                profile_picture=self.cleaned_data.get('profile_picture') or 'users/profiles/default.png'
             )
+            
+            pic = self.cleaned_data.get('profile_picture')
+            if pic:
+                blob, mime = process_profile_picture(pic)
+                if blob:
+                    profile.profile_picture_blob = blob
+                    profile.profile_picture_mime = mime
+                    profile.save(update_fields=['profile_picture_blob', 'profile_picture_mime'])
         return user
 
 
@@ -158,7 +199,22 @@ class UserProfileForm(forms.ModelForm):
             'allergies': forms.Textarea(attrs={'rows': 3}),
             'chronic_conditions': forms.Textarea(attrs={'rows': 3}),
             'medications': forms.Textarea(attrs={'rows': 3}),
+            'profile_picture': forms.FileInput(attrs={'class': 'custom-file-input', 'accept': 'image/*'}),
         }
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+        pic = self.cleaned_data.get('profile_picture')
+        
+        if pic:
+            blob, mime = process_profile_picture(pic)
+            if blob:
+                profile.profile_picture_blob = blob
+                profile.profile_picture_mime = mime
+                
+        if commit:
+            profile.save()
+        return profile
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

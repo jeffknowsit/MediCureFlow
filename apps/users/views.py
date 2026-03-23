@@ -6,6 +6,7 @@ authentication, doctor search, and appointment booking.
 """
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, Http404
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -557,4 +558,11 @@ def help_center_view(request):
 def about_us_view(request):
     """About Us page view."""
     return render(request, 'pages/about_us.html')
+
+def serve_patient_profile_image(request, user_id):
+    """Serve the profile picture from SQLite binary storage."""
+    user_profile = get_object_or_404(UserProfile, user__id=user_id)
+    if user_profile.profile_picture_blob and user_profile.profile_picture_mime:
+        return HttpResponse(user_profile.profile_picture_blob, content_type=user_profile.profile_picture_mime)
+    raise Http404("Profile picture not found")
 

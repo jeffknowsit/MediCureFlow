@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}MediCureFlow — Modern Healthcare Platform{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -213,7 +214,19 @@
         {% if user.is_authenticated %}
             <div class="dropdown">
                 <button class="dropdown-btn">
-                    <i class="fas fa-user-circle"></i>
+                    {% if user.profile.profile_picture_blob %}
+                        <div style="width:24px; height:24px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background: #eee;">
+                            <img src="{{ user.profile.profile_picture_url }}" style="width: 100%; height: 100%; object-fit: cover;" alt="Profile" onerror="this.outerHTML='<i class=\'fas fa-user-circle\' style=\'font-size: 1.2rem; color: #555;\'></i>'">
+                        </div>
+                    {% elif user.doctor_profile.photo_blob %}
+                        <div style="width:24px; height:24px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background: #eee;">
+                            <img src="{{ user.doctor_profile.photo_url }}" style="width: 100%; height: 100%; object-fit: cover;" alt="Profile" onerror="this.outerHTML='<i class=\'fas fa-user-circle\' style=\'font-size: 1.2rem; color: #555;\'></i>'">
+                        </div>
+                    {% elif user.is_staff %}
+                        <i class="fas fa-user-shield" style="font-size: 1.2rem; color: var(--primary);"></i>
+                    {% else %}
+                        <i class="fas fa-user-circle" style="font-size: 1.2rem; color: #555;"></i>
+                    {% endif %}
                     {{ user.get_full_name|default:user.username }}
                     <i class="fas fa-chevron-down" style="font-size:0.65rem;"></i>
                 </button>

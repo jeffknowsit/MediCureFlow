@@ -1,0 +1,291 @@
+<!-- templates/includes/image_cropper.html -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+<style>
+/* Modal styles */
+.cropper-modal-wrapper {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+}
+.cropper-modal-wrapper.show {
+    display: flex;
+}
+.cropper-modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+.cropper-img-container {
+    max-height: 400px;
+    width: 100%;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    background: #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.cropper-img-container img {
+    max-width: 100%;
+    max-height: 400px;
+    display: block;
+}
+.cropper-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.cropper-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.btn-primary-crop { background: #4834d4; color: white; }
+.btn-primary-crop:hover { background: #3b2bb0; }
+.btn-secondary-crop { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+.btn-secondary-crop:hover { background: #e2e8f0; }
+.btn-icon-crop { width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.1rem; }
+.cropper-controls { display: flex; gap: 8px; }
+
+/* Modern Upload UI */
+.modern-upload-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    transition: all 0.2s;
+    position: relative;
+    cursor: pointer;
+}
+.modern-upload-wrapper:hover {
+    border-color: #4834d4;
+    background: #f0f4ff;
+}
+.modern-upload-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #e2e8f0;
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.modern-upload-text {
+    display: flex;
+    flex-direction: column;
+}
+.modern-upload-title {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+.modern-upload-subtitle {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+.custom-file-input {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+</style>
+
+<div class="cropper-modal-wrapper" id="globalCropperModal">
+    <div class="cropper-modal-content">
+        <h3 style="margin-top: 0; margin-bottom: 15px; color: #1e293b; font-size: 1.25rem;">Adjust Image</h3>
+        <div class="cropper-img-container">
+            <img id="cropperImageSource" src="" alt="Image to crop">
+        </div>
+        <div class="cropper-actions">
+            <div class="cropper-controls">
+                <button type="button" class="cropper-btn btn-secondary-crop btn-icon-crop" id="btnCropperLeft" title="Rotate Left"><i class="fas fa-undo"></i></button>
+                <button type="button" class="cropper-btn btn-secondary-crop btn-icon-crop" id="btnCropperRight" title="Rotate Right"><i class="fas fa-redo"></i></button>
+                <button type="button" class="cropper-btn btn-secondary-crop btn-icon-crop" id="btnCropperReset" title="Reset"><i class="fas fa-sync-alt"></i></button>
+            </div>
+            <div style="display:flex; gap: 10px;">
+                <button type="button" class="cropper-btn btn-secondary-crop" id="btnCropperCancel">Cancel</button>
+                <button type="button" class="cropper-btn btn-primary-crop" id="btnCropperSave">Crop & Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let globalCropper = null;
+    const cropperModal = document.getElementById('globalCropperModal');
+    const cropperImage = document.getElementById('cropperImageSource');
+    
+    // Bind to the file inputs for user and doctor profile forms
+    const fileInputs = document.querySelectorAll('input[type="file"][id="id_profile_picture"], input[type="file"][id="id_photo"]');
+    
+    let activeFileInput = null;
+    // Enhance file inputs with modern UI wrapper and live preview
+    fileInputs.forEach(input => {
+        // Find existing image src from page to use as initial preview
+        let initialSrc = '';
+        const headerAvatar = document.querySelector('.header-avatar img');
+        if (headerAvatar) initialSrc = headerAvatar.src;
+        const profileImage = document.querySelector('.profile-image-wrap img');
+        if (profileImage) initialSrc = profileImage.src;
+
+        // Create the wrapper HTML
+        const wrapper = document.createElement('div');
+        wrapper.className = 'modern-upload-wrapper';
+        
+        const previewImg = document.createElement('img');
+        previewImg.className = 'modern-upload-preview';
+        previewImg.src = initialSrc || '/static/images/default-user.png';
+        
+        const textWrapper = document.createElement('div');
+        textWrapper.className = 'modern-upload-text';
+        
+        const title = document.createElement('span');
+        title.className = 'modern-upload-title';
+        title.innerText = 'Choose a file...';
+        
+        const subtitle = document.createElement('span');
+        subtitle.className = 'modern-upload-subtitle';
+        subtitle.innerText = 'JPEG, PNG up to 5MB';
+        
+        textWrapper.appendChild(title);
+        textWrapper.appendChild(subtitle);
+        
+        wrapper.appendChild(previewImg);
+        wrapper.appendChild(textWrapper);
+        
+        // Wrap the input
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        // Reference the preview and title to this input for updates
+        input._previewImg = previewImg;
+        input._title = title;
+
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                activeFileInput = this;
+                originalFilename = file.name;
+                originalFileType = file.type;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    cropperImage.src = event.target.result;
+                    cropperModal.classList.add('show');
+                    
+                    if (globalCropper) {
+                        globalCropper.destroy();
+                    }
+                    
+                    globalCropper = new Cropper(cropperImage, {
+                        aspectRatio: 1, // 1:1 aspect ratio for avatars
+                        viewMode: 1,
+                        background: true,
+                        autoCropArea: 0.9,
+                        responsive: true,
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+
+    document.getElementById('btnCropperLeft').addEventListener('click', () => {
+        if (globalCropper) globalCropper.rotate(-90);
+    });
+    
+    document.getElementById('btnCropperRight').addEventListener('click', () => {
+        if (globalCropper) globalCropper.rotate(90);
+    });
+
+    document.getElementById('btnCropperReset').addEventListener('click', () => {
+        if (globalCropper) globalCropper.reset();
+    });
+
+    document.getElementById('btnCropperCancel').addEventListener('click', () => {
+        cropperModal.classList.remove('show');
+        if (globalCropper) {
+            globalCropper.destroy();
+            globalCropper = null;
+        }
+        if (activeFileInput) {
+            activeFileInput.value = ''; // clear the input so the user can select the same file
+            activeFileInput = null;
+        }
+    });
+
+    document.getElementById('btnCropperSave').addEventListener('click', () => {
+        if (!globalCropper) return;
+        
+        const originalText = document.getElementById('btnCropperSave').innerText;
+        document.getElementById('btnCropperSave').innerText = 'Saving...';
+        
+        globalCropper.getCroppedCanvas({
+            width: 800,
+            height: 800,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
+        }).toBlob((blob) => {
+            if (blob && activeFileInput) {
+                // Create a new File object
+                const newFile = new File([blob], originalFilename, {
+                    type: originalFileType || 'image/jpeg',
+                    lastModified: new Date().getTime()
+                });
+                
+                // Update the file input files
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(newFile);
+                activeFileInput.files = dataTransfer.files;
+                
+                // Update Modern UI Preview
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    if (activeFileInput._previewImg) {
+                        activeFileInput._previewImg.src = evt.target.result;
+                    }
+                    if (activeFileInput._title) {
+                        activeFileInput._title.innerText = newFile.name;
+                    }
+                    
+                    // Also update header avatars if they exist on the page
+                    const hdrs = document.querySelectorAll('.header-avatar img, .profile-image-wrap img, .doc-avatar img');
+                    hdrs.forEach(img => {
+                        img.src = evt.target.result;
+                    });
+                };
+                reader.readAsDataURL(blob);
+            }
+            
+            document.getElementById('btnCropperSave').innerText = originalText;
+            cropperModal.classList.remove('show');
+            if (globalCropper) {
+                globalCropper.destroy();
+                globalCropper = null;
+            }
+        }, originalFileType || 'image/jpeg', 0.9);
+    });
+});
+</script>

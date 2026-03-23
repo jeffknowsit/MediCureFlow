@@ -20,6 +20,7 @@ urlpatterns = [
     # Dashboard and Profile
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('profile/', views.ProfileUpdateView.as_view(), name='profile'),
+    path('profile-image/<int:user_id>/', views.serve_patient_profile_image, name='profile_image'),
     
     # Doctor Search and Booking
     path('doctors/', views.DoctorSearchView.as_view(), name='search_doctors'),

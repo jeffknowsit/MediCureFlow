@@ -148,7 +148,18 @@ class UserProfile(models.Model):
     profile_picture = models.ImageField(
         upload_to='users/profiles/%Y/%m/',
         default='users/profiles/default.png',
-        help_text="Profile picture"
+        help_text="Legacy Profile picture field"
+    )
+    profile_picture_blob = models.BinaryField(
+        null=True,
+        blank=True,
+        help_text="Profile picture stored in SQLite"
+    )
+    profile_picture_mime = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        help_text="Mime type of the SQLite profile picture"
     )
     
     # Preferences
@@ -247,67 +258,12 @@ class UserProfile(models.Model):
     
     @property
     def profile_picture_url(self):
-        """Return the profile picture URL using static images."""
+        """Return the profile picture URL using the SQLite binary storage."""
+        if self.profile_picture_blob:
+            return reverse('users:profile_image', kwargs={'user_id': self.user.id})
+        
+        # Fallback to the default image if no blob is found
         from django.templatetags.static import static
-        import os
-        from django.conf import settings
-        
-        # Build list of possible names to match against photos
-        possible_names = []
-        
-        # Add full name parts
-        if self.full_name:
-            name_parts = self.full_name.strip().split()
-            if name_parts:
-                # Try first name from full_name
-                possible_names.append(name_parts[0])
-        
-        # Add user first name
-        if self.user.first_name:
-            possible_names.append(self.user.first_name)
-        
-        # Add name from username (cleaned up)
-        if self.user.username:
-            username_clean = self.user.username.replace('.patient', '').replace('.doctor', '').replace('dr.', '')
-            # Handle usernames like "aarnav.patient" -> "Aarnav"
-            if '.' in username_clean:
-                username_clean = username_clean.split('.')[0]
-            possible_names.append(username_clean.title())
-        
-        # Remove duplicates while preserving order
-        seen = set()
-        unique_names = []
-        for name in possible_names:
-            if name and name not in seen:
-                seen.add(name)
-                unique_names.append(name)
-        
-        # Try to find matching static image
-        static_users_dir = os.path.join(settings.BASE_DIR, 'static', 'images', 'users')
-        
-        for name in unique_names:
-            for extension in ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG']:
-                filename = f"{name}{extension}"
-                full_static_path = os.path.join(static_users_dir, filename)
-                if os.path.exists(full_static_path):
-                    static_path = f"images/users/{filename}"
-                    return static(static_path)
-        
-        # Fallback: check if any photo exists with case-insensitive matching
-        if os.path.exists(static_users_dir):
-            try:
-                available_files = os.listdir(static_users_dir)
-                for name in unique_names:
-                    for available_file in available_files:
-                        # Case-insensitive match on the base name
-                        file_base = os.path.splitext(available_file)[0].lower()
-                        if name.lower() == file_base:
-                            static_path = f"images/users/{available_file}"
-                            return static(static_path)
-            except OSError:
-                pass
-        
-        # Return default photo if no matching static image found
         return static('images/default-user.png')
     
     def get_absolute_url(self):
@@ -334,18 +290,5 @@ class UserProfile(models.Model):
         self.save(update_fields=['last_appointment_date', 'total_appointments'])
     
     def save(self, *args, **kwargs):
-        """Override save to handle profile picture resizing."""
+        """Override save."""
         super().save(*args, **kwargs)
-        
-        if self.profile_picture and hasattr(self.profile_picture, 'path'):
-            try:
-                import os
-                if os.path.exists(self.profile_picture.path):
-                    img = Image.open(self.profile_picture.path)
-                    if img.height > 300 or img.width > 300:
-                        output_size = (300, 300)
-                        img.thumbnail(output_size)
-                        img.save(self.profile_picture.path)
-            except (IOError, OSError):
-                # Handle missing file gracefully (e.g., during testing)
-                pass

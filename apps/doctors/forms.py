@@ -8,11 +8,34 @@ availability management, and other doctor-related functionality.
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Doctor, Appointment, DoctorAvailability, Review
+from .models import Doctor, Appointment, DoctorAvailability, Review, Medication
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column, HTML, Field
 from crispy_forms.bootstrap import FormActions
 from decimal import Decimal
+from io import BytesIO
+from PIL import Image
+from django.core.files.uploadedfile import UploadedFile
+
+def process_profile_picture(image_file):
+    """Compress and resize profile picture for SQLite blob storage."""
+    if not image_file or not isinstance(image_file, UploadedFile):
+        return None, None
+    try:
+        img = Image.open(image_file)
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Resize to max 300x300 while maintaining aspect ratio
+        img.thumbnail((300, 300))
+        
+        output = BytesIO()
+        img.save(output, format='JPEG', quality=70)
+        return output.getvalue(), 'image/jpeg'
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error compressing image: {e}")
+        return None, None
 
 
 class DoctorRegistrationForm(UserCreationForm):
@@ -83,6 +106,11 @@ class DoctorRegistrationForm(UserCreationForm):
         required=False,
         widget=forms.Textarea(attrs={'rows': 4, 'placeholder': 'Brief professional biography (optional)'})
     )
+    photo = forms.ImageField(
+        required=False,
+        help_text='Upload a profile photo (optional)',
+        widget=forms.FileInput(attrs={'class': 'custom-file-input', 'accept': 'image/*'})
+    )
 
     class Meta:
         model = User
@@ -128,6 +156,7 @@ class DoctorRegistrationForm(UserCreationForm):
                 css_class='row'
             ),
             'address',
+            'photo',
             'bio',
             
             FormActions(
@@ -174,7 +203,16 @@ class DoctorRegistrationForm(UserCreationForm):
                 city=self.cleaned_data['city'],
                 address=self.cleaned_data['address'],
                 bio=self.cleaned_data.get('bio', ''),
+                photo=self.cleaned_data.get('photo')
             )
+            
+            pic = self.cleaned_data.get('photo')
+            if pic:
+                blob, mime = process_profile_picture(pic)
+                if blob:
+                    doctor.photo_blob = blob
+                    doctor.photo_mime = mime
+                    doctor.save(update_fields=['photo_blob', 'photo_mime'])
         return user
 
 
@@ -196,7 +234,22 @@ class DoctorProfileForm(forms.ModelForm):
             'bio': forms.Textarea(attrs={'rows': 4}),
             'lunch_break_start': forms.TimeInput(attrs={'type': 'time'}),
             'lunch_break_end': forms.TimeInput(attrs={'type': 'time'}),
+            'photo': forms.FileInput(attrs={'class': 'custom-file-input', 'accept': 'image/*'}),
         }
+
+    def save(self, commit=True):
+        doctor = super().save(commit=False)
+        pic = self.cleaned_data.get('photo')
+        
+        if pic:
+            blob, mime = process_profile_picture(pic)
+            if blob:
+                doctor.photo_blob = blob
+                doctor.photo_mime = mime
+                
+        if commit:
+            doctor.save()
+        return doctor
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -350,23 +403,76 @@ class AppointmentUpdateForm(forms.ModelForm):
     """
     Form for updating appointment status and notes (for doctors).
     """
+    is_final_appointment = forms.BooleanField(
+        required=False, 
+        label="Is this the final appointment?",
+        help_text="If checked, next appointment date will be cleared."
+    )
     
     class Meta:
         model = Appointment
-        fields = ['status', 'doctor_notes', 'is_paid']
+        fields = [
+            'status', 'is_paid', 'consultation_remarks', 'doctor_notes', 
+            'next_appointment_date', 'next_appointment_time'
+        ]
         widgets = {
-            'doctor_notes': forms.Textarea(attrs={'rows': 4}),
+            'doctor_notes': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Internal notes (private)'}),
+            'consultation_remarks': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Remarks for patient (prescription/advice)'}),
+            'next_appointment_date': forms.DateInput(attrs={'type': 'date'}),
+            'next_appointment_time': forms.TimeInput(attrs={'type': 'time'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = Layout(
-            HTML('<h3>Update Appointment</h3>'),
-            'status',
-            'is_paid',
+            HTML('<h3>Update Appointment Results</h3>'),
+            Row(
+                Column('status', css_class='form-group col-md-6'),
+                Column('is_paid', css_class='form-group col-md-6 pt-4'),
+                css_class='row'
+            ),
+            'consultation_remarks',
             'doctor_notes',
+            HTML('<hr class="my-4">'),
+            HTML('<h4>Follow-up Information</h4>'),
+            'is_final_appointment',
+            Row(
+                Column('next_appointment_date', css_class='form-group col-md-6'),
+                Column('next_appointment_time', css_class='form-group col-md-6'),
+                css_class='row',
+                id='follow-up-row'
+            ),
             FormActions(
-                Submit('submit', 'Update Appointment', css_class='btn btn-primary')
+                Submit('submit', 'Save Appointment Results', css_class='btn btn-primary btn-lg')
             )
         )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        is_final = cleaned_data.get('is_final_appointment')
+        if is_final:
+            cleaned_data['next_appointment_date'] = None
+            cleaned_data['next_appointment_time'] = None
+        return cleaned_data
+
+
+class MedicationForm(forms.ModelForm):
+    """
+    Form for adding medications.
+    """
+    class Meta:
+        model = Medication
+        fields = ['name', 'dosage', 'frequency', 'duration', 'notes']
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Medicine Name', 'class': 'form-control'}),
+            'dosage': forms.TextInput(attrs={'placeholder': 'e.g. 500mg', 'class': 'form-control'}),
+            'frequency': forms.TextInput(attrs={'placeholder': 'e.g. 1-0-1', 'class': 'form-control'}),
+            'duration': forms.TextInput(attrs={'placeholder': 'e.g. 5 days', 'class': 'form-control'}),
+            'notes': forms.TextInput(attrs={'placeholder': 'Additional info', 'class': 'form-control'}),
+        }
+
+MedicationFormSet = forms.inlineformset_factory(
+    Appointment, Medication, form=MedicationForm, 
+    extra=1, can_delete=True
+)

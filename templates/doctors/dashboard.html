@@ -164,8 +164,8 @@ input:checked + .slider:before { transform: translateX(20px); }
     <div class="hero-inner">
         <div class="hero-doc-left">
             <div class="doc-avatar">
-                {% if doctor.photo and 'default.png' not in doctor.photo.url %}
-                    <img src="{{ doctor.photo.url }}" alt="{{ doctor.display_name }}">
+                {% if doctor.photo_blob %}
+                    <img src="{{ doctor.photo_url }}" alt="{{ doctor.display_name }}">
                 {% else %}
                     <div class="pa-av" style="width: 100%; height: 100%; font-size: 2rem; border-radius: 0;">{{ doctor.display_name|first }}</div>
                 {% endif %}

@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load crispy_forms_tags %}
 
 {% block title %}Update Appointment — MediCureFlow{% endblock %}
 
 {% block extra_css %}
 <style>
-.form-container { max-width: 600px; margin: 40px auto; padding: 40px; background: #fff; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+.form-container { max-width: 800px; margin: 40px auto; padding: 40px; background: #fff; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
 .form-title { font-size: 1.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 32px; text-align: center; }
 
 .appt-summary { background: #f8fafc; padding: 24px; border-radius: 16px; margin-bottom: 32px; border: 1px solid #e2e8f0; }
@@ -14,19 +15,19 @@
 .summary-label { color: #64748b; font-weight: 700; }
 .summary-val { color: #1e293b; font-weight: 800; }
 
-.field-group { margin-bottom: 24px; }
-.field-group label { display: block; font-size: 0.85rem; font-weight: 700; color: #555; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-.field-input { width: 100%; padding: 12px 16px; border: 2px solid #e8e8f0; border-radius: 12px; font-size: 0.95rem; font-family: inherit; transition: all 0.2s; }
-.field-input:focus { border-color: #4834d4; outline: none; }
-
-.btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, #4834d4 0%, #686de0 100%); color: #fff; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
+.btn-submit { padding: 14px 24px; background: linear-gradient(135deg, #4834d4 0%, #686de0 100%); color: #fff; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
 .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(72, 52, 212, 0.2); }
+
+.medication-form { border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-bottom: 15px; position: relative; background: #f9fafb; display: flex; flex-wrap: wrap; gap: 10px; }
+.medication-form .form-group { flex: 1; min-width: 150px; margin-bottom: 0; }
+.medication-form .delete-btn { color: #e74c3c; cursor: pointer; font-weight: bold; position: absolute; right: 15px; top: 15px; }
+.add-medication-btn { margin-bottom: 20px; font-weight: bold; color: #4834d4; cursor: pointer; display: inline-block; padding: 8px 16px; border: 1px dashed #4834d4; border-radius: 8px; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <h1 class="form-title">Update Appointment</h1>
+    <h1 class="form-title">Update Appointment Results</h1>
 
     <div class="appt-summary">
         <div class="summary-row">
@@ -43,26 +44,111 @@
         </div>
     </div>
 
-    <form method="post">
+    <form method="post" id="appointmentForm">
         {% csrf_token %}
-        <div class="field-group">
-            <label>Update Status</label>
-            <select name="status" class="field-input">
-                {% for code, label in form.fields.status.choices %}
-                    <option value="{{ code }}" {% if form.status.value == code %}selected{% endif %}>{{ label }}</option>
+        
+        {% crispy form %}
+        
+        <hr class="my-4">
+        <h4>Prescribe Medications</h4>
+        
+        {{ medication_formset.management_form }}
+        <div id="medications-container">
+            {% for form in medication_formset %}
+            <div class="medication-form row g-2 align-items-center">
+                {{ form.id }}
+                {% for field in form.visible_fields %}
+                    {% if field.name != 'DELETE' %}
+                        <div class="col-sm">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
+                        </div>
+                    {% endif %}
                 {% endfor %}
-            </select>
+                {% if medication_formset.can_delete %}
+                    <div class="col-sm-1 text-center delete-column">
+                        {{ form.DELETE.label_tag }}<br>
+                        {{ form.DELETE }}
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
-        <div class="field-group">
-            <label>Doctor's Notes</label>
-            <textarea name="doctor_notes" class="field-input" rows="5" placeholder="Add diagnosis, prescriptions or notes...">{{ form.doctor_notes.value|default:'' }}</textarea>
-        </div>
-        <div class="field-group" style="display: flex; align-items: center; gap: 12px;">
-            <input type="checkbox" name="is_paid" id="id_is_paid" {% if form.is_paid.value %}checked{% endif %}>
-            <label for="id_is_paid" style="margin-bottom: 0;">Mark as Paid</label>
-        </div>
+        
+        <div class="add-medication-btn" id="add-medication">+ Add Another Medication</div>
 
-        <button type="submit" class="btn-submit">Save Updates</button>
+        <div class="mt-4 text-center">
+            <p class="text-muted small">The submit button from the main form will save everything, but sometimes it is hidden. To be sure you can click below.</p>
+        </div>
     </form>
 </div>
+
+<div id="empty-form" style="display: none;">
+    <div class="medication-form row g-2 align-items-center">
+        {{ medication_formset.empty_form.id }}
+        {% for field in medication_formset.empty_form.visible_fields %}
+            {% if field.name != 'DELETE' %}
+                <div class="col-sm">
+                    {{ field.label_tag }}
+                    {{ field }}
+                </div>
+            {% endif %}
+        {% endfor %}
+        <div class="col-sm-1 text-center delete-column">
+            {{ medication_formset.empty_form.DELETE.label_tag }}<br>
+            {{ medication_formset.empty_form.DELETE }}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dynamic next appointment fields hiding based on "is_final_appointment" checkbox
+    const isFinalCheckbox = document.getElementById('id_is_final_appointment');
+    const followUpRow = document.getElementById('follow-up-row');
+    
+    function toggleFollowUp() {
+        if (isFinalCheckbox.checked) {
+            followUpRow.style.display = 'none';
+            // Clear values
+            document.getElementById('id_next_appointment_date').value = '';
+            document.getElementById('id_next_appointment_time').value = '';
+        } else {
+            followUpRow.style.display = 'flex';
+        }
+    }
+    
+    if (isFinalCheckbox) {
+        toggleFollowUp();
+        isFinalCheckbox.addEventListener('change', toggleFollowUp);
+    }
+
+    // Medication Formset Logic
+    const addButton = document.getElementById('add-medication');
+    const totalForms = document.getElementById('id_medications-TOTAL_FORMS');
+    const container = document.getElementById('medications-container');
+
+    if (addButton) {
+        addButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const formCount = parseInt(totalForms.value);
+            
+            // Get empty form template
+            let newFormHtml = document.getElementById('empty-form').innerHTML;
+            
+            // Replace __prefix__ with the new form index
+            newFormHtml = newFormHtml.replace(/__prefix__/g, formCount);
+            
+            // Append to container
+            container.insertAdjacentHTML('beforeend', newFormHtml);
+            
+            // Update total forms count
+            totalForms.value = formCount + 1;
+        });
+    }
+});
+</script>
 {% endblock %}

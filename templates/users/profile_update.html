@@ -140,10 +140,10 @@
     <!-- Header -->
     <div class="profile-header">
         <div class="header-avatar">
-            {% if user.userprofile.profile_picture %}
-                <img src="{{ user.userprofile.profile_picture.url }}" alt="{{ user.get_full_name }}">
+            {% if user.profile.profile_picture_blob %}
+                <img src="{{ user.profile.profile_picture_url }}" alt="{{ user.get_full_name|default:user.username }}">
             {% else %}
-                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                {% if user.first_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}
             {% endif %}
         </div>
         <div class="header-info">
@@ -323,4 +323,5 @@
         </div>
     </form>
 </div>
+{% include 'includes/image_cropper.html' %}
 {% endblock %}

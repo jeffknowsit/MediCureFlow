@@ -18,15 +18,18 @@ from django.db.models import Q
 from .models import Doctor, Appointment, DoctorAvailability, Review
 from .forms import (
     DoctorRegistrationForm, DoctorProfileForm, AppointmentUpdateForm,
-    DoctorAvailabilityForm
+    DoctorAvailabilityForm, MedicationFormSet
 )
-from django.contrib.auth.forms import AuthenticationForm
+from django.db import transaction
+from django.db.models import Prefetch
 from django.utils import timezone
-from django.http import JsonResponse
+from datetime import datetime, timedelta, date
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -487,12 +490,30 @@ class AppointmentUpdateView(LoginRequiredMixin, DoctorMixin, UpdateView):
         # Only allow doctor to update their own appointments
         return Appointment.objects.filter(doctor=self.request.user.doctor_profile)
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['medication_formset'] = MedicationFormSet(self.request.POST, instance=self.object)
+        else:
+            context['medication_formset'] = MedicationFormSet(instance=self.object)
+        return context
+    
     def form_valid(self, form):
-        messages.success(self.request, 'Appointment updated successfully!')
-        logger.info(
-            f'Appointment {self.object.id} updated by doctor {self.request.user.username}'
-        )
-        return super().form_valid(form)
+        context = self.get_context_data()
+        medication_formset = context['medication_formset']
+        
+        if medication_formset.is_valid():
+            self.object = form.save()
+            medication_formset.instance = self.object
+            medication_formset.save()
+            
+            messages.success(self.request, 'Appointment results and medications saved successfully!')
+            logger.info(
+                f'Appointment {self.object.id} updated with medications by doctor {self.request.user.username}'
+            )
+            return redirect(self.get_success_url())
+        else:
+            return self.form_invalid(form)
 
 
 class AppointmentCreateView(LoginRequiredMixin, DoctorMixin, CreateView):
@@ -1217,3 +1238,10 @@ class PatientHistoryAPI(LoginRequiredMixin, DoctorMixin, TemplateView):
         except Exception as e:
             logger.error(f'Error in PatientHistoryAPI: {str(e)}')
             return JsonResponse({'success': False, 'message': str(e)})
+
+def serve_doctor_profile_image(request, doctor_id):
+    """Serve the profile picture from SQLite binary storage."""
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    if doctor.photo_blob and doctor.photo_mime:
+        return HttpResponse(doctor.photo_blob, content_type=doctor.photo_mime)
+    raise Http404("Doctor photo not found")

@@ -89,7 +89,7 @@
             <h1 class="form-title">Doctor Registration</h1>
             <p class="form-subtitle">Create your professional profile today.</p>
 
-            <form method="post" novalidate>
+            <form method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 
                 <div class="form-section-title">Account Security</div>
@@ -194,6 +194,12 @@
                     <textarea name="bio" class="field-input" rows="4" placeholder="Tell patients about your expertise...">{{ form.bio.value|default:'' }}</textarea>
                     {% for error in form.bio.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
                 </div>
+                
+                <div class="field-group">
+                    <label>Profile Photo (Optional)</label>
+                    <input type="file" name="photo" class="field-input" accept="image/*">
+                    {% for error in form.photo.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                </div>
 
                 <button type="submit" class="btn-submit">Register as Doctor</button>
             </form>
@@ -204,4 +210,5 @@
         </div>
     </div>
 </div>
+{% include 'includes/image_cropper.html' %}
 {% endblock %}

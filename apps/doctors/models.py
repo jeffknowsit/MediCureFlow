@@ -114,8 +114,20 @@ class Doctor(models.Model):
     # Profile Information
     photo = models.ImageField(
         upload_to='doctors/photos/%Y/%m/',
-        default='doctors/photos/default.png',
-        help_text="Professional profile photograph"
+        null=True,
+        blank=True,
+        help_text="Legacy Professional photo"
+    )
+    photo_blob = models.BinaryField(
+        null=True,
+        blank=True,
+        help_text="Doctor photo stored in SQLite"
+    )
+    photo_mime = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        help_text="Mime type of the SQLite doctor photo"
     )
     bio = models.TextField(
         blank=True,
@@ -243,27 +255,12 @@ class Doctor(models.Model):
     
     @property
     def photo_url(self):
-        """Return the photo URL using static images."""
+        """Return the photo URL using the SQLite binary storage."""
+        if self.photo_blob:
+            return reverse('doctors:profile_image', kwargs={'doctor_id': self.id})
+        
+        # Fallback to the default image if no blob is found
         from django.templatetags.static import static
-        import os
-        from django.conf import settings
-        
-        # Try to find matching static image
-        possible_names = [
-            f"Dr {self.first_name}",
-            f"Dr. {self.first_name}",
-            f"Dr {self.first_name} {self.last_name}",
-            f"Dr. {self.first_name} {self.last_name}",
-        ]
-        
-        for name in possible_names:
-            for extension in ['.jpg', '.jpeg', '.png']:
-                static_path = f"images/doctors/{name}{extension}"
-                full_static_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'doctors', f"{name}{extension}")
-                if os.path.exists(full_static_path):
-                    return static(static_path)
-        
-        # Return default photo if no matching static image found
         return static('images/default-doctor.png')
     
     def get_absolute_url(self):
@@ -302,21 +299,8 @@ class Doctor(models.Model):
         return self.experience_years
     
     def save(self, *args, **kwargs):
-        """Override save to handle image resizing."""
+        """Override save."""
         super().save(*args, **kwargs)
-        
-        if self.photo and hasattr(self.photo, 'path'):
-            try:
-                import os
-                if os.path.exists(self.photo.path):
-                    img = Image.open(self.photo.path)
-                    if img.height > 300 or img.width > 300:
-                        output_size = (300, 300)
-                        img.thumbnail(output_size)
-                        img.save(self.photo.path)
-            except (IOError, OSError):
-                # Handle missing file gracefully (e.g., during testing)
-                pass
 
 class DoctorEducation(models.Model):
     """
@@ -853,4 +837,24 @@ class Review(models.Model):
     
     def __str__(self):
         return f"{self.rating}-star review for {self.doctor.display_name} by {self.patient.get_full_name()}"
+
+
+class Medication(models.Model):
+    """
+    Model representing medications prescribed during an appointment.
+    """
+    appointment = models.ForeignKey(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name='medications',
+        help_text="Associated appointment"
+    )
+    name = models.CharField(max_length=200, help_text="Name of the medication")
+    dosage = models.CharField(max_length=100, help_text="Dosage (e.g., 500mg)")
+    frequency = models.CharField(max_length=100, help_text="Frequency (e.g., 1-0-1)")
+    duration = models.CharField(max_length=100, help_text="Duration (e.g., 5 days)")
+    notes = models.CharField(max_length=255, blank=True, help_text="Additional instructions")
+
+    def __str__(self):
+        return f"{self.name} for {self.appointment}"
 
