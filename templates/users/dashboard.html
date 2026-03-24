@@ -129,6 +129,25 @@ body { background-color: #f8fafc; }
 .et-num { font-size: 1.25rem; font-weight: 800; }
 .et-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; opacity: 0.9; }
 
+.btn-action { padding:8px 16px; border-radius:8px; font-weight:700; font-size:0.8rem; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; border:none; }
+.btn-remarks { background:#eff6ff; color:#3b82f6; }
+.btn-review { background:#fef3c7; color:#d97706; }
+
+/* Modal Styles */
+.modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:1000; opacity:0; transition:opacity 0.2s; }
+.modal-overlay.active { display:flex; opacity:1; }
+.modal-box { background:#fff; width:100%; max-width:550px; border-radius:24px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.2); transform:scale(0.95); transition:transform 0.2s; }
+.modal-overlay.active .modal-box { transform:scale(1); }
+.modal-header { padding:24px 32px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; }
+.modal-header h3 { font-size:1.25rem; font-weight:800; color:#0f172a; margin:0; }
+.modal-close { background:none; border:none; font-size:1.5rem; color:#94a3b8; cursor:pointer; transition:color 0.2s; }
+.modal-close:hover { color:#0f172a; }
+.modal-body { padding:32px; }
+.rating-stars { display:flex; flex-direction:row-reverse; justify-content:center; gap:8px; margin-bottom:24px; }
+.rating-stars input { display:none; }
+.rating-stars label { font-size:2.5rem; color:#cbd5e1; cursor:pointer; transition:color 0.2s; }
+.rating-stars label:hover, .rating-stars label:hover ~ label, .rating-stars input:checked ~ label { color:#fbbf24; }
+
 @media (max-width: 1000px) {
     .hero-banner { flex-direction: column; text-align: center; gap: 20px; padding: 35px 30px; }
     .hero-left { flex-direction: column; }
@@ -230,6 +249,21 @@ body { background-color: #f8fafc; }
                             {% csrf_token %}
                             <button type="submit" class="cancel-btn">Cancel</button>
                         </form>
+                        {% elif appt.status == 'completed' %}
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn-action btn-remarks" onclick="openRemarksModal({{ appt.id }})">
+                                <i class="fas fa-file-medical"></i>
+                            </button>
+                            {% if not appt.review %}
+                            <button type="button" class="btn-action btn-review" onclick="openReviewModal({{ appt.id }}, '{{ appt.doctor.display_name }}')">
+                                <i class="fas fa-star"></i>
+                            </button>
+                            {% else %}
+                            <span style="font-size:0.8rem; color:#d97706; display:flex; align-items:center;">
+                                <i class="fas fa-check-circle"></i>
+                            </span>
+                            {% endif %}
+                        </div>
                         {% endif %}
                     </div>
                     {% endfor %}
@@ -380,4 +414,195 @@ body { background-color: #f8fafc; }
         </div>
     </div>
 </div>
+</div>
+
+<!-- Remarks Modal -->
+<div class="modal-overlay" id="remarksModal" onclick="this.classList.remove('active')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Consultation Remarks</h3>
+            <button class="modal-close" onclick="document.getElementById('remarksModal').classList.remove('active')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="remarks-loading" style="text-align:center; padding:20px; color:#64748b;">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+            </div>
+            
+            <div id="remarks-content" style="display:none;">
+                <div style="background:#f8fafc; padding:20px; border-radius:12px; margin-bottom:20px;">
+                    <p style="margin:0; font-size:0.9rem; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Doctor's Notes</p>
+                    <p id="remarks-text" style="margin:0; font-size:1.05rem; color:#334155; line-height:1.6; white-space:pre-wrap;"></p>
+                </div>
+
+                <div id="medicines-box" style="display:none; background:#fff; padding:20px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px;">
+                    <p style="margin:0; font-size:0.85rem; color:#4834d4; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;"><i class="fas fa-pills"></i> Prescribed Medicines</p>
+                    <div id="medicines-list" style="display:flex; flex-direction:column; gap:10px;">
+                    </div>
+                </div>
+                
+                <div id="referral-box" style="display:none; background:linear-gradient(135deg, #eff6ff, #e0e7ff); padding:20px; border-radius:12px; border:1px solid #bfdbfe; margin-bottom:20px;">
+                    <p style="margin:0; font-size:0.85rem; color:#3b82f6; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;"><i class="fas fa-random"></i> Specialist Referral</p>
+                    <p style="margin:0; font-size:1rem; color:#1e3a8a; font-weight:600;">You have been referred to:</p>
+                    <p id="referral-doctor" style="margin:4px 0 12px 0; font-size:1.15rem; color:#172554; font-weight:800;"></p>
+                    <a href="#" id="referral-link" class="btn-action" style="background:#3b82f6; color:#fff; padding:10px 20px;">Book Appointment</a>
+                </div>
+                
+                <div id="followup-box" style="display:none; background:#f0fdf4; padding:20px; border-radius:12px; border:1px solid #bbf7d0;">
+                    <p style="margin:0; font-size:0.85rem; color:#16a34a; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;"><i class="fas fa-calendar-check"></i> Recommended Follow-up</p>
+                    <p id="followup-datetime" style="margin:0; font-size:1.1rem; color:#14532d; font-weight:700;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-overlay" id="reviewModal" onclick="this.classList.remove('active')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Rate Your Experience</h3>
+            <button class="modal-close" onclick="document.getElementById('reviewModal').classList.remove('active')">&times;</button>
+        </div>
+        <div class="modal-body" style="text-align:center;">
+            <p style="color:#64748b; margin-bottom:24px; font-size:1.05rem;">How was your consultation with <strong id="review-doctor-name" style="color:#0f172a;"></strong>?</p>
+            
+            <form id="reviewForm" onsubmit="submitReview(event)">
+                <input type="hidden" id="review-appointment-id">
+                <div class="rating-stars">
+                    <input type="radio" name="rating" id="star5" value="5" required>
+                    <label for="star5" class="fas fa-star"></label>
+                    <input type="radio" name="rating" id="star4" value="4">
+                    <label for="star4" class="fas fa-star"></label>
+                    <input type="radio" name="rating" id="star3" value="3">
+                    <label for="star3" class="fas fa-star"></label>
+                    <input type="radio" name="rating" id="star2" value="2">
+                    <label for="star2" class="fas fa-star"></label>
+                    <input type="radio" name="rating" id="star1" value="1">
+                    <label for="star1" class="fas fa-star"></label>
+                </div>
+                
+                <textarea id="review-comment" placeholder="Share details of your experience (optional)" style="width:100%; border:2px solid #e2e8f0; border-radius:12px; padding:16px; font-family:inherit; font-size:0.95rem; min-height:120px; margin-bottom:24px; transition:border-color 0.2s;"></textarea>
+                
+                <button type="submit" id="review-submit-btn" style="width:100%; padding:16px; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; border-radius:12px; font-size:1.1rem; font-weight:700; cursor:pointer; box-shadow:0 10px 20px rgba(217,119,6,0.25);">Submit Review</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    function openRemarksModal(appointmentId) {
+        document.getElementById('remarksModal').classList.add('active');
+        document.getElementById('remarks-loading').style.display = 'block';
+        document.getElementById('remarks-content').style.display = 'none';
+        
+        fetch(`/users/api/appointments/${appointmentId}/details/`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('remarks-loading').style.display = 'none';
+                if (data.success) {
+                    document.getElementById('remarks-content').style.display = 'block';
+                    document.getElementById('remarks-text').textContent = data.details.remarks;
+                    
+                    const medicinesBox = document.getElementById('medicines-box');
+                    const medicinesList = document.getElementById('medicines-list');
+                    if (data.details.medicines && data.details.medicines.length > 0) {
+                        medicinesBox.style.display = 'block';
+                        medicinesList.innerHTML = '';
+                        data.details.medicines.forEach(med => {
+                            medicinesList.innerHTML += `
+                                <div style="background:#f8fafc; padding:12px 16px; border-radius:8px; display:flex; flex-wrap:wrap; gap:16px; align-items:center; border-left:4px solid #4834d4;">
+                                    <div style="flex:1; min-width:120px;">
+                                        <div style="font-weight:800; color:#1e293b; font-size:1rem;">${med.name}</div>
+                                        <div style="font-size:0.8rem; color:#64748b;">Qty: <span style="font-weight:700;">${med.amount}</span></div>
+                                    </div>
+                                    <div style="flex:1; min-width:100px;">
+                                        <div style="font-size:0.85rem; font-weight:700; color:#475569;"><i class="fas fa-syringe" style="color:#94a3b8; margin-right:4px;"></i> ${med.dosage}</div>
+                                    </div>
+                                    <div style="flex:1; min-width:120px;">
+                                        <div style="font-size:0.85rem; font-weight:700; color:#475569;"><i class="fas fa-clock" style="color:#94a3b8; margin-right:4px;"></i> ${med.eating_quantity}</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        medicinesBox.style.display = 'none';
+                    }
+                    
+                    const followupBox = document.getElementById('followup-box');
+                    if (data.details.next_date) {
+                        followupBox.style.display = 'block';
+                        document.getElementById('followup-datetime').textContent = `${data.details.next_date} at ${data.details.next_time || 'any time'}`;
+                    } else {
+                        followupBox.style.display = 'none';
+                    }
+                    
+                    const referralBox = document.getElementById('referral-box');
+                    if (data.details.referral) {
+                        referralBox.style.display = 'block';
+                        document.getElementById('referral-doctor').textContent = `${data.details.referral.name} (${data.details.referral.specialty})`;
+                        document.getElementById('referral-link').href = `/users/book-appointment/${data.details.referral.id}/`;
+                    } else {
+                        referralBox.style.display = 'none';
+                    }
+                } else {
+                    MediCureToast.show('Could not load remarks.', 'error');
+                    document.getElementById('remarksModal').classList.remove('active');
+                }
+            });
+    }
+
+    function openReviewModal(appointmentId, doctorName) {
+        document.getElementById('reviewModal').classList.add('active');
+        document.getElementById('review-appointment-id').value = appointmentId;
+        document.getElementById('review-doctor-name').textContent = doctorName;
+        document.getElementById('reviewForm').reset();
+    }
+
+    function submitReview(e) {
+        e.preventDefault();
+        const appointmentId = document.getElementById('review-appointment-id').value;
+        const rating = document.querySelector('input[name="rating"]:checked');
+        const comment = document.getElementById('review-comment').value;
+        const btn = document.getElementById('review-submit-btn');
+
+        if (!rating) {
+            MediCureToast.show('Please select a star rating.', 'warning');
+            return;
+        }
+        
+        btn.textContent = 'Submitting...'; btn.disabled = true;
+        
+        fetch(`/users/api/appointments/${appointmentId}/review/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({ rating: rating.value, comment: comment })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                MediCureToast.show('Review submitted!', 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                MediCureToast.show('Error: ' + data.message, 'error');
+                btn.textContent = 'Submit Review'; btn.disabled = false;
+            }
+        });
+    }
+</script>
 {% endblock %}

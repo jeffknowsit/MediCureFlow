@@ -164,10 +164,12 @@ input:checked + .slider:before { transform: translateX(20px); }
     <div class="hero-inner">
         <div class="hero-doc-left">
             <div class="doc-avatar">
-                {% if doctor.photo_blob %}
+                {% if doctor.has_photo %}
                     <img src="{{ doctor.photo_url }}" alt="{{ doctor.display_name }}">
                 {% else %}
-                    <div class="pa-av" style="width: 100%; height: 100%; font-size: 2rem; border-radius: 0;">{{ doctor.display_name|first }}</div>
+                    <div class="pa-av" style="width: 100%; height: 100%; font-size: 1.5rem; border-radius: 0; background: rgba(255,255,255,0.1); color: #fff;">
+                        {{ doctor.first_name|first }}{{ doctor.last_name|first }}
+                    </div>
                 {% endif %}
             </div>
             <div class="doc-hero-text">
@@ -269,7 +271,13 @@ input:checked + .slider:before { transform: translateX(20px); }
                 {% if upcoming_appointments %}
                     {% for appt in upcoming_appointments %}
                     <div class="appt-mini">
-                        <div class="pa-av">{{ appt.patient.first_name|first }}{{ appt.patient.last_name|first }}</div>
+                        <div class="pa-av" style="overflow:hidden;">
+                            {% if appt.patient.profile.profile_picture_blob %}
+                                <img src="{{ appt.patient.profile.profile_picture_url }}" style="width:100%; height:100%; object-fit:cover;">
+                            {% else %}
+                                {{ appt.patient.first_name|first }}{{ appt.patient.last_name|first }}
+                            {% endif %}
+                        </div>
                         <div class="pa-info">
                             <div class="pa-name">{{ appt.patient.get_full_name }}</div>
                             <div class="pa-time"><i class="fas fa-clock"></i> {{ appt.appointment_time|time:"h:i A" }}</div>
@@ -309,10 +317,10 @@ input:checked + .slider:before { transform: translateX(20px); }
                     <div class="profile-complete-bar" style="width:75%;"></div>
                 </div>
                 <p style="font-size:0.8rem;color:#888;margin-bottom:12px;">75% Complete <span style="color:#667eea;font-weight:700;">3 items remaining</span></p>
-                <div class="profile-check-item done"><span class="icon">✅</span> Profile Photo</div>
-                <div class="profile-check-item done"><span class="icon">✅</span> Education Details</div>
-                <div class="profile-check-item"><span class="icon">⭕</span> Clinic Address</div>
-                <div class="profile-check-item"><span class="icon">⭕</span> Availability Schedule</div>
+                <div class="profile-check-item {% if doctor.has_photo %}done{% endif %}"><span class="icon">{% if doctor.has_photo %}✅{% else %}⭕{% endif %}</span> Profile Photo</div>
+                <div class="profile-check-item {% if doctor.education.exists %}done{% endif %}"><span class="icon">{% if doctor.education.exists %}✅{% else %}⭕{% endif %}</span> Education Details</div>
+                <div class="profile-check-item {% if doctor.address %}done{% endif %}"><span class="icon">{% if doctor.address %}✅{% else %}⭕{% endif %}</span> Clinic Address</div>
+                <div class="profile-check-item {% if availability_slots %}done{% endif %}"><span class="icon">{% if availability_slots %}✅{% else %}⭕{% endif %}</span> Availability Schedule</div>
                 <a href="{% url 'doctors:profile' %}" class="complete-btn">Complete Profile</a>
             </div>
 

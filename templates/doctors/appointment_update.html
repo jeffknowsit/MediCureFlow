@@ -6,98 +6,440 @@
 
 {% block extra_css %}
 <style>
-.form-container { max-width: 800px; margin: 40px auto; padding: 40px; background: #fff; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
-.form-title { font-size: 1.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 32px; text-align: center; }
+    .update-page {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .update-card {
+        background: #fff;
+        border-radius: 24px;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.07);
+        overflow: hidden;
+        border: 1px solid #f1f5f9;
+        margin-bottom: 30px;
+    }
 
-.appt-summary { background: #f8fafc; padding: 24px; border-radius: 16px; margin-bottom: 32px; border: 1px solid #e2e8f0; }
-.summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.95rem; }
-.summary-row:last-child { margin-bottom: 0; }
-.summary-label { color: #64748b; font-weight: 700; }
-.summary-val { color: #1e293b; font-weight: 800; }
+    .card-header {
+        background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
+        padding: 30px 40px;
+        color: #fff;
+    }
 
-.btn-submit { padding: 14px 24px; background: linear-gradient(135deg, #4834d4 0%, #686de0 100%); color: #fff; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; }
-.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(72, 52, 212, 0.2); }
+    .card-header h2 {
+        margin: 0;
+        font-weight: 800;
+        font-size: 1.6rem;
+    }
 
-.medication-form { border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-bottom: 15px; position: relative; background: #f9fafb; display: flex; flex-wrap: wrap; gap: 10px; }
-.medication-form .form-group { flex: 1; min-width: 150px; margin-bottom: 0; }
-.medication-form .delete-btn { color: #e74c3c; cursor: pointer; font-weight: bold; position: absolute; right: 15px; top: 15px; }
-.add-medication-btn { margin-bottom: 20px; font-weight: bold; color: #4834d4; cursor: pointer; display: inline-block; padding: 8px 16px; border: 1px dashed #4834d4; border-radius: 8px; }
+    .appt-summary {
+        background: #fafbff;
+        padding: 24px 40px;
+        border-bottom: 1px solid #f1f5f9;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .summary-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .summary-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .summary-val {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .form-body {
+        padding: 40px;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 40px 0 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title i {
+        color: #4834d4;
+    }
+
+    .medication-box {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 24px;
+    }
+
+    .medication-form-item {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        position: relative;
+        transition: all 0.2s;
+    }
+
+    .medication-form-item:hover {
+        border-color: #4834d4;
+        box-shadow: 0 4px 12px rgba(72, 52, 212, 0.05);
+    }
+
+    .med-row-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 12px;
+    }
+
+    .med-notes-grid {
+        display: grid;
+        grid-template-columns: 3fr 1fr;
+        gap: 16px;
+        align-items: flex-end;
+    }
+
+    .delete-col {
+        text-align: right;
+        padding-top: 10px;
+    }
+
+    .delete-col label {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        color: #ef4444;
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    .add-med-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        color: #4834d4;
+        border: 2px dashed #4834d4;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+
+    .add-med-btn:hover {
+        background: #f5f3ff;
+        transform: translateY(-1px);
+    }
+
+    /* Override standard crispy layout slightly for better aesthetics */
+    .form-control, .select, .textarea {
+        border-radius: 10px !important;
+        border: 2px solid #e2e8f0 !important;
+        padding: 12px 16px !important;
+    }
+
+    .form-control:focus {
+        border-color: #4834d4 !important;
+        box-shadow: none !important;
+    }
+
+    .submit-bar {
+        background: #fff;
+        padding: 24px 40px;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+    }
+
+    .btn-save {
+        padding: 14px 40px;
+        background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 10px 20px rgba(72, 52, 212, 0.2);
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(72, 52, 212, 0.3);
+    }
+
+    .btn-cancel {
+        padding: 14px 24px;
+        background: #f1f5f9;
+        color: #64748b;
+        border-radius: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background: #e2e8f0;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <h1 class="form-title">Update Appointment Results</h1>
+<div class="update-page">
+    <div class="update-card">
+        <div class="card-header">
+            <h2>Update Appointment Results</h2>
+        </div>
 
-    <div class="appt-summary">
-        <div class="summary-row">
-            <span class="summary-label">Patient:</span>
-            <span class="summary-val">{{ appointment.patient.get_full_name }}</span>
-        </div>
-        <div class="summary-row">
-            <span class="summary-label">Date:</span>
-            <span class="summary-val">{{ appointment.appointment_date }}</span>
-        </div>
-        <div class="summary-row">
-            <span class="summary-label">Time:</span>
-            <span class="summary-val">{{ appointment.appointment_time }}</span>
-        </div>
-    </div>
-
-    <form method="post" id="appointmentForm">
-        {% csrf_token %}
-        
-        {% crispy form %}
-        
-        <hr class="my-4">
-        <h4>Prescribe Medications</h4>
-        
-        {{ medication_formset.management_form }}
-        <div id="medications-container">
-            {% for form in medication_formset %}
-            <div class="medication-form row g-2 align-items-center">
-                {{ form.id }}
-                {% for field in form.visible_fields %}
-                    {% if field.name != 'DELETE' %}
-                        <div class="col-sm">
-                            {{ field.label_tag }}
-                            {{ field }}
-                            {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
-                        </div>
-                    {% endif %}
-                {% endfor %}
-                {% if medication_formset.can_delete %}
-                    <div class="col-sm-1 text-center delete-column">
-                        {{ form.DELETE.label_tag }}<br>
-                        {{ form.DELETE }}
-                    </div>
-                {% endif %}
+        <div class="appt-summary">
+            <div class="summary-item">
+                <span class="summary-label">Patient</span>
+                <span class="summary-val">{{ appointment.patient.get_full_name }}</span>
             </div>
-            {% endfor %}
+            <div class="summary-item">
+                <span class="summary-label">Date</span>
+                <span class="summary-val">{{ appointment.appointment_date|date:"l, F j, Y" }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Time</span>
+                <span class="summary-val">{{ appointment.appointment_time|time:"h:i A" }}</span>
+            </div>
         </div>
-        
-        <div class="add-medication-btn" id="add-medication">+ Add Another Medication</div>
 
-        <div class="mt-4 text-center">
-            <p class="text-muted small">The submit button from the main form will save everything, but sometimes it is hidden. To be sure you can click below.</p>
-        </div>
-    </form>
+        <form method="post" id="appointmentForm" class="form-body" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="main-form-section">
+                <style>
+                    .main-form-section { padding-bottom: 40px; }
+                    .main-form-section .form-group { margin-bottom: 24px; position: relative; }
+                    .main-form-section label { 
+                        display: block; font-size: 0.7rem; font-weight: 800; 
+                        color: #64748b; margin-bottom: 8px; text-transform: uppercase; 
+                        letter-spacing: 0.8px; 
+                    }
+                    .main-form-section input[type="text"], 
+                    .main-form-section input[type="date"], 
+                    .main-form-section input[type="time"], 
+                    .main-form-section select, 
+                    .main-form-section textarea {
+                        width: 100%; border-radius: 12px; border: 2px solid #e2e8f0;
+                        padding: 14px 18px; font-size: 0.95rem; font-family: inherit;
+                        transition: all 0.2s; background: #fafbff; color: #1e293b;
+                        box-sizing: border-box;
+                    }
+                    .main-form-section input:focus, .main-form-section select:focus, .main-form-section textarea:focus {
+                        border-color: #667eea; outline: none; background: #fff;
+                        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.08);
+                    }
+                    /* Handling the two-col rows from crispy */
+                    .main-form-section .row { 
+                        display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 0; 
+                    }
+                    .main-form-section .col-md-6 { padding: 0; }
+                    
+                    /* Custom Checkbox Styling */
+                    .main-form-section .checkbox { 
+                        display: flex; align-items: center; gap: 12px; 
+                        margin-top: 32px; background: #f8fafc; 
+                        padding: 12px 16px; border-radius: 12px; border: 2px solid #e2e8f0;
+                        cursor: pointer;
+                    }
+                    .main-form-section .checkbox input { 
+                        width: 22px; height: 22px; cursor: pointer; accent-color: #667eea; 
+                    }
+                    .main-form-section .checkbox label { 
+                        margin-bottom: 0; text-transform: none; font-size: 0.9rem; 
+                        color: #475569; font-weight: 600; cursor: pointer; letter-spacing: 0;
+                    }
+                    .main-form-section .help-block { font-size: 0.75rem; color: #94a3b8; margin-top: 6px; }
+                    
+                    /* Consultation Remarks / Notes */
+                    .main-form-section textarea { min-height: 100px; resize: vertical; }
+                    
+                    /* Section Headers inside form */
+                    .main-form-section h4 {
+                        font-size: 1rem; font-weight: 800; color: #1e293b; margin: 32px 0 20px;
+                        display: flex; align-items: center; gap: 10px;
+                    }
+                    .main-form-section h4::before {
+                        content: ''; display: block; width: 4px; height: 20px; background: #667eea; border-radius: 2px;
+                    }
+                    
+                    @media (max-width: 768px) {
+                        .main-form-section .row { grid-template-columns: 1fr; }
+                    }
+                </style>
+                {% crispy form %}
+            </div>
+            
+            <h3 class="section-title"><i class="fas fa-pills"></i> Prescribe Medications</h3>
+            
+            <div class="medication-box">
+                {{ medication_formset.management_form }}
+                <div id="medications-container">
+                    {% for medication_form in medication_formset %}
+                    <div class="medication-form-item medication-form-row">
+                        {{ medication_form.id }}
+                        <div class="med-row-grid">
+                            <div class="form-group">
+                                <label class="summary-label">Medicine Name</label>
+                                {{ medication_form.name }}
+                                {% for error in medication_form.name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="form-group">
+                                <label class="summary-label">Amount</label>
+                                {{ medication_form.amount }}
+                                {% for error in medication_form.amount.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="form-group">
+                                <label class="summary-label">Dosage</label>
+                                {{ medication_form.dosage }}
+                                {% for error in medication_form.dosage.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="med-notes-grid">
+                            <div class="form-group">
+                                <label class="summary-label">Eating Quantity & Notes</label>
+                                <div style="display:flex; gap:10px;">
+                                    {{ medication_form.eating_quantity }}
+                                    {{ medication_form.notes }}
+                                </div>
+                            </div>
+                            {% if medication_formset.can_delete %}
+                            <div class="delete-col">
+                                <label>{{ medication_form.DELETE }} <i class="fas fa-trash-alt"></i> Delete</label>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <button type="button" class="add-med-btn" id="add-medication">
+                    <i class="fas fa-plus"></i> Add Another Medication
+                </button>
+            </div>
+
+            <h3 class="section-title"><i class="fas fa-file-medical"></i> Diagnostic Test Reports</h3>
+            
+            <div class="medication-box">
+                {{ report_formset.management_form }}
+                <div id="reports-container">
+                    {% for report_form in report_formset %}
+                    <div class="medication-form-item report-form-row">
+                        {{ report_form.id }}
+                        <div class="med-row-grid" style="grid-template-columns: 1fr 2fr;">
+                            <div class="form-group">
+                                <label class="summary-label">Test Name</label>
+                                {{ report_form.test_name }}
+                                {% for error in report_form.test_name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="form-group">
+                                <label class="summary-label">Upload Report (PDF/Image)</label>
+                                {{ report_form.report_file }}
+                                {% for error in report_form.report_file.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        {% if report_formset.can_delete %}
+                        <div class="delete-col">
+                            <label>{{ report_form.DELETE }} <i class="fas fa-trash-alt"></i> Delete</label>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <button type="button" class="add-med-btn" id="add-report">
+                    <i class="fas fa-plus"></i> Add Another Test Report
+                </button>
+            </div>
+
+            <p class="text-muted small text-center mt-4">
+                <i class="fas fa-info-circle"></i> Complete all fields and review the prescriptions before saving.
+            </p>
+
+            <div class="submit-bar">
+                <a href="{% url 'doctors:appointments' %}" class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-save">Save All Results</button>
+            </div>
+        </form>
+    </div>
 </div>
 
+<!-- Template for adding new medication rows via JS -->
 <div id="empty-form" style="display: none;">
-    <div class="medication-form row g-2 align-items-center">
+    <div class="medication-form-item medication-form-row">
         {{ medication_formset.empty_form.id }}
-        {% for field in medication_formset.empty_form.visible_fields %}
-            {% if field.name != 'DELETE' %}
-                <div class="col-sm">
-                    {{ field.label_tag }}
-                    {{ field }}
+        <div class="med-row-grid">
+            <div class="form-group">
+                <label class="summary-label">Medicine Name</label>
+                {{ medication_formset.empty_form.name }}
+            </div>
+            <div class="form-group">
+                <label class="summary-label">Amount</label>
+                {{ medication_formset.empty_form.amount }}
+            </div>
+            <div class="form-group">
+                <label class="summary-label">Dosage</label>
+                {{ medication_formset.empty_form.dosage }}
+            </div>
+        </div>
+        <div class="med-notes-grid">
+            <div class="form-group">
+                <label class="summary-label">Eating Quantity & Notes</label>
+                <div style="display:flex; gap:10px;">
+                    {{ medication_formset.empty_form.eating_quantity }}
+                    {{ medication_formset.empty_form.notes }}
                 </div>
-            {% endif %}
-        {% endfor %}
-        <div class="col-sm-1 text-center delete-column">
-            {{ medication_formset.empty_form.DELETE.label_tag }}<br>
-            {{ medication_formset.empty_form.DELETE }}
+            </div>
+            <div class="delete-col">
+                <label>{{ medication_formset.empty_form.DELETE }} <i class="fas fa-trash-alt"></i> Delete</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template for adding new report rows via JS -->
+<div id="empty-report-form" style="display: none;">
+    <div class="medication-form-item report-form-row">
+        {{ report_formset.empty_form.id }}
+        <div class="med-row-grid" style="grid-template-columns: 1fr 2fr;">
+            <div class="form-group">
+                <label class="summary-label">Test Name</label>
+                {{ report_formset.empty_form.test_name }}
+            </div>
+            <div class="form-group">
+                <label class="summary-label">Upload Report (PDF/Image)</label>
+                {{ report_formset.empty_form.report_file }}
+            </div>
+        </div>
+        <div class="delete-col">
+            <label>{{ report_formset.empty_form.DELETE }} <i class="fas fa-trash-alt"></i> Delete</label>
         </div>
     </div>
 </div>
@@ -111,11 +453,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const followUpRow = document.getElementById('follow-up-row');
     
     function toggleFollowUp() {
-        if (isFinalCheckbox.checked) {
+        if (!followUpRow) return;
+        if (isFinalCheckbox && isFinalCheckbox.checked) {
             followUpRow.style.display = 'none';
-            // Clear values
-            document.getElementById('id_next_appointment_date').value = '';
-            document.getElementById('id_next_appointment_time').value = '';
         } else {
             followUpRow.style.display = 'flex';
         }
@@ -131,22 +471,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalForms = document.getElementById('id_medications-TOTAL_FORMS');
     const container = document.getElementById('medications-container');
 
-    if (addButton) {
+    if (addButton && totalForms) {
         addButton.addEventListener('click', function(e) {
             e.preventDefault();
             const formCount = parseInt(totalForms.value);
-            
-            // Get empty form template
             let newFormHtml = document.getElementById('empty-form').innerHTML;
-            
-            // Replace __prefix__ with the new form index
             newFormHtml = newFormHtml.replace(/__prefix__/g, formCount);
-            
-            // Append to container
+            newFormHtml = newFormHtml.replace(/id_medications-__prefix__/g, 'id_medications-' + formCount);
             container.insertAdjacentHTML('beforeend', newFormHtml);
-            
-            // Update total forms count
             totalForms.value = formCount + 1;
+        });
+    }
+
+    // Report Formset Logic
+    const addReportBtn = document.getElementById('add-report');
+    const totalReportForms = document.getElementById('id_test_reports-TOTAL_FORMS');
+    const reportContainer = document.getElementById('reports-container');
+
+    if (addReportBtn && totalReportForms) {
+        addReportBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const formCount = parseInt(totalReportForms.value);
+            let newFormHtml = document.getElementById('empty-report-form').innerHTML;
+            newFormHtml = newFormHtml.replace(/__prefix__/g, formCount);
+            newFormHtml = newFormHtml.replace(/id_test_reports-__prefix__/g, 'id_test_reports-' + formCount);
+            reportContainer.insertAdjacentHTML('beforeend', newFormHtml);
+            totalReportForms.value = formCount + 1;
         });
     }
 });

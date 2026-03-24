@@ -12,6 +12,7 @@ from .models import UserProfile
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column, HTML, Div, Field
 from crispy_forms.bootstrap import FormActions
+from django.core.validators import RegexValidator
 from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import UploadedFile
@@ -37,6 +38,13 @@ def process_profile_picture(image_file):
         return None, None
 
 
+name_validator = RegexValidator(
+    regex=r'^[a-zA-Z\s]+$',
+    message='Name should only contain letters and spaces.',
+    code='invalid_name'
+)
+
+
 class CustomUserRegistrationForm(UserCreationForm):
     """
     Extended user registration form with additional fields.
@@ -44,11 +52,13 @@ class CustomUserRegistrationForm(UserCreationForm):
     first_name = forms.CharField(
         max_length=30, 
         required=True,
+        validators=[name_validator],
         widget=forms.TextInput(attrs={'placeholder': 'First Name'})
     )
     last_name = forms.CharField(
         max_length=30, 
         required=True,
+        validators=[name_validator],
         widget=forms.TextInput(attrs={'placeholder': 'Last Name'})
     )
     email = forms.EmailField(
@@ -278,6 +288,14 @@ class UserUpdateForm(forms.ModelForm):
     """
     Form for updating basic user information.
     """
+    first_name = forms.CharField(
+        validators=[name_validator],
+        widget=forms.TextInput(attrs={'placeholder': 'First Name'})
+    )
+    last_name = forms.CharField(
+        validators=[name_validator],
+        widget=forms.TextInput(attrs={'placeholder': 'Last Name'})
+    )
     
     class Meta:
         model = User

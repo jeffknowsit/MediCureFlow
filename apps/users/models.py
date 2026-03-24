@@ -245,6 +245,11 @@ class UserProfile(models.Model):
         return ', '.join(address_parts)
     
     @property
+    def has_profile_picture(self):
+        """Return True if the user has a profile picture (either blob or file)."""
+        return bool(self.profile_picture_blob or self.profile_picture)
+
+    @property
     def age(self):
         """Calculate age from date of birth."""
         if not self.date_of_birth:
@@ -258,11 +263,17 @@ class UserProfile(models.Model):
     
     @property
     def profile_picture_url(self):
-        """Return the profile picture URL using the SQLite binary storage."""
+        """Return the profile picture URL using the SQLite binary storage with fallback to ImageField."""
         if self.profile_picture_blob:
             return reverse('users:profile_image', kwargs={'user_id': self.user.id})
         
-        # Fallback to the default image if no blob is found
+        if self.profile_picture:
+            try:
+                return self.profile_picture.url
+            except ValueError:
+                pass
+        
+        # Fallback to the default image if no blob or file is found
         from django.templatetags.static import static
         return static('images/default-user.png')
     

@@ -20,6 +20,7 @@ urlpatterns = [
     # Dashboard and Profile
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('profile/', views.ProfileUpdateView.as_view(), name='profile'),
+    path('delete-account/', views.DeleteAccountView.as_view(), name='delete_account'),
     path('profile-image/<int:user_id>/', views.serve_patient_profile_image, name='profile_image'),
     
     # Doctor Search and Booking
@@ -27,6 +28,10 @@ urlpatterns = [
     path('book-appointment/<int:doctor_id>/', views.BookAppointmentView.as_view(), name='book_appointment'),
     path('cancel-appointment/<int:appointment_id>/', views.CancelAppointmentView.as_view(), name='cancel_appointment'),
     path('my-appointments/', views.MyAppointmentsView.as_view(), name='my_appointments'),
+    
+    # API endpoints for appointments
+    path('api/appointments/<int:appointment_id>/details/', views.AppointmentDetailsAPI.as_view(), name='appointment_details'),
+    path('api/appointments/<int:appointment_id>/review/', views.SubmitReviewAPI.as_view(), name='submit_review'),
     
     # Password Management
     path('password-change/', 

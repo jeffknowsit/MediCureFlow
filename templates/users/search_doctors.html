@@ -142,7 +142,7 @@
                 {% for doctor in doctors %}
                 <div class="doc-card">
                     <div class="doc-thumb">
-                        {% if doctor.photo %}
+                        {% if doctor.has_photo %}
                             <img src="{{ doctor.photo_url }}" alt="{{ doctor.display_name }}">
                         {% else %}
                             <i class="fas fa-user-md"></i>
@@ -179,7 +179,11 @@
                             ₹{{ doctor.consultation_fee }}
                             <small>Consultation</small>
                         </div>
-                        <span class="available-badge">● Available</span>
+                        {% if doctor.is_on_duty %}
+                            <span class="available-badge">● On Duty</span>
+                        {% else %}
+                            <span class="available-badge" style="color: #e67e22; background: rgba(230, 126, 34, 0.1);">● Off Duty</span>
+                        {% endif %}
                         <a href="{% url 'users:book_appointment' doctor.id %}" class="btn-book">Book Now</a>
                     </div>
                 </div>

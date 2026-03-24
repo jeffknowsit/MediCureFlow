@@ -8,10 +8,11 @@ availability management, and other doctor-related functionality.
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Doctor, Appointment, DoctorAvailability, Review, Medication
+from .models import Doctor, Appointment, DoctorAvailability, Review, Medication, TestReport
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, Row, Column, HTML, Field
 from crispy_forms.bootstrap import FormActions
+from django.core.validators import RegexValidator
 from decimal import Decimal
 from io import BytesIO
 from PIL import Image
@@ -38,6 +39,13 @@ def process_profile_picture(image_file):
         return None, None
 
 
+name_validator = RegexValidator(
+    regex=r'^[a-zA-Z\s]+$',
+    message='Name should only contain letters and spaces.',
+    code='invalid_name'
+)
+
+
 class DoctorRegistrationForm(UserCreationForm):
     """
     Registration form for doctors with professional information.
@@ -45,11 +53,13 @@ class DoctorRegistrationForm(UserCreationForm):
     first_name = forms.CharField(
         max_length=100,
         required=True,
+        validators=[name_validator],
         widget=forms.TextInput(attrs={'placeholder': 'First Name'})
     )
     last_name = forms.CharField(
         max_length=100,
         required=True,
+        validators=[name_validator],
         widget=forms.TextInput(attrs={'placeholder': 'Last Name'})
     )
     email = forms.EmailField(
@@ -189,7 +199,7 @@ class DoctorRegistrationForm(UserCreationForm):
         if commit:
             user.save()
             # Create doctor profile
-            Doctor.objects.create(
+            doctor = Doctor.objects.create(
                 user=user,
                 first_name=self.cleaned_data['first_name'],
                 last_name=self.cleaned_data['last_name'],
@@ -220,6 +230,15 @@ class DoctorProfileForm(forms.ModelForm):
     """
     Form for updating doctor profile information.
     """
+    
+    first_name = forms.CharField(
+        validators=[name_validator],
+        widget=forms.TextInput(attrs={'placeholder': 'First Name'})
+    )
+    last_name = forms.CharField(
+        validators=[name_validator],
+        widget=forms.TextInput(attrs={'placeholder': 'Last Name'})
+    )
     
     class Meta:
         model = Doctor
@@ -425,8 +444,8 @@ class AppointmentUpdateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
+        self.helper.form_tag = False  # Don't render <form> tags
         self.helper.layout = Layout(
-            HTML('<h3>Update Appointment Results</h3>'),
             Row(
                 Column('status', css_class='form-group col-md-6'),
                 Column('is_paid', css_class='form-group col-md-6 pt-4'),
@@ -442,9 +461,6 @@ class AppointmentUpdateForm(forms.ModelForm):
                 Column('next_appointment_time', css_class='form-group col-md-6'),
                 css_class='row',
                 id='follow-up-row'
-            ),
-            FormActions(
-                Submit('submit', 'Save Appointment Results', css_class='btn btn-primary btn-lg')
             )
         )
 
@@ -463,16 +479,34 @@ class MedicationForm(forms.ModelForm):
     """
     class Meta:
         model = Medication
-        fields = ['name', 'dosage', 'frequency', 'duration', 'notes']
+        fields = ['name', 'amount', 'dosage', 'eating_quantity', 'notes']
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': 'Medicine Name', 'class': 'form-control'}),
+            'amount': forms.TextInput(attrs={'placeholder': 'e.g. 10 Tablets', 'class': 'form-control'}),
             'dosage': forms.TextInput(attrs={'placeholder': 'e.g. 500mg', 'class': 'form-control'}),
-            'frequency': forms.TextInput(attrs={'placeholder': 'e.g. 1-0-1', 'class': 'form-control'}),
-            'duration': forms.TextInput(attrs={'placeholder': 'e.g. 5 days', 'class': 'form-control'}),
+            'eating_quantity': forms.TextInput(attrs={'placeholder': 'e.g. 1-0-1 After Meals', 'class': 'form-control'}),
             'notes': forms.TextInput(attrs={'placeholder': 'Additional info', 'class': 'form-control'}),
         }
 
 MedicationFormSet = forms.inlineformset_factory(
-    Appointment, Medication, form=MedicationForm, 
+    Appointment, Medication, form=MedicationForm,
+    extra=1, can_delete=True
+)
+
+
+class TestReportForm(forms.ModelForm):
+    """
+    Form for uploading diagnostic test reports.
+    """
+    class Meta:
+        model = TestReport
+        fields = ['test_name', 'report_file']
+        widgets = {
+            'test_name': forms.TextInput(attrs={'placeholder': 'e.g. CT Scan, X-Ray', 'class': 'form-control'}),
+            'report_file': forms.FileInput(attrs={'accept': '.pdf,image/*', 'class': 'form-control'}),
+        }
+
+TestReportFormSet = forms.inlineformset_factory(
+    Appointment, TestReport, form=TestReportForm,
     extra=1, can_delete=True
 )

@@ -145,7 +145,13 @@ tr:hover td { background: #fafaff; }
                     <td style="font-weight:800;color:#888;">#{{ appt.id }}</td>
                     <td>
                         <div class="doctor-cell">
-                            <div class="dc-av">{{ appt.doctor.display_name|first }}</div>
+                            <div class="dc-av">
+                                {% if appt.doctor.has_photo %}
+                                    <img src="{{ appt.doctor.photo_url }}" alt="{{ appt.doctor.display_name }}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">
+                                {% else %}
+                                    {{ appt.doctor.display_name|first }}
+                                {% endif %}
+                            </div>
                             <div>
                                 <div class="dc-name">{{ appt.doctor.display_name }}</div>
                                 <div class="dc-spec">{{ appt.doctor.get_specialty_display }}</div>

@@ -566,3 +566,151 @@ def serve_patient_profile_image(request, user_id):
         return HttpResponse(user_profile.profile_picture_blob, content_type=user_profile.profile_picture_mime)
     raise Http404("Profile picture not found")
 
+
+class SubmitReviewAPI(LoginRequiredMixin, View):
+    """
+    API view to submit a doctor review for a completed appointment.
+    """
+    http_method_names = ['post']
+    
+    def post(self, request, appointment_id):
+        try:
+            import json
+            from django.http import JsonResponse
+            
+            data = json.loads(request.body)
+            rating = int(data.get('rating', 0))
+            comment = data.get('comment', '')
+            
+            if not (1 <= rating <= 5):
+                return JsonResponse({'success': False, 'message': 'Rating must be between 1 and 5 stars.'})
+                
+            # Get appointment and ensure it belongs to the patient
+            appointment = get_object_or_404(
+                Appointment, 
+                id=appointment_id, 
+                patient=request.user,
+                status='completed'
+            )
+            
+            # Check if review already exists
+            from apps.doctors.models import Review
+            if hasattr(appointment, 'review'):
+                return JsonResponse({'success': False, 'message': 'You have already reviewed this appointment.'})
+                
+            # Create review
+            review = Review.objects.create(
+                doctor=appointment.doctor,
+                patient=request.user,
+                appointment=appointment,
+                rating=rating,
+                comment=comment,
+                is_approved=True  # Auto approve for now so it updates dashboard right away
+            )
+            
+            # Update doctor statistics
+            appointment.doctor.update_statistics()
+            
+            logger.info(f'Review {review.id} submitted for doctor {appointment.doctor.id} by user {request.user.username}')
+            
+            return JsonResponse({
+                'success': True, 
+                'message': 'Review submitted successfully! Thank you for your feedback.'
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+        except Appointment.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Completed appointment not found.'})
+        except Exception as e:
+            logger.error(f'Error submitting review: {str(e)}')
+            return JsonResponse({'success': False, 'message': 'Server error occurred'})
+
+
+class AppointmentDetailsAPI(LoginRequiredMixin, View):
+    """
+    API view to fetch detailed remarks and prescription for a completed appointment.
+    """
+    def get(self, request, appointment_id):
+        from django.http import JsonResponse
+        try:
+            appointment = get_object_or_404(
+                Appointment, 
+                id=appointment_id, 
+                patient=request.user
+            )
+            
+            # Prepare referral info
+            referral = None
+            if appointment.recommended_doctor:
+                doc = appointment.recommended_doctor
+                referral = {
+                    'name': doc.display_name,
+                    'specialty': doc.get_specialty_display(),
+                    'id': doc.id
+                }
+                
+            medicines = []
+            for med in appointment.medications.all():
+                medicines.append({
+                    'name': med.name,
+                    'amount': med.amount,
+                    'dosage': med.dosage,
+                    'eating_quantity': med.eating_quantity,
+                    'notes': med.notes
+                })
+                
+            reports = []
+            for report in appointment.test_reports.all():
+                reports.append({
+                    'name': report.test_name,
+                    'url': report.report_file.url if report.report_file else None
+                })
+                
+            data = {
+                'doctor_name': appointment.doctor.display_name,
+                'date': appointment.appointment_date.strftime('%d %b, %Y'),
+                'time': appointment.appointment_time.strftime('%I:%M %p'),
+                'remarks': appointment.consultation_remarks or 'No clinical remarks provided by the doctor.',
+                'medicines': medicines,
+                'reports': reports,
+                'next_date': appointment.next_appointment_date.strftime('%d %b, %Y') if appointment.next_appointment_date else None,
+                'next_time': appointment.next_appointment_time.strftime('%I:%M %p') if appointment.next_appointment_time else None,
+                'referral': referral
+            }
+            
+            return JsonResponse({'success': True, 'details': data})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+
+
+class DeleteAccountView(LoginRequiredMixin, View):
+    """
+    View for users to delete their own account.
+    Restricted: Staff/Admins cannot delete their accounts this way.
+    """
+    def post(self, request):
+        user = request.user
+        
+        # Security: Do not allow staff or superusers to delete themselves via this view
+        if user.is_staff or user.is_superuser:
+            messages.error(request, 'Administrative accounts cannot be deleted through this interface. Please contact system management.')
+            return redirect('users:profile')
+            
+        try:
+            with transaction.atomic():
+                # Store username for the message
+                username = user.username
+                # Log the deletion
+                logger.info(f'User {username} deleted their account.')
+                # Delete the user (this will cascade delete the profile if setup correctly)
+                user.delete()
+                
+            messages.success(request, 'Your account has been permanently deleted. We are sorry to see you go.')
+            return redirect('home')
+        except Exception as e:
+            logger.error(f'Error deleting account for {user.username}: {e}')
+            messages.error(request, 'An error occurred while deleting your account.')
+            return redirect('users:profile')
+

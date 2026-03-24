@@ -297,21 +297,40 @@
                 </div>
             </div>
 
-            <!-- Preferences -->
-            <div class="form-card">
-                <div class="card-hdr">
-                    <i class="fas fa-bell"></i>
-                    <h3>Communication Preferences</h3>
+            <!-- Security & Privacy -->
+            <div class="form-card" style="border: 1px solid #fee2e2; background: #fffbff;">
+                <div class="card-hdr" style="border-bottom-color: #fff1f1;">
+                    <i class="fas fa-shield-alt" style="color: #ef4444;"></i>
+                    <h3>Security & Account Management</h3>
                 </div>
-                <div class="form-row">
-                    <div class="field-group checkbox-group">
-                        {{ form.email_notifications }}
-                        <label style="margin:0;">Email Notifications</label>
+                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 28px;">Manage your account security and data privacy settings here.</p>
+                
+                <div class="form-row" style="align-items: flex-end;">
+                    <div class="field-group">
+                        <label>Password Policy</label>
+                        <a href="{% url 'users:password_reset' %}" class="btn-cancel" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff; border-color: #4834d4; color: #4834d4; width: 100%; padding: 16px;">
+                            <i class="fas fa-envelope-open-text"></i> Email Password Reset
+                        </a>
                     </div>
-                    <div class="field-group checkbox-group">
-                        {{ form.sms_notifications }}
-                        <label style="margin:0;">SMS Notifications</label>
+                    
+                    <div class="field-group">
+                        <label>Danger Zone</label>
+                        <button type="button" onclick="confirmAccountDeletion()" class="btn-cancel" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #fef2f2; border-color: #fecaca; color: #dc2626; width: 100%; padding: 16px;">
+                            <i class="fas fa-trash-alt"></i> Delete My Account
+                        </button>
                     </div>
+                </div>
+                
+                <div id="deletion-confirm-box" style="display:none; margin-top:20px; padding:20px; background:#fff1f1; border-radius:12px; border:1px solid #fecaca;">
+                    <p style="color:#991b1b; font-weight:700; margin-bottom:12px;"><i class="fas fa-exclamation-triangle"></i> Are you absolutely sure?</p>
+                    <p style="font-size:0.85rem; color:#7f1d1d; margin-bottom:16px;">This action is permanent and cannot be undone. All your medical records, appointments, and profile data will be erased forever.</p>
+                    <form action="{% url 'users:delete_account' %}" method="post">
+                        {% csrf_token %}
+                        <div style="display:flex; gap:12px;">
+                            <button type="submit" style="background:#dc2626; color:#fff; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer;">Yes, Delete My Account</button>
+                            <button type="button" onclick="document.getElementById('deletion-confirm-box').style.display='none'" style="background:#fff; border:1px solid #d1d5db; padding:10px 20px; border-radius:8px; font-weight:600; cursor:pointer;">Cancel</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -323,5 +342,12 @@
         </div>
     </form>
 </div>
+
+<script>
+function confirmAccountDeletion() {
+    document.getElementById('deletion-confirm-box').style.display = 'block';
+    document.getElementById('deletion-confirm-box').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+</script>
 {% include 'includes/image_cropper.html' %}
 {% endblock %}

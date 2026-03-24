@@ -18,7 +18,7 @@ from django.db.models import Q
 from .models import Doctor, Appointment, DoctorAvailability, Review
 from .forms import (
     DoctorRegistrationForm, DoctorProfileForm, AppointmentUpdateForm,
-    DoctorAvailabilityForm, MedicationFormSet
+    DoctorAvailabilityForm, MedicationFormSet, TestReportFormSet
 )
 from django.db import transaction
 from django.db.models import Prefetch
@@ -27,9 +27,11 @@ from datetime import datetime, timedelta, date
 from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.views import View
 import json
 import logging
 import os
+import tempfile
 
 logger = logging.getLogger(__name__)
 
@@ -454,6 +456,11 @@ class DoctorAppointmentsView(LoginRequiredMixin, DoctorMixin, ListView):
             context['current_currency'] = currency
             context['currency_symbol'] = currency_symbols.get(currency, '₹')
             
+            # Pass all other doctors for the referral dropdown
+            context['all_doctors'] = Doctor.objects.filter(
+                is_available=True
+            ).exclude(id=doctor.id).order_by('first_name', 'last_name')
+            
         except Exception as e:
             logger.error(f'Error in get_context_data for appointments: {str(e)}')
             messages.error(self.request, 'Error loading appointment data.')
@@ -494,22 +501,27 @@ class AppointmentUpdateView(LoginRequiredMixin, DoctorMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         if self.request.POST:
             context['medication_formset'] = MedicationFormSet(self.request.POST, instance=self.object)
+            context['report_formset'] = TestReportFormSet(self.request.POST, self.request.FILES, instance=self.object)
         else:
             context['medication_formset'] = MedicationFormSet(instance=self.object)
+            context['report_formset'] = TestReportFormSet(instance=self.object)
         return context
     
     def form_valid(self, form):
         context = self.get_context_data()
         medication_formset = context['medication_formset']
+        report_formset = context['report_formset']
         
-        if medication_formset.is_valid():
+        if medication_formset.is_valid() and report_formset.is_valid():
             self.object = form.save()
             medication_formset.instance = self.object
             medication_formset.save()
+            report_formset.instance = self.object
+            report_formset.save()
             
-            messages.success(self.request, 'Appointment results and medications saved successfully!')
+            messages.success(self.request, 'Appointment results, medications, and reports saved successfully!')
             logger.info(
-                f'Appointment {self.object.id} updated with medications by doctor {self.request.user.username}'
+                f'Appointment {self.object.id} updated by doctor {self.request.user.username}'
             )
             return redirect(self.get_success_url())
         else:
@@ -1086,10 +1098,13 @@ class DoctorAvailableSlotsView(TemplateView):
         
         try:
             doctor = Doctor.objects.get(id=doctor_id)
-            
-            # Check if doctor is accepting appointments
-            if not doctor.is_available or not doctor.is_on_duty:
-                return JsonResponse({'success': True, 'slots': []})
+            # Check if doctor is accepting appointments at all globally
+            if not doctor.is_available:
+                return JsonResponse({
+                    'success': True, 
+                    'slots': [],
+                    'message': 'Doctor is currently unavailable for new appointments.'
+                })
 
             from datetime import datetime, time
             date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -1108,8 +1123,21 @@ class DoctorAvailableSlotsView(TemplateView):
                 for a in availabilities:
                     active_ranges.append((a.start_time, a.end_time))
             else:
-                # Default working hours: 09:00 to 18:00
-                active_ranges.append((time(9, 0), time(18, 0)))
+                # Check if doctor has ANY availability defined globally
+                has_any_availability = DoctorAvailability.objects.filter(
+                    doctor=doctor, 
+                    is_active=True
+                ).exists()
+                
+                if not has_any_availability:
+                    # Default working hours ONLY if no schedule defined
+                    active_ranges.append((time(9, 0), time(18, 0)))
+                else:
+                    return JsonResponse({
+                        'success': True, 
+                        'slots': [],
+                        'message': 'No available slots for this date.'
+                    })
             
             # Get already booked appointments for this date
             booked_appointments = Appointment.objects.filter(
@@ -1138,8 +1166,9 @@ class DoctorAvailableSlotsView(TemplateView):
                     
                     # Check if slot is in the past (if date is today)
                     is_past = False
-                    if date_obj == timezone.now().date():
-                        if slot_time <= timezone.now().time():
+                    local_now = timezone.localtime()
+                    if date_obj == local_now.date():
+                        if slot_time <= local_now.time():
                             is_past = True
                     
                     if not is_booked and not is_lunch and not is_past:
@@ -1158,54 +1187,243 @@ class DoctorAvailableSlotsView(TemplateView):
             return JsonResponse({'success': False, 'error': str(e)})
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class WhisperTranscribeAPI(View):
+    """
+    API view to transcribe audio using OpenAI Whisper model.
+    """
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return JsonResponse({'success': False, 'message': 'Authentication required'}, status=401)
+            
+        if 'audio' not in request.FILES:
+            return JsonResponse({'success': False, 'message': 'No audio file provided'})
+            
+        audio_file = request.FILES['audio']
+        
+        # Save audio file to temp directory
+        import tempfile
+        import os
+        import whisper
+        from django.conf import settings
+        
+        # Load local whisper model (singleton-ish)
+        if not hasattr(WhisperTranscribeAPI, '_model'):
+            # Use 'base' for speed/accuracy balance. Alternatives: 'tiny', 'small', 'medium', 'large'
+            WhisperTranscribeAPI._model = whisper.load_model("base")
+            
+        temp_dir = tempfile.gettempdir()
+        temp_name = os.path.join(temp_dir, f"audio_{request.user.id}_{int(timezone.now().timestamp())}.webm")
+        
+        try:
+            with open(temp_name, 'wb+') as destination:
+                for chunk in audio_file.chunks():
+                    destination.write(chunk)
+            
+            # Use local model for transcription
+            result = WhisperTranscribeAPI._model.transcribe(temp_name)
+            
+            return JsonResponse({
+                'success': True, 
+                'text': result.get("text", "").strip()
+            })
+            
+        except Exception as e:
+            logger.error(f"Whisper transcription error: {str(e)}")
+            return JsonResponse({'success': False, 'message': str(e)})
+        finally:
+            if os.path.exists(temp_name):
+                try:
+                    os.remove(temp_name)
+                except:
+                    pass
+
+
+class CheckAvailabilityAPI(LoginRequiredMixin, View):
+    """
+    API view to check if a specific date and time is available for a doctor.
+    Used for follow-up scheduling in consultation modal.
+    """
+    def get(self, request, *args, **kwargs):
+        doctor_id = request.GET.get('doctor_id')
+        
+        # Security check: If not specified, default to current doctor. 
+        # If specified, ensure requester has permission or it's a valid public check.
+        if not doctor_id:
+            try:
+                doctor_id = request.user.doctor_profile.id
+            except AttributeError:
+                return JsonResponse({'success': False, 'message': 'Doctor profile not found'}, status=403)
+
+        date_str = request.GET.get('date')
+        time_str = request.GET.get('time')
+        
+        if not all([doctor_id, date_str, time_str]):
+            return JsonResponse({'success': False, 'message': 'Missing required parameters: doctor_id, date, and time'})
+            
+        try:
+            from datetime import datetime
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+            time_obj = datetime.strptime(time_str, '%H:%M').time()
+            doctor = get_object_or_404(Doctor, id=doctor_id)
+            
+            # Check for existing appointments at this exact slot
+            conflict = Appointment.objects.filter(
+                doctor=doctor,
+                appointment_date=date_obj,
+                appointment_time=time_obj,
+                status__in=['scheduled', 'confirmed', 'in_progress']
+            ).exists()
+            
+            if conflict:
+                return JsonResponse({
+                    'success': True, 
+                    'available': False, 
+                    'message': 'This slot is already booked by another patient.'
+                })
+            
+            # Check availability schedule for this day
+            day_of_week = date_obj.weekday()
+            avail_slots = DoctorAvailability.objects.filter(
+                doctor=doctor,
+                day_of_week=day_of_week,
+                is_active=True,
+                start_time__lte=time_obj,
+                end_time__gt=time_obj
+            )
+            
+            is_available = avail_slots.exists()
+            
+            # Fallback: If no custom availability is defined, assume standard 9 AM - 6 PM
+            if not is_available:
+                has_any_defined_slots = DoctorAvailability.objects.filter(doctor=doctor, is_active=True).exists()
+                if not has_any_defined_slots:
+                    from datetime import time as dt_time
+                    is_available = dt_time(9, 0) <= time_obj < dt_time(18, 0)
+            
+            # Check for lunch break exclusion
+            if is_available and doctor.lunch_break_start and doctor.lunch_break_end:
+                if doctor.lunch_break_start <= time_obj < doctor.lunch_break_end:
+                    is_available = False
+                    return JsonResponse({
+                        'success': True, 
+                        'available': False, 
+                        'message': 'Doctor is on lunch break at this time.'
+                    })
+            
+            return JsonResponse({
+                'success': True, 
+                'available': is_available,
+                'message': 'Slot is available for booking.' if is_available else 'Doctor is not scheduled to work at this time.'
+            })
+            
+        except ValueError:
+            return JsonResponse({'success': False, 'message': 'Invalid date or time format. Expected YYYY-MM-DD and HH:MM.'})
+        except Exception as e:
+            logger.error(f"Availability check error: {str(e)}")
+            return JsonResponse({'success': False, 'message': 'An internal error occurred during availability check.'})
+
+
 class AppointmentConsultationAPI(LoginRequiredMixin, DoctorMixin, TemplateView):
     """
-    API view to save consultation remarks and recommended next appointment.
+    API view to save consultation remarks, prescriptions, and diagnostic test reports.
+    Supports both JSON and multipart/form-data for file uploads.
     """
     http_method_names = ['post']
     
     def post(self, request, appointment_id):
         try:
-            data = json.loads(request.body)
+            # Check content type and parse data accordingly
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                # Handle multipart/form-data for file uploads
+                data = request.POST.dict()
+                # Parse the medicines JSON if sent as a field in FormData
+                if 'medicines_json' in data:
+                    try:
+                        data['medicines'] = json.loads(data['medicines_json'])
+                    except json.JSONDecodeError:
+                        data['medicines'] = []
+
             appointment = get_object_or_404(
                 Appointment, 
                 id=appointment_id, 
                 doctor=request.user.doctor_profile
             )
             
+            # Save core consultation data
             appointment.consultation_remarks = data.get('remarks', '')
             next_date = data.get('next_date')
             next_time = data.get('next_time')
+            recommended_doc_id = data.get('recommended_doctor_id')
             
             if next_date:
                 appointment.next_appointment_date = next_date
             if next_time:
                 appointment.next_appointment_time = next_time
+            if recommended_doc_id:
+                appointment.recommended_doctor_id = recommended_doc_id
                 
             appointment.status = 'completed'
             appointment.save()
             
+            # 1. Update/Create Medications
+            medicines = data.get('medicines', [])
+            if medicines:
+                from .models import Medication
+                appointment.medications.all().delete()
+                
+                med_objects = []
+                for med in medicines:
+                    if med.get('name'):
+                        med_objects.append(
+                            Medication(
+                                appointment=appointment,
+                                name=med.get('name')[:200],
+                                amount=med.get('amount', '')[:100],
+                                dosage=med.get('dosage', '')[:100],
+                                eating_quantity=med.get('eating_quantity', '')[:100],
+                                notes=med.get('notes', '')[:255]
+                            )
+                        )
+                if med_objects:
+                    Medication.objects.bulk_create(med_objects)
+            
+            # 2. Handle Test Report Uploads
+            # Expecting fields like 'test_name_0', 'test_file_0', 'test_name_1', 'test_file_1', etc.
+            from .models import TestReport
+            
+            test_indices = set()
+            for key in request.POST.keys():
+                if key.startswith('test_name_'):
+                    index = key.replace('test_name_', '')
+                    test_indices.add(index)
+            
+            for index in test_indices:
+                test_name = request.POST.get(f'test_name_{index}')
+                test_file = request.FILES.get(f'test_file_{index}')
+                
+                if test_name and test_file:
+                    TestReport.objects.create(
+                        appointment=appointment,
+                        test_name=test_name[:200],
+                        report_file=test_file
+                    )
+            
             # Create notification for patient
             from apps.notifications.services import NotificationService
-            from apps.notifications.models import NotificationType
             
-            try:
-                notif_type = NotificationType.objects.get(name='Appointment Completed')
-            except NotificationType.DoesNotExist:
-                notif_type = NotificationType.objects.create(
-                    name='Appointment Completed',
-                    description='Notification when an appointment is completed'
-                )
-            
-            NotificationService.create_notification(
+            service = NotificationService()
+            service.create_notification(
                 recipient=appointment.patient,
-                notification_type=notif_type,
+                notification_type='Appointment Completed',
                 title="Consultation Completed",
                 message=f"Dr. {appointment.doctor.last_name} has completed your consultation. Please check your dashboard for remarks and follow-up details.",
                 content_object=appointment
             )
             
-            return JsonResponse({'success': True, 'message': 'Consultation details saved successfully'})
+            return JsonResponse({'success': True, 'message': 'Consultation and reports saved successfully'})
             
         except Exception as e:
             logger.error(f'Error in AppointmentConsultationAPI: {str(e)}')
@@ -1214,7 +1432,7 @@ class AppointmentConsultationAPI(LoginRequiredMixin, DoctorMixin, TemplateView):
 
 class PatientHistoryAPI(LoginRequiredMixin, DoctorMixin, TemplateView):
     """
-    API view to fetch past consultation history for a patient.
+    API view to fetch past consultation history for a patient, including test reports.
     """
     def get(self, request, patient_id):
         try:
@@ -1222,16 +1440,24 @@ class PatientHistoryAPI(LoginRequiredMixin, DoctorMixin, TemplateView):
             history = Appointment.objects.filter(
                 patient_id=patient_id,
                 status='completed'
-            ).order_by('appointment_date', 'appointment_time')
+            ).order_by('appointment_date', 'appointment_time').prefetch_related('test_reports')
             
             data = []
             for appt in history:
+                reports = []
+                for report in appt.test_reports.all():
+                    reports.append({
+                        'name': report.test_name,
+                        'url': report.report_file.url if report.report_file else None
+                    })
+                
                 data.append({
                     'id': appt.id,
                     'date': appt.appointment_date.strftime('%d %b, %Y'),
                     'doctor': appt.doctor.display_name,
                     'remarks': appt.consultation_remarks or "No remarks provided.",
-                    'notes': appt.patient_notes or "N/A"
+                    'notes': appt.patient_notes or "N/A",
+                    'reports': reports
                 })
             
             return JsonResponse({'success': True, 'history': data})

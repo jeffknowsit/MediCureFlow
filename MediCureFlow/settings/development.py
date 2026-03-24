@@ -32,5 +32,11 @@ CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
 
-# Enable console email backend
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Enable SMTP email backend
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'jeffjosephchirayath1@gmail.com'
+EMAIL_HOST_PASSWORD = 'iwiu pdan iibd vmvs'
+DEFAULT_FROM_EMAIL = 'MediCure Plus <jeffjosephchirayath1@gmail.com>'

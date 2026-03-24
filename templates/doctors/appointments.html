@@ -139,25 +139,134 @@
         
         <!-- Modal Header -->
         <div style="padding: 24px 40px; border-bottom: 2px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fafbff;">
-            <div>
-                <h2 style="margin:0; font-weight:800; color:#1a1a2e; font-size: 1.5rem;">Clinical Consultation</h2>
-                <p style="margin: 4px 0 0; color:#64748b; font-weight: 600;">Patient: <span id="modal-patient-name" style="color:#4834d4;"></span></p>
+            <div style="display: flex; align-items: center; gap: 24px;">
+                <div>
+                    <h2 style="margin:0; font-weight:800; color:#1a1a2e; font-size: 1.5rem;">Clinical Consultation</h2>
+                    <p style="margin: 4px 0 0; color:#64748b; font-weight: 600;">Patient: <span id="modal-patient-name" style="color:#4834d4;"></span></p>
+                </div>
+                <div style="display: flex; background: #e2e8f0; padding: 4px; border-radius: 12px; height: fit-content;">
+                    <button id="view-form-btn" onclick="toggleReportView(false)" style="padding: 8px 16px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.8rem; background: #fff; color: #4834d4; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">Input Form</button>
+                    <button id="view-report-btn" onclick="toggleReportView(true)" style="padding: 8px 16px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.8rem; background: transparent; color: #64748b;">Formal Report Preview</button>
+                </div>
             </div>
-            <button id="close-modal" style="background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: #64748b; font-weight: 800;">✕</button>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button onclick="printFormalReport()" id="print-report-btn" style="display: none; background: #1a1a2e; color: #fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.85rem;"><i class="fas fa-print"></i> Print Report</button>
+                <button id="close-modal" style="background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: #64748b; font-weight: 800;">✕</button>
+            </div>
         </div>
 
         <!-- Modal Body (Split Layout) -->
-        <div style="flex: 1; display: flex; overflow: hidden;">
+        <div style="flex: 1; display: flex; overflow: hidden; position: relative;">
             
+            <!-- Formal Report Preview Overlay (A4 Style) -->
+            <div id="formal-report-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background: #f1f5f9; overflow-y: auto; padding: 40px;">
+                <div id="printable-report" style="background: #fff; width: 210mm; min-height: 297mm; margin: 0 auto; padding: 60px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); font-family: 'Inter', sans-serif; color: #1a1a2e;">
+                    <!-- Report Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 4px solid #1a1a2e; padding-bottom: 24px; margin-bottom: 40px;">
+                        <div>
+                            <h1 style="margin: 0; font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; color: #4834d4;">MediCureFlow</h1>
+                            <p style="margin: 4px 0 0; font-weight: 700; color: #64748b; font-size: 0.9rem;">CLINICAL ANALYSIS & CONSULTATION REPORT</p>
+                        </div>
+                        <div style="text-align: right; color: #64748b; font-size: 0.85rem; line-height: 1.5;">
+                            <p style="margin: 0; font-weight: 800; color: #1a1a2e;">Health Facility Record</p>
+                            <p style="margin: 0;">Ref ID: <span id="report-ref-id">CF-2024-001</span></p>
+                            <p style="margin: 0;">Date: <span id="report-current-date"></span></p>
+                        </div>
+                    </div>
+
+                    <!-- Information Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 48px; background: #f8fafc; padding: 24px; border-radius: 12px;">
+                        <div>
+                            <p style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Patient Information</p>
+                            <h3 id="report-patient-name" style="margin: 0; font-size: 1.2rem; font-weight: 800;"></h3>
+                            <p id="report-patient-id" style="margin: 4px 0 0; color: #475569; font-weight: 600; font-size: 0.9rem;"></p>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Consulting Physician</p>
+                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800;">{{ user.doctor_profile.display_name }}</h3>
+                            <p style="margin: 4px 0 0; color: #475569; font-weight: 600; font-size: 0.9rem;">{{ user.doctor_profile.get_specialty_display }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Clinical Findings -->
+                    <div style="margin-bottom: 48px;">
+                        <h4 style="font-size: 0.85rem; font-weight: 800; color: #4834d4; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px;">I. Clinical Assessment & Diagnostic Findings</h4>
+                        <div id="report-clinical-summary" style="font-size: 1.05rem; line-height: 1.8; color: #1e293b; white-space: pre-wrap; font-family: 'Inter', serif;">
+                            No diagnostic findings recorded.
+                        </div>
+                    </div>
+
+                    <!-- Prescriptions -->
+                    <div style="margin-bottom: 48px;">
+                        <h4 style="font-size: 0.85rem; font-weight: 800; color: #4834d4; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 20px;">II. Medication & Prescription Plan</h4>
+                        <div id="report-meds-section">
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                                <thead>
+                                    <tr style="background: #f1f5f9; text-align: left;">
+                                        <th style="padding: 12px 16px; font-size: 0.85rem;">Medicine Name</th>
+                                        <th style="padding: 12px 16px; font-size: 0.85rem;">Quantity</th>
+                                        <th style="padding: 12px 16px; font-size: 0.85rem;">Dosage</th>
+                                        <th style="padding: 12px 16px; font-size: 0.85rem;">Instructions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-meds-body">
+                                    <tr>
+                                        <td colspan="4" style="padding: 24px; text-align: center; color: #94a3b8; font-style: italic;">No medications prescribed.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Follow up -->
+                    <div style="margin-bottom: 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                        <div id="report-tests-col">
+                            <h4 style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Recommended Tests</h4>
+                            <ul id="report-tests-list" style="margin: 0; padding-left: 20px; line-height: 2;">
+                                <li style="color: #94a3b8; font-style: italic;">None recommended.</li>
+                            </ul>
+                        </div>
+                        <div style="background: #fafbff; padding: 24px; border-radius: 12px; border: 1px dashed #e2e8f0;">
+                            <h4 style="font-size: 0.8rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Follow-up Schedule</h4>
+                            <p id="report-followup-text" style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0;">No follow-up scheduled.</p>
+                        </div>
+                    </div>
+
+                    <!-- Footer Signature -->
+                    <div style="margin-top: 80px; display: flex; justify-content: flex-end;">
+                        <div style="width: 280px; text-align: center;">
+                            <div style="border-bottom: 2px solid #1a1a2e; margin-bottom: 12px; height: 60px;"></div>
+                            <p style="margin: 0; font-weight: 800; font-size: 0.95rem;">Dr. {{ user.doctor_profile.full_name }}</p>
+                            <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b; font-weight: 600;">Authorized Medical Professional Seal</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 60px; text-align: center; font-size: 0.75rem; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 24px;">
+                        This is an official clinical document generated by the MediCureFlow Medical Management System. 
+                        Digital Reference: CF-APPT-{{ appt.id|default:'XXX' }}
+                    </div>
+                </div>
+            </div>
+
             <!-- Left Panel: Consultation Form -->
-            <div style="flex: 1; padding: 40px; border-right: 2px solid #f1f5f9; overflow-y: auto;">
+            <div id="form-panel" style="flex: 1; padding: 40px; border-right: 2px solid #f1f5f9; overflow-y: auto;">
                 <form id="consultation-form">
+                    {% csrf_token %}
                     <div style="margin-bottom:28px;">
                         <label style="display:block; font-size:0.8rem; font-weight:800; color:#475569; margin-bottom:12px; text-transform:uppercase; letter-spacing: 1px;">Clinical Remarks & Prescription</label>
-                        <textarea id="modal-remarks" required style="width:100%; padding:20px; border:2px solid #e2e8f0; border-radius:16px; font-family:inherit; min-height:220px; font-size: 1rem; transition: border-color 0.2s;" placeholder="Enter clinical assessment, diagnostic findings, and prescriptions..."></textarea>
+                        <div style="position: relative;">
+                            <textarea id="modal-remarks" required style="width:100%; padding:20px; border:2px solid #e2e8f0; border-radius:16px; font-family:inherit; min-height:220px; font-size: 1rem; transition: border-color 0.2s;" placeholder="Enter clinical assessment, diagnostic findings, and prescriptions..."></textarea>
+                            <button type="button" id="start-voice-btn" style="position: absolute; bottom: 15px; right: 15px; background: #4834d4; color: #fff; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(72, 52, 212, 0.3); transition: all 0.2s;" title="Voice to Text (Whisper)">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <div id="voice-indicator" style="display: none; position: absolute; bottom: 15px; right: 70px; background: #ef4444; color: #fff; padding: 10px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; align-items: center; gap: 8px;">
+                                <div style="width: 8px; height: 8px; background: #fff; border-radius: 50%; animation: pulse 1s infinite;"></div>
+                                RECORDING...
+                            </div>
+                        </div>
                     </div>
                     
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
                         <div>
                             <label style="display:block; font-size:0.8rem; font-weight:800; color:#475569; margin-bottom:12px; text-transform:uppercase; letter-spacing: 1px;">Follow-up Date</label>
                             <input type="date" id="modal-next-date" style="width:100%; padding:14px 18px; border:2px solid #e2e8f0; border-radius:12px; font-size: 0.95rem;">
@@ -166,6 +275,58 @@
                             <label style="display:block; font-size:0.8rem; font-weight:800; color:#475569; margin-bottom:12px; text-transform:uppercase; letter-spacing: 1px;">Follow-up Time</label>
                             <input type="time" id="modal-next-time" style="width:100%; padding:14px 18px; border:2px solid #e2e8f0; border-radius:12px; font-size: 0.95rem;">
                         </div>
+                    </div>
+                    <div id="availability-warning" style="display:none; margin-bottom:24px; padding:12px 18px; background:#fff1f1; border:1.5px solid #fecaca; border-radius:12px; color:#ef4444; font-size:0.85rem; font-weight:700; align-items:center; gap:10px;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span id="availability-msg">Doctor is not available at this time.</span>
+                    </div>
+                    
+                    <div style="margin-bottom:28px; background: #fafbff; padding: 24px; border-radius: 20px; border: 1px solid #e0e7ff; box-shadow: 0 4px 12px rgba(72, 52, 212, 0.03);">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+                            <label style="font-size:0.8rem; font-weight:800; color:#4834d4; text-transform:uppercase; letter-spacing: 1.2px;"><i class="fas fa-pills"></i> Prescribed Medicines</label>
+                            <button type="button" onclick="addMedicineRow()" style="background:#4834d4; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:0.75rem; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'"><i class="fas fa-plus"></i> Add Medicine</button>
+                        </div>
+                        
+                        <!-- Medicine Header -->
+                        <div id="med-header" style="display:none; grid-template-columns: 2fr 1fr 1fr 1.5fr 40px; gap: 12px; padding: 0 12px; margin-bottom: 10px;">
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Medicine Name</span>
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Quantity</span>
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Dosage</span>
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Eating/Notes</span>
+                            <span></span>
+                        </div>
+                        
+                        <div id="medicines-container" style="display:flex; flex-direction:column; gap:12px;">
+                            <!-- Medicines will be added here -->
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom:28px; background: #fafbff; padding: 24px; border-radius: 20px; border: 1px solid #e0e7ff; box-shadow: 0 4px 12px rgba(72, 52, 212, 0.03);">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+                            <label style="font-size:0.8rem; font-weight:800; color:#4834d4; text-transform:uppercase; letter-spacing: 1.2px;"><i class="fas fa-file-pdf"></i> Tests & Reports (Optional)</label>
+                            <button type="button" onclick="addTestRow()" style="background:#4834d4; color:#fff; border:none; padding:8px 16px; border-radius:10px; font-weight:700; cursor:pointer; font-size:0.75rem; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'"><i class="fas fa-plus"></i> Add Test</button>
+                        </div>
+
+                        <!-- Test Header -->
+                        <div id="test-header" style="display:none; grid-template-columns: 1fr 1.5fr 40px; gap: 12px; padding: 0 12px; margin-bottom: 10px;">
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Diagnostic Test Name</span>
+                            <span style="font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">PDF/Report File</span>
+                            <span></span>
+                        </div>
+
+                        <div id="tests-container" style="display:flex; flex-direction:column; gap:12px;">
+                            <!-- Test rows will be added here -->
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:32px;">
+                        <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; font-weight:800; color:#4834d4; margin-bottom:12px; text-transform:uppercase; letter-spacing: 1px;"><i class="fas fa-user-md"></i> Refer to Specialist (Optional)</label>
+                        <select id="modal-referral" style="width:100%; padding:14px 18px; border:2px solid #e2e8f0; border-radius:12px; font-size: 0.95rem; background: #fafbff;">
+                            <option value="">-- Select Doctor to Refer --</option>
+                            {% for doc in all_doctors %}
+                            <option value="{{ doc.id }}">{{ doc.display_name }} ({{ doc.get_specialty_display }})</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
                     <div style="display:flex; gap:16px; justify-content:flex-end;">
@@ -212,9 +373,13 @@
                             </div>
                             <button id="close-detail" style="background: #f1f5f9; border: none; padding: 4px 12px; border-radius: 8px; cursor: pointer; color: #64748b; font-weight: 700; font-size: 0.8rem;">CLOSE</button>
                         </div>
-                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; border-left: 4px solid #e2e8f0;">
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; border-left: 4px solid #e2e8f0; margin-bottom: 20px;">
                             <h4 style="margin: 0 0 8px; font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase;">Clinical Summary:</h4>
                             <p id="hd-remarks" style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.6; white-space: pre-wrap;"></p>
+                        </div>
+                        <div id="hd-reports-section" style="display: none;">
+                            <h4 style="margin: 0 0 12px; font-size: 0.8rem; font-weight: 800; color: #475569; text-transform: uppercase;">Attached Reports:</h4>
+                            <div id="hd-reports-list" style="display: flex; flex-wrap: wrap; gap: 12px;"></div>
                         </div>
                     </div>
                 </div>
@@ -224,6 +389,7 @@
 </div>
 
 <style>
+@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .mindmap-node {
@@ -326,6 +492,23 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('hd-doctor').textContent = `Attended by ${item.doctor}`;
         document.getElementById('hd-remarks').textContent = item.remarks;
         
+        const reportsSection = document.getElementById('hd-reports-section');
+        const reportsList = document.getElementById('hd-reports-list');
+        
+        if (item.reports && item.reports.length > 0) {
+            reportsSection.style.display = 'block';
+            reportsList.innerHTML = '';
+            item.reports.forEach(report => {
+                reportsList.innerHTML += `
+                    <a href="${report.url}" target="_blank" style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; text-decoration: none; color: #4834d4; font-size: 0.85rem; font-weight: 700; transition: all 0.2s;">
+                        <i class="fas fa-file-pdf"></i> ${report.name}
+                    </a>
+                `;
+            });
+        } else {
+            reportsSection.style.display = 'none';
+        }
+
         historyDetailOverlay.style.display = 'block';
         setTimeout(() => {
             historyDetailOverlay.style.transform = 'translateY(0)';
@@ -344,22 +527,63 @@ document.addEventListener('DOMContentLoaded', function() {
         form.reset();
     });
 
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const data = {
-            remarks: document.getElementById('modal-remarks').value,
-            next_date: document.getElementById('modal-next-date').value,
-            next_time: document.getElementById('modal-next-time').value
-        };
+        const csrftoken = getCookie('csrftoken');
+        const formData = new FormData();
+        formData.append('remarks', document.getElementById('modal-remarks').value);
+        formData.append('next_date', document.getElementById('modal-next-date').value);
+        formData.append('next_time', document.getElementById('modal-next-time').value);
+        formData.append('recommended_doctor_id', document.getElementById('modal-referral').value);
+
+        const medicines = [];
+        document.querySelectorAll('.medicine-row').forEach(row => {
+            medicines.push({
+                name: row.querySelector('.med-name').value,
+                amount: row.querySelector('.med-amount').value,
+                dosage: row.querySelector('.med-dosage').value,
+                eating_quantity: row.querySelector('.med-eating').value
+            });
+        });
+        formData.append('medicines_json', JSON.stringify(medicines));
+
+        document.querySelectorAll('.test-row').forEach((row, index) => {
+            const nameInput = row.querySelector('.test-name-input');
+            const fileInput = row.querySelector('.test-file-input');
+            if (nameInput.value && fileInput.files[0]) {
+                formData.append(`test_name_${index}`, nameInput.value);
+                formData.append(`test_file_${index}`, fileInput.files[0]);
+            }
+        });
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
 
         fetch(`/doctors/api/appointments/${activeAppointmentId}/consultation-save/`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
+                'X-CSRFToken': csrftoken
             },
-            body: JSON.stringify(data)
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
@@ -368,11 +592,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.reload();
             } else {
                 alert('Error: ' + data.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
             }
         })
         .catch(err => {
             console.error('Error saving consultation:', err);
             alert('An error occurred. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
         });
     });
 
@@ -382,6 +610,310 @@ document.addEventListener('DOMContentLoaded', function() {
             form.reset();
         }
     });
+});
+
+function addMedicineRow() {
+    const container = document.getElementById('medicines-container');
+    const header = document.getElementById('med-header');
+    header.style.display = 'grid';
+    
+    const row = document.createElement('div');
+    row.className = 'medicine-row';
+    row.style.display = 'grid';
+    row.style.gridTemplateColumns = '2fr 1fr 1fr 1.5fr 40px';
+    row.style.gap = '12px';
+    row.style.alignItems = 'center';
+    row.style.background = '#fff';
+    row.style.padding = '12px';
+    row.style.borderRadius = '14px';
+    row.style.border = '1px solid #e2e8f0';
+    row.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)';
+    
+    row.innerHTML = `
+        <input type="text" class="med-name" placeholder="Medicine Name" required style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.9rem; background: #fafbff; transition: all 0.2s;" onfocus="this.style.borderColor='#4834d4'; this.style.background='#fff'">
+        <input type="text" class="med-amount" placeholder="e.g. 10 Tabs" required style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.9rem; background: #fafbff; transition: all 0.2s;" onfocus="this.style.borderColor='#4834d4'; this.style.background='#fff'">
+        <input type="text" class="med-dosage" placeholder="e.g. 500mg" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.9rem; background: #fafbff; transition: all 0.2s;" onfocus="this.style.borderColor='#4834d4'; this.style.background='#fff'">
+        <input type="text" class="med-eating" placeholder="e.g. 1-0-1 After meal" style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.9rem; background: #fafbff; transition: all 0.2s;" onfocus="this.style.borderColor='#4834d4'; this.style.background='#fff'">
+        <button type="button" onclick="removeMedRow(this)" style="background:#fff1f1; color:#ef4444; border:none; width:40px; height:40px; border-radius:10px; cursor:pointer; transition: all 0.2s;" title="Remove" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff1f1'"><i class="fas fa-trash-alt"></i></button>
+    `;
+    container.appendChild(row);
+}
+
+function removeMedRow(btn) {
+    btn.parentElement.remove();
+    const container = document.getElementById('medicines-container');
+    const header = document.getElementById('med-header');
+    if (container.children.length === 0) {
+        header.style.display = 'none';
+    }
+}
+
+function addTestRow() {
+    const container = document.getElementById('tests-container');
+    const header = document.getElementById('test-header');
+    header.style.display = 'grid';
+    
+    const row = document.createElement('div');
+    row.className = 'test-row';
+    row.style.display = 'grid';
+    row.style.gridTemplateColumns = '1fr 1.5fr 40px';
+    row.style.gap = '12px';
+    row.style.alignItems = 'center';
+    row.style.background = '#fff';
+    row.style.padding = '12px';
+    row.style.borderRadius = '14px';
+    row.style.border = '1px solid #e2e8f0';
+    row.style.boxShadow = '0 2px 8px rgba(0,0,0,0.02)';
+    
+    row.innerHTML = `
+        <input type="text" class="test-name-input" placeholder="e.g. Blood Test, CT Scan" required style="width:100%; padding:12px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.9rem; background: #fafbff;" onfocus="this.style.borderColor='#4834d4'; this.style.background='#fff'">
+        <input type="file" class="test-file-input" accept="application/pdf" required style="width:100%; padding:8px; font-size:0.85rem; color: #64748b;">
+        <button type="button" onclick="removeTestRow(this)" style="background:#fff1f1; color:#ef4444; border:none; width:40px; height:40px; border-radius:10px; cursor:pointer;" title="Remove"><i class="fas fa-trash-alt"></i></button>
+    `;
+    container.appendChild(row);
+}
+
+function removeTestRow(btn) {
+    btn.parentElement.remove();
+    const container = document.getElementById('tests-container');
+    const header = document.getElementById('test-header');
+    if (container.children.length === 0) {
+        header.style.display = 'none';
+    }
+}
+
+function toggleReportView(showReport) {
+    const overlay = document.getElementById('formal-report-overlay');
+    const formBtn = document.getElementById('view-form-btn');
+    const reportBtn = document.getElementById('view-report-btn');
+    const printBtn = document.getElementById('print-report-btn');
+    const formPanel = document.getElementById('form-panel');
+    const historyPanel = document.querySelector('div[style*="flex: 1.2"]'); // History panel
+    
+    if (showReport) {
+        // Sync values from form to report
+        document.getElementById('report-patient-name').textContent = document.getElementById('modal-patient-name').textContent;
+        document.getElementById('report-current-date').textContent = new Date().toLocaleDateString('en-GB', { 
+            day: 'numeric', month: 'long', year: 'numeric' 
+        });
+        
+        const remarks = document.getElementById('modal-remarks').value || "No diagnostic findings recorded.";
+        document.getElementById('report-clinical-summary').textContent = remarks;
+        
+        const nextDate = document.getElementById('modal-next-date').value;
+        const nextTime = document.getElementById('modal-next-time').value;
+        if (nextDate) {
+            document.getElementById('report-followup-text').textContent = `${nextDate} at ${nextTime || 'TBD'}`;
+        } else {
+            document.getElementById('report-followup-text').textContent = "No follow-up scheduled.";
+        }
+        
+        // Medicines
+        const medsBody = document.getElementById('report-meds-body');
+        const medRows = document.querySelectorAll('.medicine-row');
+        if (medRows.length > 0) {
+            medsBody.innerHTML = '';
+            medRows.forEach(row => {
+                const name = row.querySelector('.med-name').value;
+                const amount = row.querySelector('.med-amount').value;
+                const dosage = row.querySelector('.med-dosage').value;
+                const eating = row.querySelector('.med-eating').value;
+                if (name) {
+                    medsBody.innerHTML += `
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px 16px; font-weight: 700;">${name}</td>
+                            <td style="padding: 12px 16px;">${amount}</td>
+                            <td style="padding: 12px 16px;">${dosage}</td>
+                            <td style="padding: 12px 16px; font-size: 0.85rem; color: #64748b;">${eating}</td>
+                        </tr>
+                    `;
+                }
+            });
+        } else {
+             medsBody.innerHTML = '<tr><td colspan="4" style="padding: 24px; text-align: center; color: #94a3b8; font-style: italic;">No medications prescribed.</td></tr>';
+        }
+        
+        // Tests
+        const testsList = document.getElementById('report-tests-list');
+        const testRows = document.querySelectorAll('.test-row');
+        if (testRows.length > 0) {
+            testsList.innerHTML = '';
+            testRows.forEach(row => {
+                const testName = row.querySelector('.test-name-input').value;
+                if (testName) {
+                    testsList.innerHTML += `<li style="font-weight: 600;">${testName}</li>`;
+                }
+            });
+        } else {
+            testsList.innerHTML = '<li style="color: #94a3b8; font-style: italic;">None recommended.</li>';
+        }
+        
+        overlay.style.display = 'block';
+        if(formPanel) formPanel.style.display = 'none';
+        if(historyPanel) historyPanel.style.display = 'none';
+
+        formBtn.style.background = 'transparent';
+        formBtn.style.color = '#64748b';
+        formBtn.style.boxShadow = 'none';
+        
+        reportBtn.style.background = '#fff';
+        reportBtn.style.color = '#4834d4';
+        reportBtn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+        printBtn.style.display = 'block';
+    } else {
+        overlay.style.display = 'none';
+        if(formPanel) formPanel.style.display = 'block';
+        if(historyPanel) historyPanel.style.display = 'flex';
+
+        reportBtn.style.background = 'transparent';
+        reportBtn.style.color = '#64748b';
+        reportBtn.style.boxShadow = 'none';
+        
+        formBtn.style.background = '#fff';
+        formBtn.style.color = '#4834d4';
+        formBtn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+        printBtn.style.display = 'none';
+    }
+}
+
+function printFormalReport() {
+    const reportStyles = `
+        <style>
+            @media print {
+                @page { margin: 15mm; size: A4; }
+                body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+                .print-wrap { width: 100%; }
+            }
+            body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; }
+            h1, h2, h3, h4 { margin: 0; }
+        </style>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    `;
+    const printContent = document.getElementById('printable-report').innerHTML;
+    
+    // Create hidden iframe for printing
+    let printFrame = document.getElementById('print-frame');
+    if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'print-frame';
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = 'none';
+        document.body.appendChild(printFrame);
+    }
+    
+    const frameDoc = printFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write('<html><head>' + reportStyles + '</head><body>');
+    frameDoc.write('<div class="print-wrap">' + printContent + '</div>');
+    frameDoc.write('</body></html>');
+    frameDoc.close();
+    
+    // Wait for content (and fonts) to load, then print
+    printFrame.contentWindow.focus();
+    setTimeout(() => {
+        printFrame.contentWindow.print();
+    }, 500);
+}
+
+// Availability Check Logic
+const nextDateInput = document.getElementById('modal-next-date');
+const nextTimeInput = document.getElementById('modal-next-time');
+const warnBox = document.getElementById('availability-warning');
+const warnMsg = document.getElementById('availability-msg');
+
+function checkAvailability() {
+    const date = nextDateInput.value;
+    const time = nextTimeInput.value;
+    
+    if (!date || !time) return;
+    
+    fetch(`/doctors/api/check-availability/?date=${date}&time=${time}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (!data.available) {
+                    warnBox.style.display = 'flex';
+                    warnMsg.textContent = data.message;
+                    nextDateInput.style.borderColor = '#ef4444';
+                    nextTimeInput.style.borderColor = '#ef4444';
+                } else {
+                    warnBox.style.display = 'none';
+                    nextDateInput.style.borderColor = '#e2e8f0';
+                    nextTimeInput.style.borderColor = '#e2e8f0';
+                }
+            }
+        });
+}
+
+nextDateInput.addEventListener('change', checkAvailability);
+nextTimeInput.addEventListener('change', checkAvailability);
+
+// Voice to Text (Whisper) Logic
+let mediaRecorder;
+let audioChunks = [];
+const voiceBtn = document.getElementById('start-voice-btn');
+const voiceIndicator = document.getElementById('voice-indicator');
+const remarksTextarea = document.getElementById('modal-remarks');
+
+voiceBtn.addEventListener('click', async () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        voiceBtn.style.background = '#4834d4';
+        voiceIndicator.style.display = 'none';
+        return;
+    }
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const formData = new FormData();
+            formData.append('audio', audioBlob);
+
+            voiceBtn.disabled = true;
+            voiceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const response = await fetch('/doctors/api/transcribe/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    remarksTextarea.value += (remarksTextarea.value ? ' ' : '') + data.text;
+                } else {
+                    MediCureToast.show('Transcription failed: ' + data.message, 'error');
+                }
+            } catch (err) {
+                console.error('Transcription error:', err);
+                MediCureToast.show('Transcription error occurred.', 'error');
+            } finally {
+                voiceBtn.disabled = false;
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            }
+        };
+
+        mediaRecorder.start();
+        voiceBtn.style.background = '#ef4444';
+        voiceIndicator.style.display = 'flex';
+    } catch (err) {
+        console.error('Microphone access denied:', err);
+        MediCureToast.show('Microphone access denied or not available.', 'warning');
+    }
 });
 </script>
 {% endblock %}

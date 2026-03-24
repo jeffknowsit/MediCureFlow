@@ -84,7 +84,7 @@
     <div class="profile-card">
         <div class="profile-header">
             <div class="profile-image-wrap">
-                {% if doctor.photo %}
+                {% if doctor.has_photo %}
                     <img src="{{ doctor.photo_url }}" class="profile-image" alt="{{ doctor.display_name }}">
                 {% else %}
                     <div class="profile-image" style="background: #fff; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: #4834d4;">
@@ -217,6 +217,37 @@
                     </div>
                 </div>
 
+                <div class="form-section" style="border-top: 2px solid #fee2e2; padding-top: 32px; margin-top: 48px; background: #fffbff; border-radius: 24px; padding: 32px; border: 1px solid #fee2e2;">
+                    <h3 class="section-title" style="color: #dc2626; border-bottom-color: #ffe4e4;"><i class="fas fa-shield-alt"></i> Security & Account Management</h3>
+                    <p style="font-size: 0.95rem; color: #64748b; margin-bottom: 28px;">Manage your Professional login security and professional account data privacy.</p>
+                    
+                    <div class="form-row" style="align-items: flex-end;">
+                        <div class="field-group">
+                            <label>Password Policy</label>
+                            <a href="{% url 'users:password_reset' %}" class="btn-cancel" style="display: flex; align-items: center; justify-content: center; gap: 10px; border-color: #1a9c7b; color: #1a9c7b; width: 100%; padding: 16px;">
+                                <i class="fas fa-envelope-open-text"></i> Email Password Reset
+                            </a>
+                        </div>
+                        
+                        <div class="field-group">
+                            <label>Danger Zone</label>
+                            <button type="button" onclick="confirmDoctorAccountDeletion()" class="btn-cancel" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #fff1f1; border-color: #fca5a5; color: #dc2626; width: 100%; padding: 16px;">
+                                <i class="fas fa-trash-alt"></i> Delete Account
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="doctor-deletion-confirm-box" style="display:none; margin-top:20px; padding:24px; background:#fff1f1; border-radius:16px; border:1px solid #fecaca;">
+                        <p style="color:#991b1b; font-weight:800; margin-bottom:12px; font-size:1.1rem;"><i class="fas fa-exclamation-triangle"></i> Administrative Warning!</p>
+                        <p style="font-size:0.9rem; color:#7f1d1d; margin-bottom:20px; line-height:1.5;">Deleting your profile will permanently remove your medical practice details, clinical history, patient records, and upcoming appointments from the system. This action is **irreversible**.</p>
+                        
+                        <div style="display:flex; gap:16px;">
+                            <button type="button" onclick="submitDoctorDeletion()" style="background:#dc2626; color:#fff; border:none; padding:12px 24px; border-radius:10px; font-weight:700; cursor:pointer;">Permanently Delete My Profile</button>
+                            <button type="button" onclick="document.getElementById('doctor-deletion-confirm-box').style.display='none'" style="background:#fff; border:1px solid #d1d5db; padding:12px 24px; border-radius:10px; font-weight:600; cursor:pointer;">Keep My Profile</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="btn-row">
                     <button type="submit" class="btn-save">Update Profile</button>
                     <a href="{% url 'doctors:dashboard' %}" class="btn-cancel">Cancel</a>
@@ -225,5 +256,20 @@
         </div>
     </div>
 </div>
+
+<form id="doctor-delete-form" action="{% url 'users:delete_account' %}" method="post" style="display:none;">
+    {% csrf_token %}
+</form>
+
+<script>
+function confirmDoctorAccountDeletion() {
+    document.getElementById('doctor-deletion-confirm-box').style.display = 'block';
+    document.getElementById('doctor-deletion-confirm-box').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function submitDoctorDeletion() {
+    document.getElementById('doctor-delete-form').submit();
+}
+</script>
 {% include 'includes/image_cropper.html' %}
 {% endblock %}

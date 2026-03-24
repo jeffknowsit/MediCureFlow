@@ -254,12 +254,48 @@ class Doctor(models.Model):
         return f"Dr. {self.full_name}"
     
     @property
+    def has_photo(self):
+        """Return True if the doctor has a real photo (either blob, non-default file, or UserProfile photo)."""
+        if self.photo_blob:
+            return True
+        if self.photo:
+            # Check if it's the specifically disliked default static image
+            if 'default.png' in self.photo.name or 'default-doctor.png' in self.photo.name:
+                # If doctor photo is default, still check UserProfile
+                pass
+            else:
+                return True
+        
+        # Fallback check for UserProfile photo
+        try:
+            if hasattr(self.user, 'profile') and self.user.profile.profile_picture_blob:
+                return True
+        except:
+            pass
+            
+        return False
+    
+    @property
     def photo_url(self):
-        """Return the photo URL using the SQLite binary storage."""
+        """Return the photo URL with fallback to UserProfile picture and then default image."""
         if self.photo_blob:
             return reverse('doctors:profile_image', kwargs={'doctor_id': self.id})
         
-        # Fallback to the default image if no blob is found
+        if self.photo:
+            try:
+                if 'default.png' not in self.photo.name and 'default-doctor.png' not in self.photo.name:
+                    return self.photo.url
+            except ValueError:
+                pass
+        
+        # Fallback to UserProfile photo
+        try:
+            if hasattr(self.user, 'profile') and self.user.profile.profile_picture_blob:
+                return self.user.profile.profile_picture_url
+        except:
+            pass
+            
+        # Fallback to the premium default image
         from django.templatetags.static import static
         return static('images/default-doctor.png')
     
@@ -582,6 +618,14 @@ class Appointment(models.Model):
         blank=True,
         help_text="Recommended time for follow-up"
     )
+    recommended_doctor = models.ForeignKey(
+        Doctor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='referred_appointments',
+        help_text="Optional referral to another doctor"
+    )
     
     class Meta:
         ordering = ['-appointment_date', '-appointment_time']
@@ -849,12 +893,42 @@ class Medication(models.Model):
         related_name='medications',
         help_text="Associated appointment"
     )
-    name = models.CharField(max_length=200, help_text="Name of the medication")
-    dosage = models.CharField(max_length=100, help_text="Dosage (e.g., 500mg)")
-    frequency = models.CharField(max_length=100, help_text="Frequency (e.g., 1-0-1)")
-    duration = models.CharField(max_length=100, help_text="Duration (e.g., 5 days)")
+    name = models.CharField(max_length=200, help_text="Medicine Name")
+    amount = models.CharField(max_length=100, default='', help_text="Amount (Total Quantity)")
+    dosage = models.CharField(max_length=100, default='', help_text="Dosage Amount (e.g., 500mg)")
+    eating_quantity = models.CharField(max_length=100, default='', help_text="Eating Quantity/Frequency (e.g., 1-0-1)")
     notes = models.CharField(max_length=255, blank=True, help_text="Additional instructions")
 
     def __str__(self):
         return f"{self.name} for {self.appointment}"
+
+
+class TestReport(models.Model):
+    """
+    Model representing diagnostic tests/reports (CT Scan, X-Ray, etc.)
+    uploaded during or after a consultation.
+    """
+    appointment = models.ForeignKey(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name='test_reports',
+        help_text="Associated appointment"
+    )
+    test_name = models.CharField(
+        max_length=200, 
+        help_text="Name of the test (e.g., CT Scan, X-Ray, Blood Test)"
+    )
+    report_file = models.FileField(
+        upload_to='consultations/reports/%Y/%m/',
+        help_text="Uploaded PDF report"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Test Report'
+        verbose_name_plural = 'Test Reports'
+
+    def __str__(self):
+        return f"{self.test_name} - {self.appointment.patient.get_full_name()}"
 

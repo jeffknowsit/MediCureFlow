@@ -2,7 +2,17 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Doctor, DoctorAvailability, Appointment, Review
+from .models import Doctor, DoctorAvailability, Appointment, Review, Medication, TestReport
+
+
+class MedicationInline(admin.TabularInline):
+    model = Medication
+    extra = 0
+
+
+class TestReportInline(admin.TabularInline):
+    model = TestReport
+    extra = 0
 
 
 @admin.register(Doctor)

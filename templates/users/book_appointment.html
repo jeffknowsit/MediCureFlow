@@ -131,6 +131,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     option.textContent = 'No slots available';
                     timeSelect.appendChild(option);
                     timeSelect.disabled = true;
+                    if (data.message) {
+                        noSlotsMsg.textContent = data.message;
+                    } else {
+                        noSlotsMsg.textContent = 'No available slots for this date.';
+                    }
                     noSlotsMsg.style.display = 'block';
                 }
             })

@@ -189,6 +189,39 @@
         .btn-modal-confirm { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
         .btn-modal-confirm:hover { transform: translateY(-1px); opacity: 0.9; }
 
+        /* ── TOAST NOTIFICATIONS ── */
+        #toast-container {
+            position: fixed; top: 24px; right: 24px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 12px; pointer-events: none;
+        }
+        .toast {
+            min-width: 320px; max-width: 450px; padding: 16px 20px;
+            background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            color: #1a1a2e; font-size: 0.925rem; font-weight: 600;
+            display: flex; align-items: center; gap: 14px;
+            transform: translateX(120%); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto; border: 1px solid rgba(0,0,0,0.05);
+            position: relative; overflow: hidden;
+        }
+        .toast.active { transform: translateX(0); }
+        .toast-icon {
+            width: 36px; height: 36px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+        }
+        .toast-progress {
+            position: absolute; bottom: 0; left: 0; height: 3px; width: 100%;
+            background: rgba(0,0,0,0.08); transform-origin: left;
+        }
+        /* Types */
+        .toast-success .toast-icon { background: #e8f5e9; color: #2e7d32; }
+        .toast-success .toast-progress { background: #4caf50; }
+        .toast-error .toast-icon { background: #ffebee; color: #c62828; }
+        .toast-error .toast-progress { background: #f44336; }
+        .toast-info .toast-icon { background: #e3f2fd; color: #1565c0; }
+        .toast-info .toast-progress { background: #2196f3; }
+        .toast-warning .toast-icon { background: #fff8e1; color: #f57f17; }
+        .toast-warning .toast-progress { background: #ffc107; }
+
         @media (max-width: 900px) {
             .navbar { padding: 0 24px; }
             .navbar-links { display: none; }
@@ -200,8 +233,10 @@
 </head>
 <body>
 
+<div id="toast-container"></div>
+
 <nav class="navbar">
-    <a href="{% url 'home' %}" class="navbar-brand">
+    <a href="{% if user.is_authenticated %}{% url 'users:dashboard' %}{% else %}{% url 'home' %}{% endif %}" class="navbar-brand">
         <span class="icon"><i class="fas fa-hospital-user"></i></span>
         MediCureFlow
     </a>
@@ -405,5 +440,75 @@
         }
     });
 </script>
+<script>
+    // Premium Toast System
+    const MediCureToast = {
+        show: function(message, type = 'success', duration = 4000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            let icon = 'fa-info-circle';
+            if (type === 'success') icon = 'fa-check-circle';
+            if (type === 'error') icon = 'fa-exclamation-circle';
+            if (type === 'warning') icon = 'fa-exclamation-triangle';
+
+            toast.innerHTML = `
+                <div class="toast-icon"><i class="fas ${icon}"></i></div>
+                <div style="flex:1;">${message}</div>
+                <button onclick="this.parentElement.remove()" style="background:none; border:none; color:#cbd5e1; cursor:pointer; font-size:1.1rem; padding-left:12px;">&times;</button>
+                <div class="toast-progress"></div>
+            `;
+
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => toast.classList.add('active'), 10);
+
+            // Progress bar animation
+            const progress = toast.querySelector('.toast-progress');
+            progress.style.transition = `transform ${duration}ms linear`;
+            progress.style.transform = 'scaleX(1)';
+            setTimeout(() => progress.style.transform = 'scaleX(0)', 10);
+
+            // Remove after duration
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 400);
+            }, duration);
+        }
+    };
+
+    // Replace default alert everywhere
+    window.alert = function(message) {
+        // Try to guess context for colors
+        let type = 'info';
+        if (message.toLowerCase().includes('success') || message.toLowerCase().includes('thank') || message.toLowerCase().includes('done')) {
+            type = 'success';
+        } else if (message.toLowerCase().includes('error') || message.toLowerCase().includes('fail') || message.toLowerCase().includes('could not')) {
+            type = 'error';
+        } else if (message.toLowerCase().includes('warning') || message.toLowerCase().includes('please')) {
+            type = 'warning';
+        }
+        
+        MediCureToast.show(message, type);
+    };
+
+    // Auto-dismiss Django messages using the toast system
+    document.addEventListener('DOMContentLoaded', () => {
+        const djangoMessages = document.querySelectorAll('.msg');
+        djangoMessages.forEach(msg => {
+            const text = msg.querySelector('span').textContent;
+            let type = 'info';
+            if (msg.classList.contains('success')) type = 'success';
+            if (msg.classList.contains('error') || msg.classList.contains('danger')) type = 'error';
+            if (msg.classList.contains('warning')) type = 'warning';
+            
+            MediCureToast.show(text, type);
+            msg.remove(); // Hide the static ones since we show toasts
+        });
+    });
+</script>
+<script src="{% static 'js/medicure-datepicker.js' %}"></script>
 </body>
 </html>
