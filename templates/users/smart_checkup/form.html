@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Smart Diagnostic Assistant — MediCureFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── BACKGROUND & CONTAINER ── */
+body { background-color: #f8fafc; }
+.ai-container {
+    max-width: 800px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+/* ── HEADER ── */
+.ai-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    padding: 40px 40px;
+    text-align: center;
+    color: #fff;
+    position: relative;
+}
+.ai-header i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    background: rgba(255,255,255,0.2);
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.ai-header h1 { font-weight: 800; font-size: 2rem; margin-bottom: 10px; }
+.ai-header p { font-size: 1.05rem; opacity: 0.9; max-width: 600px; margin: 0 auto; line-height: 1.5; }
+
+/* ── FORM BODY ── */
+.ai-body { padding: 40px; }
+.form-group { margin-bottom: 25px; }
+.form-label {
+    display: block;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+.form-label i { color: #6366f1; margin-right: 6px; }
+.form-control {
+    width: 100%;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.2s;
+    background: #f8fafc;
+}
+.form-control:focus {
+    border-color: #6366f1;
+    background: #fff;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+textarea.form-control { resize: vertical; min-height: 120px; }
+
+/* Slider styling */
+.range-wrap { position: relative; width: 100%; display: flex; align-items: center; gap: 15px; }
+input[type=range] { flex: 1; accent-color: #6366f1; }
+.range-val {
+    background: #6366f1; color: #fff; font-weight: 800;
+    padding: 5px 15px; border-radius: 20px; font-size: 0.9rem;
+}
+
+/* Submit Button */
+.btn-ai {
+    display: block;
+    width: 100%;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #fff;
+    border: none;
+    padding: 18px;
+    border-radius: 14px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    margin-top: 20px;
+}
+.btn-ai:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(99, 102, 241, 0.4); }
+.btn-ai:active { transform: translateY(0); }
+.btn-ai i { margin-right: 8px; }
+
+/* Loading State */
+#loadingData { display: none; text-align: center; padding: 40px 0; }
+.spinner {
+    width: 50px; height: 50px;
+    border: 5px solid rgba(99, 102, 241, 0.2);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 1.1rem; font-weight: 700; color: #4f46e5; }
+.loading-subtext { color: #64748b; font-size: 0.9rem; margin-top: 5px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ai-container" id="mainCard">
+    <div class="ai-header">
+        <i class="fas fa-brain"></i>
+        <h1>Smart Checkup Assistant</h1>
+        <p>Powered by Gemini AI, this tool analyzes your symptoms to provide instant health insights and a structured brief for your doctor.</p>
+    </div>
+    
+    <div class="ai-body">
+        <form id="aiForm" method="POST" action="{% url 'users:smart_checkup' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-notes-medical"></i> What are your main symptoms?</label>
+                <textarea class="form-control" name="symptoms" placeholder="E.g., I have a persistent dry cough, a slight fever of 100°F, and feel very fatigued." required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-clock"></i> How long have you had these symptoms?</label>
+                <input type="text" class="form-control" name="duration" placeholder="E.g., For the last 3 days" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-tachometer-alt"></i> How severe is your discomfort? (1-10)</label>
+                <div class="range-wrap">
+                    <span style="font-weight:700; color:#cbd5e1;">Mild</span>
+                    <input type="range" name="severity" min="1" max="10" value="5" oninput="document.getElementById('sevVal').innerText = this.value">
+                    <span style="font-weight:700; color:#cbd5e1;">Severe</span>
+                    <div class="range-val" id="sevVal">5</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label"><i class="fas fa-history"></i> Any relevant medical history or current medications?</label>
+                <textarea class="form-control" name="history" placeholder="E.g., I have asthma and take an inhaler daily. No other issues." style="min-height: 80px;"></textarea>
+            </div>
+            
+            <button type="submit" class="btn-ai" id="submitBtn">
+                <i class="fas fa-magic"></i> Generate AI Analysis
+            </button>
+        </form>
+        
+        <div id="loadingData">
+            <div class="spinner"></div>
+            <div class="loading-text">Analyzing your symptoms...</div>
+            <div class="loading-subtext">The Gemini AI is building your health insight and doctor's brief.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('aiForm').addEventListener('submit', function(e) {
+        document.getElementById('aiForm').style.display = 'none';
+        document.getElementById('loadingData').style.display = 'block';
+    });
+</script>
+{% endblock %}

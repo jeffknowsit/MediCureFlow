@@ -1,0 +1,728 @@
+﻿
+
+=== FILE: SRS_Format (1).pdf ===
+Christ College Of Engineering
+
+(Autonomous))
+
+Department of Computer Science and Engineering
+
+Software Requirements Specification
+
+(SRS)
+
+Project Title
+
+Submitted by
+
+Student Name 1
+
+Student Name 2
+
+Student Name 3
+
+Supervisor
+
+Supervisor Name
+
+Date
+
+March 13, 2026
+
+Contents
+
+1 Introduction
+
+1.1 Purpose . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+1.2 Scope
+
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+1.3 Definitions, Acronyms, Abbreviations . . . . . . . . . . . . . . . . . . . .
+
+1.4 References . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+2 Glossary
+
+3 Overall Description
+
+3.1 Product Perspective
+
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+3.2 User Classes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+3.3 Operating Environment
+
+. . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+4 System Models
+
+4.1 Use Case Diagram . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+4.2 Class Diagram . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+4.3 Sequence Diagram . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+5 Use Case Specifications
+
+5.1 Use Case UC-01: User Login . . . . . . . . . . . . . . . . . . . . . . . . .
+
+6 Functional Requirements
+
+7 Non Functional Requirements
+
+8 External Interface Requirements
+
+8.1 User Interface . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+8.2 Hardware Interface . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+8.3 Software Interface . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+8.4 Communication Interface . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+9 Requirements Traceability Matrix
+
+10 Appendix
+
+1
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+2
+
+3
+
+3
+
+3
+
+3
+
+4
+
+5
+
+5
+
+5
+
+5
+
+6
+
+6
+
+6
+
+6
+
+6
+
+6
+
+7
+
+7
+
+1
+
+Introduction
+
+1.1 Purpose
+
+This document describes the software requirements for the proposed system.
+
+1.2 Scope
+
+The system aims to provide functionality for managing users, data processing, and re-
+
+porting.
+
+1.3 Definitions, Acronyms, Abbreviations
+
+Term Description
+
+SRS
+
+Software Requirements Specification
+
+UML Unified Modeling Language
+
+API
+
+Application Programming Interface
+
+1.4 References
+
+ò IEEE 830 û SRS Standard
+
+ò IEEE 29148 û Requirements Engineering
+
+2 Glossary
+
+Term
+
+Actor
+
+Meaning
+
+External entity interacting with system
+
+Use Case
+
+Sequence of interactions between actor and system
+
+Requirement Condition or capability needed by the system
+
+3 Overall Description
+
+3.1 Product Perspective
+
+The system is a standalone application that interacts with users and database systems.
+
+2
+
+3.2 User Classes
+
+User Type Description
+
+Admin
+
+Full system control
+
+User
+
+Guest
+
+Limited access
+
+View only access
+
+3.3 Operating Environment
+
+ò OS: Windows / Linux
+
+ò Database: MySQL
+
+ò Interface: Web browser
+
+4 System Models
+
+4.1 Use Case Diagram
+
+usecase.png
+
+Figure 1: System Use Case Diagram
+
+3
+
+4.2 Class Diagram
+
+classdiagram.png
+
+Figure 2: Class Diagram
+
+4
+
+4.3 Sequence Diagram
+
+sequence.png
+
+Figure 3: Sequence Diagram
+
+5 Use Case Specifications
+
+5.1 Use Case UC-01: User Login
+
+Use Case ID
+
+UC-01
+
+Use Case Name
+
+User Login
+
+Primary Actor
+
+User
+
+Description
+
+Allows user to login to system
+
+Precondition
+
+User must be registered
+
+Postcondition
+
+User dashboard displayed
+
+6 Functional Requirements
+
+ò FR-01 System shall allow users to register accounts
+
+5
+
+ò FR-02 System shall authenticate users using username and password
+
+ò FR-03 System shall allow users to update profile information
+
+ò FR-04 System shall generate reports
+
+7 Non Functional Requirements
+
+ò NFR-01 System response time shall be less than 3 seconds
+
+ò NFR-02 System shall support secure authentication
+
+ò NFR-03 System shall be available 99% of the time
+
+ò NFR-04 System interface shall be user friendly
+
+8 External Interface Requirements
+
+8.1 User Interface
+
+Graphical interface for user interaction.
+
+8.2 Hardware Interface
+
+Example hardware:
+
+ò Barcode Scanner
+
+ò Camera
+
+8.3 Software Interface
+
+ò Database server
+
+ò External APIs
+
+8.4 Communication Interface
+
+ò HTTP protocol
+
+ò RESTful API
+
+6
+
+9 Requirements Traceability Matrix
+
+Requirement ID Design Module
+
+Test Case
+
+FR-01
+
+FR-02
+
+FR-03
+
+Registration Module TC01
+
+Login Module
+
+Profile Module
+
+TC02
+
+TC03
+
+10 Appendix
+
+Additional supporting documents or diagrams.
+
+7
+
+
+
+
+=== FILE: SRS_Guidlines.pdf ===
+Software Requirements Specification (SRS)
+
+Formatting Guidelines
+
+3
+
+3
+
+3
+
+4
+
+4
+
+4
+
+5
+
+5
+
+6
+
+6
+
+6
+
+6
+
+7
+
+Contents
+
+1 Page Setup
+
+2 Font and Text Formatting
+
+3 Line and Paragraph Formatting
+
+4 Heading Numbering Style
+
+5 Table Formatting
+
+6 Figure Formatting
+
+7 List Formatting
+
+8 Header and Footer
+
+9 Table of Contents
+
+10 Document Length Recommendation
+
+11 File Naming Convention
+
+12 Version Control
+
+13 Recommended Standard
+
+2
+
+1 Page Setup
+
+ò Paper Size: A4
+
+ò Orientation: Portrait
+
+ò Margins:
+
+û Top: 1 inch
+
+û Bottom: 1 inch
+
+û Left: 1.25 inch
+
+û Right: 1 inch
+
+ò Page Numbers: Bottom center or bottom right
+
+2 Font and Text Formatting
+
+Element
+
+Font
+
+Size
+
+Title
+
+Times New Roman 18 Bold
+
+Main Heading
+
+Times New Roman 16 Bold
+
+Sub Heading
+
+Times New Roman 14 Bold
+
+Body Text
+
+Times New Roman 12
+
+Table Text
+
+Times New Roman 11û12
+
+Figure Caption Times New Roman 11 Italic
+
+3 Line and Paragraph Formatting
+
+ò Line spacing: 1.5
+
+ò Paragraph alignment: Justified
+
+ò Spacing after paragraph: 6 pt
+
+ò Optional first line indentation: 0.5 cm
+
+3
+
+4 Heading Numbering Style
+
+Use hierarchical numbering for sections.
+
+1. Introduction
+
+1.1 Purpose
+
+1.2 Scope
+
+1.3 Definitions
+
+2. Overall Description
+
+2.1 Product Perspective
+
+2.2 Product Functions
+
+2.3 User Classes
+
+3. System Models
+
+3.1 Use Case Diagram
+
+3.2 Data Flow Diagram
+
+5 Table Formatting
+
+Tables must be numbered sequentially.
+
+Table 3.1: User Types
+
+User Type Description
+
+Admin
+
+Full system access
+
+User
+
+Limited functionality
+
+6 Figure Formatting
+
+Figures are used for system diagrams such as:
+
+ò Use Case Diagram
+
+ò Data Flow Diagram
+
+4
+
+ò Class Diagram
+
+ò Architecture Diagram
+
+ò Sequence Diagram
+
+Example caption:
+
+Figure 3.1: Use Case Diagram
+
+Captions should appear below the figure.
+
+7 List Formatting
+
+Example functional requirements list:
+
+ò FR1 û User Registration
+
+ò FR2 û Login Authentication
+
+ò FR3 û Data Management
+
+ò FR4 û Search Functionality
+
+ò FR5 û Report Generation
+
+8 Header and Footer
+
+Example header:
+
+Software Requirements Specification { Project Name
+
+Example footer:
+
+Page X of Y
+
+5
+
+9 Table of Contents
+
+Include an automatically generated Table of Contents after the title page.
+
+Example structure:
+
+1. Introduction
+
+2. Overall Description
+
+3. System Models
+
+4. Functional Requirements
+
+5. Non-Functional Requirements
+
+6. System Interfaces
+
+7. References
+
+10 Document Length Recommendation
+
+Project Type
+
+Recommended Pages
+
+Mini Project
+
+15û25
+
+Academic Project
+
+25û40
+
+Industry Project
+
+40û100+
+
+11 File Naming Convention
+
+Example:
+
+SRS_ProjectName_Version1.0.tex
+
+Example:
+
+SRS_EcommerceSystem_V1.0.tex
+
+12 Version Control
+
+Version Date
+
+Author Description
+
+1.0
+
+1.1
+
+10 Mar 2026 Team
+
+Initial Draft
+
+12 Mar 2026 Team
+
+Updated Requirements
+
+6
+
+13 Recommended Standard
+
+This document follows guidelines based on:
+
+ò IEEE 830 û Software Requirements Specification
+
+ò IEEE 29148 û Systems and Software Engineering Requirements
+
+7
+
+
+
+
+=== FILE: SRS_Mini_Project_Template.pdf ===
+Software Requirements Specification (SRS)
+
+1. Introduction
+
+1.1 Purpose
+
+This document describes the requirements for the [Project Name] system.
+
+1.2 Scope
+
+The system is a web/mobile/desktop application developed to automate [problem].
+
+1.3 Definitions
+
+Admin û System administrator
+User û End user
+DB û Database
+
+2. Overall Description
+
+2.1 Product Perspective
+
+Standalone application connected to database.
+
+2.2 Product Functions
+
+(cid:127) Registration & Login
+(cid:127) Manage Records
+(cid:127) Search Information
+(cid:127) Generate Reports
+
+2.3 User Types
+
+Admin û Full access
+User û Limited access
+
+2.4 Operating Environment
+
+Windows/Linux, Browser, Backend, MySQL
+
+3. System Models (Diagrams)
+
+3.1 Use Case Diagram
+
+Insert Use Case Diagram here.
+
+3.2 Data Flow Diagram
+
+DFD Level 0 and Level 1.
+
+3.3 Entity Relationship Diagram
+
+Insert ER Diagram.
+
+3.4 System Architecture Diagram
+
+Insert Architecture Diagram.
+
+4. Functional Requirements
+
+FR1 Registration
+FR2 Login
+FR3 Manage Data
+FR4 Search
+FR5 Reports
+
+5. Non-Functional Requirements
+
+Performance, Security, Usability, Reliability
+
+6. System Requirements
+
+Hardware and Software requirements.
+
+7. Future Enhancements
+
+Mobile app, Cloud deployment, Analytics.
+
+

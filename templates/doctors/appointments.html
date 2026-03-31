@@ -119,6 +119,7 @@
                                     data-id="{{ appt.id }}" 
                                     data-patient-id="{{ appt.patient.id }}"
                                     data-patient="{{ appt.patient.get_full_name }}"
+                                    data-notes="{{ appt.patient_notes|escape }}"
                                     title="Complete Consultation">
                                 <i class="fas fa-stethoscope"></i>
                             </button>
@@ -261,6 +262,14 @@
             <div id="form-panel" style="flex: 1; padding: 40px; border-right: 2px solid #f1f5f9; overflow-y: auto;">
                 <form id="consultation-form">
                     {% csrf_token %}
+                    <!-- Pre-Consultation AI Analysis Banner -->
+                    <div id="ai-summary-card" style="display:none; margin-bottom: 24px; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.02); position: relative;">
+                        <h4 id="ai-summary-title" style="margin: 0 0 12px; font-size: 0.85rem; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-robot"></i> Pre-Consultation Remarks
+                        </h4>
+                        <div id="ai-summary-content" style="font-size: 0.95rem; line-height: 1.6; color: #334155; white-space: pre-wrap; font-family: 'Inter', sans-serif;"></div>
+                    </div>
+                    
                     <div style="margin-bottom:28px;">
                         <label style="display:block; font-size:0.8rem; font-weight:800; color:#475569; margin-bottom:12px; text-transform:uppercase; letter-spacing: 1px;">Clinical Remarks & Prescription</label>
                         <div style="position: relative;">
@@ -454,6 +463,33 @@ document.addEventListener('DOMContentLoaded', function() {
             activeAppointmentId = this.dataset.id;
             const patientId = this.dataset.patientId;
             patientNameSpan.textContent = this.dataset.patient;
+            
+            // Modern beautifully styled Injection for AI/Patient Notes
+            let notes = this.dataset.notes || '';
+            const aiCard = document.getElementById('ai-summary-card');
+            const aiContent = document.getElementById('ai-summary-content');
+            const aiTitle = document.getElementById('ai-summary-title');
+            
+            if (notes.trim()) {
+                aiCard.style.display = 'block';
+                aiContent.textContent = notes;
+                // Dynamically style if it's an AI diagnostic report or standard patient form note
+                if (notes.includes('AI DIAGNOSTIC REPORT')) {
+                    aiTitle.innerHTML = '<i class="fas fa-robot" style="font-size: 1.1rem; color: #8b5cf6;"></i> AI Diagnostic Report';
+                    aiCard.style.background = 'linear-gradient(135deg, #f5f3ff 0%, #eff6ff 100%)';
+                    aiCard.style.borderLeft = '4px solid #8b5cf6';
+                } else {
+                    aiTitle.innerHTML = '<i class="fas fa-user-edit" style="font-size: 1.1rem; color: #64748b;"></i> Patient Check-in Notes';
+                    aiCard.style.background = 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)';
+                    aiCard.style.borderLeft = '4px solid #64748b';
+                }
+            } else {
+                aiCard.style.display = 'none';
+            }
+            
+            // Clear the doctor's clinical remarks textbox directly
+            document.getElementById('modal-remarks').value = '';
+            
             modal.style.display = 'flex';
             
             // Fetch Patient History

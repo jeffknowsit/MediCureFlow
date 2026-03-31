@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.utils import timezone
@@ -643,6 +644,7 @@ class Appointment(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['doctor', 'appointment_date', 'appointment_time'],
+                condition=~Q(status__in=['cancelled', 'no_show']),
                 name='unique_doctor_appointment_slot'
             )
         ]
@@ -687,8 +689,8 @@ class Appointment(models.Model):
         # Skip date validation during testing for historical appointments
         is_testing = 'test' in sys.argv or hasattr(self, '_skip_date_validation')
         
-        # Check if appointment is in the future (skip during testing)
-        if not is_testing and self.appointment_date and self.appointment_time:
+        # Check if appointment is in the future (skip for cancelled/completed appointments)
+        if not is_testing and self.appointment_date and self.appointment_time and self.status in ['scheduled', 'confirmed']:
             naive_datetime = timezone.datetime.combine(
                 self.appointment_date, self.appointment_time
             )
@@ -713,6 +715,33 @@ class Appointment(models.Model):
                             f"This time slot falls during {doctor.display_name}'s lunch break "
                             f"({doctor.lunch_break_start.strftime('%I:%M %p')} - {doctor.lunch_break_end.strftime('%I:%M %p')})."
                         )
+                
+                # Check Doctor Availability Chart
+                weekday = self.appointment_date.weekday()
+                availability = DoctorAvailability.objects.filter(
+                    doctor=doctor,
+                    day_of_week=weekday,
+                    is_active=True
+                )
+                
+                if not availability.exists():
+                    raise ValidationError(
+                        f"{doctor.display_name} is not available on {self.appointment_date.strftime('%A')}s. "
+                        f"Please check the availability chart."
+                    )
+                
+                is_within_slot = False
+                for slot in availability:
+                    if slot.start_time <= self.appointment_time <= slot.end_time:
+                        is_within_slot = True
+                        break
+                
+                if not is_within_slot:
+                    slots_str = ", ".join([f"{s.start_time.strftime('%I:%M %p')} - {s.end_time.strftime('%I:%M %p')}" for s in availability])
+                    raise ValidationError(
+                        f"Requested time {self.appointment_time.strftime('%I:%M %p')} is outside of "
+                        f"{doctor.display_name}'s available slots on this day: {slots_str}."
+                    )
         
         # Check for double booking (exclude current instance if updating)
         # Only validate if doctor is properly set (not None and not just doctor_id)
@@ -726,14 +755,14 @@ class Appointment(models.Model):
                     doctor=doctor_obj,
                     appointment_date=self.appointment_date,
                     appointment_time=self.appointment_time,
-                    status__in=['scheduled', 'confirmed']
+                    status__in=['scheduled', 'confirmed', 'in_progress', 'completed']
                 )
                 if self.pk:
                     conflicts = conflicts.exclude(pk=self.pk)
                 
                 # During testing, be more lenient to avoid conflicts with fixtures
                 if conflicts.exists() and not is_testing:
-                    raise ValidationError("This time slot is already booked.")
+                    raise ValidationError("This time slot is already booked or completed.")
             except (Doctor.DoesNotExist, ValueError, AttributeError):
                 # If doctor doesn't exist or can't be accessed, skip validation
                 # This will be caught by model field validation
@@ -874,7 +903,6 @@ class Review(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ['doctor', 'patient']
         ordering = ['-created_at']
         verbose_name = 'Review'
         verbose_name_plural = 'Reviews'

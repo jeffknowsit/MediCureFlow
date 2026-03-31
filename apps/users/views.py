@@ -17,7 +17,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Q
 from django.db import transaction
-from apps.doctors.models import Doctor, Appointment
+from apps.doctors.models import Doctor, Appointment, Review
 from .models import UserProfile
 from .forms import (
     CustomUserRegistrationForm, CustomAuthenticationForm,
@@ -452,6 +452,24 @@ class BookAppointmentView(LoginRequiredMixin, CreateView):
         appointment.patient = self.request.user
         appointment.patient_email = self.request.user.email
         
+        # Inject AI Summary if present
+        ai_brief = self.request.session.pop('ai_doctor_brief', None)
+        if ai_brief:
+            border = "=" * 30
+            ai_notes = f"\n\n{border}\n🏥 AI DIAGNOSTIC REPORT\n{border}\n\n"
+            ai_notes += f"SUMMARY: {ai_brief.get('summary', '')}\n\n"
+            diagnoses = ai_brief.get('possible_diagnoses', [])
+            ai_notes += f"PROBABLE CONDITIONS:\n- " + "\n- ".join(diagnoses) + "\n\n"
+            tests = ai_brief.get('suggested_tests', [])
+            ai_notes += f"SUGGESTED TESTS:\n- " + "\n- ".join(tests) + "\n\n"
+            ai_notes += f"RED FLAGS:\n{ai_brief.get('red_flags', '')}\n"
+            
+            # Prepend or append
+            if appointment.patient_notes:
+                appointment.patient_notes = appointment.patient_notes + ai_notes
+            else:
+                appointment.patient_notes = ai_notes
+        
         # Get user profile for contact info
         try:
             profile = self.request.user.profile
@@ -521,7 +539,7 @@ class CancelAppointmentView(LoginRequiredMixin, View):
         # Only allow cancellation for scheduled or confirmed appointments
         if appointment.status in ['scheduled', 'confirmed']:
             appointment.status = 'cancelled'
-            appointment.save()
+            appointment.save(skip_validation=True)
             messages.success(request, f'Appointment with {appointment.doctor.display_name} has been cancelled.')
             logger.info(f'Appointment {appointment_id} cancelled by user {request.user.username}')
         else:
@@ -593,10 +611,13 @@ class SubmitReviewAPI(LoginRequiredMixin, View):
                 status='completed'
             )
             
-            # Check if review already exists
-            from apps.doctors.models import Review
+            # Double check for existing reviews between this doctor and patient for this appointment
+            # (OneToOneField already handles this, but explicit check is good for custom error)
             if hasattr(appointment, 'review'):
-                return JsonResponse({'success': False, 'message': 'You have already reviewed this appointment.'})
+                return JsonResponse({
+                    'success': False, 
+                    'message': f'You have already submitted a review for this visit with {appointment.doctor.display_name}.'
+                })
                 
             # Create review
             review = Review.objects.create(
@@ -605,7 +626,7 @@ class SubmitReviewAPI(LoginRequiredMixin, View):
                 appointment=appointment,
                 rating=rating,
                 comment=comment,
-                is_approved=True  # Auto approve for now so it updates dashboard right away
+                is_approved=True 
             )
             
             # Update doctor statistics
@@ -619,12 +640,23 @@ class SubmitReviewAPI(LoginRequiredMixin, View):
             })
             
         except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
+            return JsonResponse({'success': False, 'message': 'Invalid JSON data format.'})
         except Appointment.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Completed appointment not found.'})
+            return JsonResponse({'success': False, 'message': 'Completed appointment record not found.'})
         except Exception as e:
-            logger.error(f'Error submitting review: {str(e)}')
-            return JsonResponse({'success': False, 'message': 'Server error occurred'})
+            error_msg = str(e)
+            logger.error(f'Error submitting review for appointment {appointment_id}: {error_msg}')
+            
+            if "UNIQUE constraint failed" in error_msg:
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'A review for this doctor-patient visit already exists.'
+                })
+                
+            return JsonResponse({
+                'success': False, 
+                'message': 'A system error occurred while processing your review. Please try again later.'
+            })
 
 
 class AppointmentDetailsAPI(LoginRequiredMixin, View):
@@ -714,3 +746,121 @@ class DeleteAccountView(LoginRequiredMixin, View):
             messages.error(request, 'An error occurred while deleting your account.')
             return redirect('users:profile')
 
+
+import google.generativeai as genai
+import os, json
+from django.conf import settings
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from apps.doctors.models import Doctor
+
+@login_required
+def smart_checkup_view(request):
+    """
+    AI Diagnostic Assistant using Gemini 3.1 Flash Lite.
+    Provides Patient recommendations, a structured Doctor's brief, and
+    queries the database to recommend an appropriate Doctor based on symptoms.
+    """
+    if request.method == "POST":
+        symptoms = request.POST.get('symptoms', '')
+        duration = request.POST.get('duration', 'Not specified')
+        severity = request.POST.get('severity', 'Not specified')
+        history = request.POST.get('history', 'None')
+
+        try:
+            api_key = os.environ.get("GEMINI_API_KEY", "")
+            if not api_key:
+                from dotenv import load_dotenv
+                load_dotenv()
+                api_key = os.environ.get("GEMINI_API_KEY", "")
+
+            if not api_key:
+                return render(request, 'users/smart_checkup/result.html', {
+                    'data': None,
+                    'error': 'Gemini API Key is missing. Please configure GEMINI_API_KEY in your .env file.'
+                })
+
+            genai.configure(api_key=api_key)
+            # Use Gemini Flash Lite as requested ("FLASHLIGHT")
+            model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
+            
+            # Fetch valid specialties from the DB dynamically
+            valid_specialties = [s[0] for s in Doctor._meta.get_field('specialty').choices]
+            
+            prompt = f"""
+            You are an advanced Medical Diagnostic AI for the MediCureFlow platform. Your goal is to analyze patient symptoms and provide two distinct outputs: 
+            1. A patient-friendly 'Health Insight' (empathetic, non-alarmist).
+            2. A professional 'Clinical Summary' for the doctor (structured, data-driven). 
+            **Note:** Always include a disclaimer at the start of patient insight that this is an AI-assisted analysis and not a final diagnosis.
+
+            [PATIENT DATA]
+            Symptoms: {symptoms}
+            Duration: {duration}
+            Severity: {severity}/10
+            Medical History: {history}
+
+            [TASK]
+            1. Analyze the symptoms and provide a "Probable Condition" list.
+            2. Create a "Patient Recommendation" (Lifestyle tips, urgency level).
+            3. Create a "Doctor's Brief" including potential red flags and suggested initial tests.
+            4. Select the VERY BEST matching specialty from this exact list of our database keys: {valid_specialties}. Return the exact string key exactly as it appears. If none match perfectly, use 'general_medicine' or 'general'.
+
+            [OUTPUT FORMAT - JSON ONLY. NO MARKDOWN WRAPPERS OR BACKTICKS. JUST RAW JSON]
+            {{
+              "patient_view": {{
+                "insight": "...",
+                "next_steps": "...",
+                "urgency_level": "..."
+              }},
+              "doctor_view": {{
+                "summary": "...",
+                "possible_diagnoses": ["...", "..."],
+                "suggested_tests": ["...", "..."],
+                "red_flags": "..."
+              }},
+              "recommended_specialty": "..."
+            }}
+            """
+
+            response = model.generate_content(prompt)
+            
+            cleaned_text = response.text.replace("```json", "").replace("```", "").strip()
+            ai_data = json.loads(cleaned_text)
+            
+            # Now access the database and select an available doctor
+            raw_specialty = ai_data.get('recommended_specialty', '')
+            specialty_key = str(raw_specialty).strip().lower()
+            
+            recommended_doctor = None
+            if specialty_key:
+                # Find an available doctor with this exact specialty (case insensitive)
+                recommended_doctor = Doctor.objects.filter(specialty__iexact=specialty_key, is_available=True).order_by('?').first()
+                
+                # If exact matching fails, try a partial match (e.g., if AI returns 'cardiology' but key is 'cardiologist')
+                if not recommended_doctor:
+                    recommended_doctor = Doctor.objects.filter(specialty__icontains=specialty_key, is_available=True).order_by('?').first()
+
+            # Fallback for General Medicine
+            if not recommended_doctor:
+                recommended_doctor = Doctor.objects.filter(specialty__icontains='general', is_available=True).order_by('?').first()
+                
+            # Final fallback
+            if not recommended_doctor:
+                recommended_doctor = Doctor.objects.filter(is_available=True).order_by('?').first()
+
+            # Save doctor brief to session to attach to the Appointment
+            if ai_data and 'doctor_view' in ai_data:
+                request.session['ai_doctor_brief'] = ai_data['doctor_view']
+            
+            return render(request, 'users/smart_checkup/result.html', {
+                'data': ai_data, 
+                'doctor': recommended_doctor,
+                'error': None
+            })
+
+            
+        except Exception as e:
+            return render(request, 'users/smart_checkup/result.html', {'data': None, 'error': str(e)})
+            
+    # GET request - show the form
+    return render(request, 'users/smart_checkup/form.html')

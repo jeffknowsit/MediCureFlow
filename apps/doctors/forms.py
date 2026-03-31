@@ -343,7 +343,14 @@ class AppointmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        from django.utils import timezone
+        
+        # Add min attribute to the date picker so HTML5 prevents past dates
+        today_str = timezone.now().date().isoformat()
+        self.fields['appointment_date'].widget.attrs['min'] = today_str
+        
         self.fields['duration_minutes'].required = False
+
         self.fields['duration_minutes'].initial = 30
         self.helper = FormHelper()
         self.helper.layout = Layout(
@@ -360,6 +367,13 @@ class AppointmentForm(forms.ModelForm):
             )
         )
 
+    def clean_appointment_date(self):
+        from django.utils import timezone
+        import datetime
+        date = self.cleaned_data.get('appointment_date')
+        if date < timezone.now().date():
+            raise forms.ValidationError("Appointments cannot be booked for past dates.")
+        return date
 
 class DoctorAvailabilityForm(forms.ModelForm):
     """

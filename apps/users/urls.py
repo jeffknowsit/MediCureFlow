@@ -22,6 +22,7 @@ urlpatterns = [
     path('profile/', views.ProfileUpdateView.as_view(), name='profile'),
     path('delete-account/', views.DeleteAccountView.as_view(), name='delete_account'),
     path('profile-image/<int:user_id>/', views.serve_patient_profile_image, name='profile_image'),
+    path('smart-checkup/', views.smart_checkup_view, name='smart_checkup'),
     
     # Doctor Search and Booking
     path('doctors/', views.DoctorSearchView.as_view(), name='search_doctors'),

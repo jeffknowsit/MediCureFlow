@@ -1140,8 +1140,11 @@ class DoctorAvailableSlotsView(TemplateView):
                 ).exists()
                 
                 if not has_any_availability:
-                    # Default working hours ONLY if no schedule defined
-                    active_ranges.append((time(9, 0), time(18, 0)))
+                    return JsonResponse({
+                        'success': True, 
+                        'slots': [],
+                        'message': 'Doctor has not yet set up their availability schedule.'
+                    })
                 else:
                     return JsonResponse({
                         'success': True, 
@@ -1304,12 +1307,9 @@ class CheckAvailabilityAPI(LoginRequiredMixin, View):
             
             is_available = avail_slots.exists()
             
-            # Fallback: If no custom availability is defined, assume standard 9 AM - 6 PM
+            # Custom availability is strictly enforced for all doctors
             if not is_available:
-                has_any_defined_slots = DoctorAvailability.objects.filter(doctor=doctor, is_active=True).exists()
-                if not has_any_defined_slots:
-                    from datetime import time as dt_time
-                    is_available = dt_time(9, 0) <= time_obj < dt_time(18, 0)
+                from datetime import time as dt_time
             
             # Check for lunch break exclusion
             if is_available and doctor.lunch_break_start and doctor.lunch_break_end:

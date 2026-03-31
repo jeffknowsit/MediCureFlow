@@ -269,6 +269,7 @@
                     <a href="{% url 'users:dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     <a href="{% url 'users:profile' %}"><i class="fas fa-user-edit"></i> My Profile</a>
                     {% if not user.doctor_profile %}
+                    <a href="{% url 'users:smart_checkup' %}" style="color: #6a11cb; font-weight: 700;"><i class="fas fa-robot" style="color: #6a11cb;"></i> Smart Checkup</a>
                     <a href="{% url 'users:my_appointments' %}"><i class="fas fa-calendar"></i> Appointments</a>
                     {% endif %}
                     <div class="divider-line"></div>
