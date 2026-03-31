@@ -765,6 +765,7 @@ def update_appointment_status(request, appointment_id):
 class DoctorDeleteView(AdminOnlyMixin, DeleteView):
     """Delete doctor"""
     model = Doctor
+    template_name = 'admin_system/confirm_delete.html'
     pk_url_kwarg = 'doctor_id'
     success_url = reverse_lazy('admin_system:doctor_management')
     
@@ -788,6 +789,7 @@ class DoctorDeleteView(AdminOnlyMixin, DeleteView):
 class UserDeleteView(AdminOnlyMixin, DeleteView):
     """Delete user/patient"""
     model = User
+    template_name = 'admin_system/confirm_delete.html'
     pk_url_kwarg = 'user_id'
     success_url = reverse_lazy('admin_system:user_management')
     

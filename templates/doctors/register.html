@@ -196,8 +196,8 @@
                 </div>
                 
                 <div class="field-group">
-                    <label>Profile Photo (Optional)</label>
-                    <input type="file" name="photo" class="field-input" accept="image/*">
+                    <label>Profile Photo - <span style="color: #4834d4; text-transform: none;">With Auto-Crop</span> (Optional)</label>
+                    <input type="file" name="photo" id="id_photo" class="field-input" accept="image/*">
                     {% for error in form.photo.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
                 </div>
 

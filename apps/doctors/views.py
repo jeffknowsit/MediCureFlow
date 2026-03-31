@@ -370,12 +370,22 @@ class DoctorAppointmentsView(LoginRequiredMixin, DoctorMixin, ListView):
         try:
             doctor = self.request.user.doctor_profile
             status = self.request.GET.get('status')
+            date_filter = self.request.GET.get('date')
             
             # Use select_related to optimize queries and avoid N+1 problems
             queryset = Appointment.objects.select_related('patient', 'patient__profile', 'doctor').filter(doctor=doctor)
             
+            # Filter by status
             if status and status != 'all':
                 queryset = queryset.filter(status=status)
+            
+            # Filter by date
+            if date_filter:
+                try:
+                    # Django automatically handles 'YYYY-MM-DD' strings for DateField
+                    queryset = queryset.filter(appointment_date=date_filter)
+                except (ValueError, TypeError):
+                    logger.warning(f"Invalid date filter provided: {date_filter}")
             
             return queryset.order_by('-appointment_date', '-appointment_time')
             

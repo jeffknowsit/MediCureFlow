@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirm Deletion — MediCureFlow Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        max-width: 600px;
+        margin: 80px auto;
+        text-align: center;
+    }
+    .delete-card {
+        background: #fff;
+        padding: 50px 40px;
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+    }
+    .warning-icon {
+        width: 80px;
+        height: 80px;
+        background: #fff1f1;
+        color: #ef4444;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 30px;
+    }
+    .delete-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #1a1a2e;
+        margin-bottom: 16px;
+    }
+    .delete-message {
+        color: #64748b;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 40px;
+    }
+    .object-name {
+        color: #1a1a2e;
+        font-weight: 700;
+        background: #f1f5f9;
+        padding: 4px 12px;
+        border-radius: 8px;
+    }
+    .action-btns {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+    }
+    .btn-confirm {
+        padding: 14px 32px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #ef4444;
+        color: #fff;
+    }
+    .btn-confirm:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
+    }
+    .btn-cancel {
+        padding: 14px 32px;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fff;
+        color: #64748b;
+        text-decoration: none;
+    }
+    .btn-cancel:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+    <div class="delete-card">
+        <div class="warning-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h1 class="delete-title">Confirm Deletion</h1>
+        <p class="delete-message">
+            Are you sure you want to delete <span class="object-name">"{{ object }}"</span>? 
+            This action cannot be undone and all associated data will be permanently removed.
+        </p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="action-btns">
+                <a href="{{ cancel_url|default:'#' }}" onclick="window.history.back(); return false;" class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-confirm">Delete Permanently</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

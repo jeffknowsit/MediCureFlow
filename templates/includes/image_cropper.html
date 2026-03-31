@@ -141,6 +141,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileInputs = document.querySelectorAll('input[type="file"][id="id_profile_picture"], input[type="file"][id="id_photo"]');
     
     let activeFileInput = null;
+    let originalFilename = '';
+    let originalFileType = '';
     // Enhance file inputs with modern UI wrapper and live preview
     fileInputs.forEach(input => {
         // Find existing image src from page to use as initial preview
@@ -167,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const subtitle = document.createElement('span');
         subtitle.className = 'modern-upload-subtitle';
-        subtitle.innerText = 'JPEG, PNG up to 5MB';
+        subtitle.innerText = 'JPEG, PNG up to 5MB (Crop available)';
         
         textWrapper.appendChild(title);
         textWrapper.appendChild(subtitle);
@@ -177,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Wrap the input
         input.parentNode.insertBefore(wrapper, input);
+        input.classList.add('custom-file-input');
         wrapper.appendChild(input);
 
         // Reference the preview and title to this input for updates

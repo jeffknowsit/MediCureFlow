@@ -51,22 +51,31 @@
         <h1>Appointment Schedule</h1>
     </div>
 
-    <div class="filter-bar">
+    <form method="GET" action="{% url 'doctors:appointments' %}" class="filter-bar">
         <div class="filter-group">
             <label>Filter Status</label>
-            <select class="filter-input">
-                <option>All Appointments</option>
-                <option>Scheduled</option>
-                <option>Confirmed</option>
-                <option>Completed</option>
-                <option>Cancelled</option>
+            <select name="status" class="filter-input" onchange="this.form.submit()">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Appointments</option>
+                <option value="scheduled" {% if status_filter == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                <option value="no_show" {% if status_filter == 'no_show' %}selected{% endif %}>No Show</option>
             </select>
         </div>
         <div class="filter-group">
             <label>Date Range</label>
-            <input type="date" class="filter-input">
+            <input type="date" name="date" class="filter-input" value="{{ request.GET.date }}" onchange="this.form.submit()">
         </div>
-    </div>
+        {% if request.GET.status or request.GET.date %}
+        <div class="filter-group" style="margin-left: auto;">
+            <a href="{% url 'doctors:appointments' %}" style="font-size: 0.8rem; font-weight: 700; color: #ef4444; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-times-circle"></i> CLEAR FILTERS
+            </a>
+        </div>
+        {% endif %}
+    </form>
 
     <div class="apt-table-card">
         <table class="apt-table">
