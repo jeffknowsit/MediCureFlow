@@ -392,7 +392,7 @@ See the [LICENSE](LICENSE) file for complete terms and conditions.
 
 ### 🌟 **If you find this project helpful, please consider giving it a star!** ⭐
 
-**Made with ❤️ by [Aniket Kumar](https://github.com/Aniket-Dev-IT)**
+**Made with ❤️ by [Jeff Joseph](https://github.com/jeffknowsit)**
 
 *Transforming Healthcare Through Technology*
 
