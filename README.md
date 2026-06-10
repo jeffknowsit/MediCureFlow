@@ -303,24 +303,6 @@ python manage.py check --deploy
 | 🏛️ **Architecture Overview** | [System Architecture](docs/architecture.md) |
 | 🔒 **Security Guide** | [Security Practices](docs/security.md) |
 
-## 🤝 **Contributing & Usage**
-
-### ⚠️ **IMPORTANT: Usage Restrictions**
-
-**🔒 This project requires explicit permission for use. Please contact the owner before using this code.**
-
-### 📦 **Permission Requests & Contact** {#contact}
-
-<div align="center">
-
-**Aniket Kumar** - Full Stack Developer
-
-[![Email](https://img.shields.io/badge/Email-aniket.kumar.devpro@gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:aniket.kumar.devpro@gmail.com)
-[![WhatsApp](https://img.shields.io/badge/WhatsApp-+91_8318601925-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/918318601925)
-[![GitHub](https://img.shields.io/badge/GitHub-Aniket--Dev--IT-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Aniket-Dev-IT)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/aniket-k-61037217a/)
-
-</div>
 
 ### 💼 **Available for:**
 - 🚀 **Freelance Projects** - Full-stack healthcare solutions
@@ -352,16 +334,6 @@ python manage.py check --deploy
 ![GitHub last commit](https://img.shields.io/github/last-commit/Aniket-Dev-IT/MediCureFlow)
 
 </div>
-
-## 📄 **License & Legal**
-
-**⚠️ IMPORTANT: This project is protected under a custom license requiring explicit permission for use.**
-
-- 📧 **Contact for Permission**: [aniket.kumar.devpro@gmail.com](mailto:aniket.kumar.devpro@gmail.com)
-- 📱 **WhatsApp**: [+91 8318601925](https://wa.me/918318601925)
-- 🐙 **GitHub**: [@Aniket-Dev-IT](https://github.com/Aniket-Dev-IT)
-
-See the [LICENSE](LICENSE) file for complete terms and conditions.
 
 ## 🌟 **Why Choose This Project?**
 
